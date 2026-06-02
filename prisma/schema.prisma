@@ -1,0 +1,166 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String?
+  name      String?
+  image     String?
+  lineToken String?  // สำหรับผูก LINE Notify
+  role      Role     @default(TENANT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  properties     Property[] // สำหรับ Owner
+  tenantProfile  Tenant?    // สำหรับ Tenant
+}
+
+enum Role {
+  ADMIN
+  OWNER
+  TENANT
+}
+
+model Property {
+  id            String   @id @default(cuid())
+  name          String
+  address       String
+  imageUrl      String?  // ภาพปกของหอพัก
+  leaseTemplate String?  // ข้อความ/เงื่อนไขสัญญาเช่าที่ปรับแต่งได้
+  ownerId       String
+  owner         User     @relation(fields: [ownerId], references: [id])
+  rooms         Room[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Room {
+  id          String   @id @default(cuid())
+  number      String
+  floor       String?
+  rentPrice   Float
+  imageUrl    String?  // ภาพถ่ายภายในห้อง
+  inviteCode  String?  @unique // รหัสสำหรับให้ลูกบ้านใช้สมัครสมาชิกเข้าห้องนี้
+  propertyId  String
+  property    Property @relation(fields: [propertyId], references: [id])
+  tenants     Tenant[]
+  bills       Bill[]
+  maintenance MaintenanceRequest[]
+  parcels     Parcel[]
+  status      RoomStatus @default(AVAILABLE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum RoomStatus {
+  AVAILABLE
+  OCCUPIED
+  MAINTENANCE
+}
+
+model Tenant {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id])
+  roomId        String?
+  room          Room?     @relation(fields: [roomId], references: [id])
+  leaseStart    DateTime?
+  leaseEnd      DateTime?
+  depositAmount Float?
+  idCardNumber  String?
+  phone         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Bill {
+  id             String    @id @default(cuid())
+  month          Int
+  year           Int
+  roomId         String
+  room           Room      @relation(fields: [roomId], references: [id])
+  rentAmount     Float
+  waterAmount    Float
+  waterUnits     Float?
+  electricAmount Float
+  electricUnits  Float?
+  commonFee      Float     @default(0)
+  parkingFee     Float     @default(0)
+  internetFee    Float     @default(0)
+  otherFee       Float     @default(0)
+  totalAmount    Float
+  status         BillStatus @default(UNPAID)
+  dueDate        DateTime
+  payments       Payment[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+enum BillStatus {
+  UNPAID
+  PARTIAL
+  PAID
+  OVERDUE
+}
+
+model Payment {
+  id           String    @id @default(cuid())
+  billId       String
+  bill         Bill      @relation(fields: [billId], references: [id])
+  amount       Float
+  slipUrl      String?
+  status       PaymentStatus @default(PENDING)
+  verifiedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model MaintenanceRequest {
+  id           String    @id @default(cuid())
+  roomId       String
+  room         Room      @relation(fields: [roomId], references: [id])
+  title        String
+  description  String
+  imageUrl     String?
+  status       MaintenanceStatus @default(PENDING)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+enum MaintenanceStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+model Parcel {
+  id              String       @id @default(cuid())
+  trackingNumber  String?
+  recipientName   String?
+  roomId          String
+  room            Room         @relation(fields: [roomId], references: [id])
+  status          ParcelStatus @default(PENDING)
+  receivedAt      DateTime     @default(now())
+  pickedUpAt      DateTime?
+}
+
+enum ParcelStatus {
+  PENDING
+  PICKED_UP
+}
