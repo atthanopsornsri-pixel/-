@@ -24,21 +24,28 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email,
-          },
-        });
+        console.log("[LOGIN_DEBUG] Attempting login for email:", credentials.email);
+        try {
+          const user = await prisma.user.findUnique({
+            where: {
+              email: credentials.email,
+            },
+          });
 
-        if (!user || !user.password) {
-          return null;
-        }
+          console.log("[LOGIN_DEBUG] User found in DB:", !!user);
 
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+          if (!user || !user.password) {
+            console.log("[LOGIN_DEBUG] Rejecting: User not found or no password");
+            return null;
+          }
 
-        if (!isPasswordValid) {
-          return null;
-        }
+          const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
+          console.log("[LOGIN_DEBUG] Password valid:", isPasswordValid);
+
+          if (!isPasswordValid) {
+            console.log("[LOGIN_DEBUG] Rejecting: Invalid password");
+            return null;
+          }
 
         return {
           id: user.id,
@@ -46,6 +53,10 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           role: user.role,
         };
+        } catch (error) {
+          console.error("[LOGIN_DEBUG] Caught error in authorize:", error);
+          return null;
+        }
       },
     }),
   ],
