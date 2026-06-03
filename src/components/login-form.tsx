@@ -94,7 +94,7 @@ export function LoginForm() {
             </div>
           </div>
           
-          <Button variant="outline" type="button" className="w-full h-12 rounded-xl border-slate-200 hover:bg-slate-50 font-semibold text-slate-700" onClick={() => alert("Line Login coming soon!")}>
+          <Button variant="outline" type="button" className="w-full h-12 rounded-xl border-slate-200 hover:bg-slate-50 font-semibold text-slate-700" onClick={() => signIn("line", { callbackUrl: "/dashboard" })}>
             <svg className="w-5 h-5 mr-2 text-[#00C300]" fill="currentColor" viewBox="0 0 24 24">
               <path d="M24 10.304c0-5.369-5.383-9.738-12-9.738-6.616 0-12 4.369-12 9.738 0 4.814 3.551 8.875 8.358 9.584.327.071.77.218.883.499.102.253.067.643.033.811l-.145.867c-.042.247-.2.98.861.533 1.061-.448 5.722-3.376 7.943-5.863 1.341-1.503 2.067-3.149 2.067-4.992z" />
             </svg>
