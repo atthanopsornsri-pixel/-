@@ -41,16 +41,10 @@ export function LoginForm() {
 
   return (
     <div className="w-full flex flex-col items-center">
-      {/* Decorative Logo inspired by iCloud */}
+      {/* Logo */}
       <div className="mb-8 relative flex items-center justify-center">
-        {/* Colorful dots ring (simulating the iCloud logo dots) */}
-        <div className="absolute w-[120px] h-[120px] rounded-full border-[2px] border-dashed border-indigo-200 animate-spin-slow" style={{ animationDuration: '20s' }}></div>
-        <div className="absolute w-[100px] h-[100px] rounded-full border-[2px] border-dashed border-blue-300 animate-spin-slow" style={{ animationDuration: '15s', animationDirection: 'reverse' }}></div>
-        <div className="absolute w-[80px] h-[80px] rounded-full border-[2px] border-dashed border-pink-200 animate-spin-slow" style={{ animationDuration: '10s' }}></div>
-        
-        {/* Center Logo */}
-        <div className="w-12 h-12 bg-black rounded-xl flex items-center justify-center z-10">
-          <span className="text-white font-extrabold text-2xl">A</span>
+        <div className="w-16 h-16 bg-black rounded-[18px] flex items-center justify-center shadow-md">
+          <span className="text-white font-extrabold text-3xl">A</span>
         </div>
       </div>
 
