@@ -29,7 +29,7 @@ export async function GET(request: Request) {
 
     let content = tenant.room.property.leaseTemplate || "";
 
-    // Replace Placeholders
+    // Replace Placeholders for backwards compatibility
     if (content) {
       content = content.replace(/{{TENANT_NAME}}/g, tenant.user.name || "________________");
       content = content.replace(/{{ROOM_NUMBER}}/g, tenant.room.number);
@@ -38,6 +38,23 @@ export async function GET(request: Request) {
       content = content.replace(/{{LEASE_START}}/g, tenant.leaseStart ? new Intl.DateTimeFormat('th-TH', { dateStyle: 'long' }).format(new Date(tenant.leaseStart)) : "________________");
       content = content.replace(/{{ID_CARD}}/g, tenant.idCardNumber || "________________");
     }
+
+    // Auto-generate standard preamble
+    const preamble = `
+<p style="margin-bottom: 1rem;">
+  สัญญาฉบับนี้ทำขึ้นระหว่าง <strong>${tenant.room.property.name}</strong> (ผู้ให้เช่า) 
+  และ <strong>${tenant.user.name || "________________"}</strong> (ผู้เช่า) ผู้ถือบัตรประชาชนเลขที่ <strong>${tenant.idCardNumber || "________________"}</strong>
+</p>
+<p style="margin-bottom: 1rem;">
+  ตกลงเช่าห้องพักหมายเลข <strong>${tenant.room.number}</strong> 
+  ในอัตราค่าเช่าเดือนละ <strong>${tenant.room.rentPrice.toLocaleString()}</strong> บาท 
+  โดยมีเงินประกันการเช่าจำนวน <strong>${tenant.depositAmount ? tenant.depositAmount.toLocaleString() : "0"}</strong> บาท 
+  โดยสัญญาเริ่มต้นตั้งแต่วันที่ <strong>${tenant.leaseStart ? new Intl.DateTimeFormat('th-TH', { dateStyle: 'long' }).format(new Date(tenant.leaseStart)) : "________________"}</strong> เป็นต้นไป
+</p>
+<hr style="margin: 2rem 0; border: 0; border-top: 1px solid #cbd5e1;" />
+    `;
+
+    content = preamble + content;
 
     return NextResponse.json({
       tenant: {

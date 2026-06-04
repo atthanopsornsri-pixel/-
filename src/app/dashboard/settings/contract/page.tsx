@@ -106,22 +106,10 @@ export default function ContractSettingsPage() {
           </div>
         )}
 
-        <div className="mb-6 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
-          <h3 className="font-semibold text-blue-800 mb-2">ตัวแปรอัตโนมัติ (Placeholders)</h3>
-          <p className="text-sm text-slate-600 mb-2">คุณสามารถคัดลอกข้อความด้านล่างไปวางในสัญญาได้ ระบบจะแทนที่ด้วยข้อมูลจริงของลูกบ้านอัตโนมัติ:</p>
-          <div className="flex flex-wrap gap-2 text-xs font-mono">
-            <span className="bg-white px-2 py-1 rounded border border-blue-200 text-blue-600">{"{{TENANT_NAME}}"}</span>
-            <span className="bg-white px-2 py-1 rounded border border-blue-200 text-blue-600">{"{{ROOM_NUMBER}}"}</span>
-            <span className="bg-white px-2 py-1 rounded border border-blue-200 text-blue-600">{"{{RENT_PRICE}}"}</span>
-            <span className="bg-white px-2 py-1 rounded border border-blue-200 text-blue-600">{"{{DEPOSIT_AMOUNT}}"}</span>
-            <span className="bg-white px-2 py-1 rounded border border-blue-200 text-blue-600">{"{{LEASE_START}}"}</span>
-            <span className="bg-white px-2 py-1 rounded border border-blue-200 text-blue-600">{"{{ID_CARD}}"}</span>
-          </div>
-        </div>
 
         <form onSubmit={handleSave} className="space-y-4">
           <div className="space-y-2">
-            <Label>ข้อความในสัญญาเช่า</Label>
+            <Label>ข้อตกลงและเงื่อนไขเพิ่มเติม (Terms and Conditions)</Label>
             <textarea
               value={template}
               onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setTemplate(e.target.value)}

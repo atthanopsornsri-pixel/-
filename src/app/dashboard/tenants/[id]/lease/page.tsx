@@ -67,9 +67,26 @@ export default function LeasePrintPage() {
     terms = terms.replace(/{{ROOM_NUMBER}}/g, tenant.room?.number || "");
     terms = terms.replace(/{{RENT_PRICE}}/g, tenant.room?.rentPrice?.toString() || "");
     terms = terms.replace(/{{DEPOSIT_AMOUNT}}/g, tenant.depositAmount?.toString() || "0");
-    terms = terms.replace(/{{LEASE_START}}/g, tenant.leaseStart ? new Date(tenant.leaseStart).toLocaleDateString("th-TH") : "________________");
+    terms = terms.replace(/{{LEASE_START}}/g, tenant.leaseStart ? new Date(tenant.leaseStart).toLocaleDateString("th-TH", { dateStyle: 'long' }) : "________________");
     terms = terms.replace(/{{ID_CARD}}/g, tenant.idCardNumber || "________________");
   }
+
+  // Auto-generate standard preamble
+  const preamble = `
+<p style="margin-bottom: 1rem;">
+  สัญญาฉบับนี้ทำขึ้นระหว่าง <strong>${property?.name || "________________"}</strong> (ผู้ให้เช่า) 
+  และ <strong>${tenant.user?.name || "________________"}</strong> (ผู้เช่า) ผู้ถือบัตรประชาชนเลขที่ <strong>${tenant.idCardNumber || "________________"}</strong>
+</p>
+<p style="margin-bottom: 1rem;">
+  ตกลงเช่าห้องพักหมายเลข <strong>${tenant.room?.number || "____"}</strong> 
+  ในอัตราค่าเช่าเดือนละ <strong>${tenant.room?.rentPrice?.toLocaleString() || "________________"}</strong> บาท 
+  โดยมีเงินประกันการเช่าจำนวน <strong>${tenant.depositAmount ? tenant.depositAmount.toLocaleString() : "0"}</strong> บาท 
+  โดยสัญญาเริ่มต้นตั้งแต่วันที่ <strong>${tenant.leaseStart ? new Date(tenant.leaseStart).toLocaleDateString("th-TH", { dateStyle: 'long' }) : "________________"}</strong> เป็นต้นไป
+</p>
+<hr style="margin: 2rem 0; border: 0; border-top: 1px solid #cbd5e1;" />
+  `;
+
+  terms = preamble + terms;
 
   return (
     <div className="min-h-screen bg-slate-100 p-4 md:p-8 flex flex-col items-center print:bg-white print:p-0 relative">
