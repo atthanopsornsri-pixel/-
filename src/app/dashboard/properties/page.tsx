@@ -6,6 +6,41 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 
+// Utility to compress image natively
+const compressImage = (file: File, maxWidth = 1000): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // Compress to JPEG with 0.7 quality
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+        resolve(dataUrl);
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+};
+
 export default function PropertiesPage() {
   const router = useRouter();
   const [properties, setProperties] = useState<any[]>([]);
@@ -30,35 +65,32 @@ export default function PropertiesPage() {
     e.preventDefault();
     setIsUploading(true);
 
-    let imageUrl = "";
+    try {
+      let imageUrl = "";
 
-    if (imageFile) {
-      const formData = new FormData();
-      formData.append("file", imageFile);
+      if (imageFile) {
+        imageUrl = await compressImage(imageFile);
+      }
 
-      const uploadRes = await fetch("/api/upload", {
+      const res = await fetch("/api/properties", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, address, imageUrl }),
       });
 
-      if (uploadRes.ok) {
-        const uploadData = await uploadRes.json();
-        imageUrl = uploadData.url;
+      if (res.ok) {
+        setName("");
+        setAddress("");
+        setImageFile(null);
+        (document.getElementById("image") as HTMLInputElement).value = "";
+        fetchProperties();
+        router.refresh();
+      } else {
+        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
       }
-    }
-
-    const res = await fetch("/api/properties", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, address, imageUrl }),
-    });
-
-    if (res.ok) {
-      setName("");
-      setAddress("");
-      setImageFile(null);
-      fetchProperties();
-      router.refresh();
+    } catch (err) {
+      console.error(err);
+      alert("เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ");
     }
     
     setIsUploading(false);

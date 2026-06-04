@@ -10,7 +10,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { propertyId, number, floor, rentPrice, imageUrl } = await req.json();
+    const { propertyId, number, floor, rentPrice, imageMain, imageBathroom, imageBalcony, imageFacility } = await req.json();
 
     if (!propertyId || !number || rentPrice === undefined) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
@@ -33,7 +33,10 @@ export async function POST(req: Request) {
         number,
         floor,
         rentPrice: parseFloat(rentPrice),
-        imageUrl,
+        imageMain,
+        imageBathroom,
+        imageBalcony,
+        imageFacility,
         propertyId,
         inviteCode,
       },

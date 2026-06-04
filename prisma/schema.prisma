@@ -52,9 +52,12 @@ model Room {
   id          String   @id @default(cuid())
   number      String
   floor       String?
-  rentPrice   Float
-  imageUrl    String?  // ภาพถ่ายภายในห้อง
-  inviteCode  String?  @unique // รหัสสำหรับให้ลูกบ้านใช้สมัครสมาชิกเข้าห้องนี้
+  rentPrice     Float
+  imageMain     String?  // ภาพรวมห้องนอน/ห้องนั่งเล่น
+  imageBathroom String?  // ภาพห้องน้ำ
+  imageBalcony  String?  // ภาพระเบียง/วิว
+  imageFacility String?  // ภาพสิ่งอำนวยความสะดวก
+  inviteCode    String?  @unique // รหัสสำหรับให้ลูกบ้านใช้สมัครสมาชิกเข้าห้องนี้
   propertyId  String
   property    Property @relation(fields: [propertyId], references: [id])
   tenants     Tenant[]

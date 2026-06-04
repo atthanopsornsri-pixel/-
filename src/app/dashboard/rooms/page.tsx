@@ -6,6 +6,41 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSearchParams } from "next/navigation";
 
+// Utility to compress image natively
+const compressImage = (file: File, maxWidth = 1000): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // Compress to JPEG with 0.7 quality
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+        resolve(dataUrl);
+      };
+      img.onerror = (err) => reject(err);
+    };
+    reader.onerror = (err) => reject(err);
+  });
+};
+
 export default function RoomsPage() {
   const searchParams = useSearchParams();
   const propertyIdParam = searchParams.get("propertyId");
@@ -17,7 +52,13 @@ export default function RoomsPage() {
   const [number, setNumber] = useState("");
   const [floor, setFloor] = useState("");
   const [rentPrice, setRentPrice] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  
+  // Specific image fields
+  const [fileMain, setFileMain] = useState<File | null>(null);
+  const [fileBathroom, setFileBathroom] = useState<File | null>(null);
+  const [fileBalcony, setFileBalcony] = useState<File | null>(null);
+  const [fileFacility, setFileFacility] = useState<File | null>(null);
+
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
@@ -59,34 +100,54 @@ export default function RoomsPage() {
     if (!propertyId) return alert("กรุณาเลือกหอพักก่อนเพิ่มห้อง");
     setIsUploading(true);
 
-    let imageUrl = "";
-    if (imageFile) {
-      const formData = new FormData();
-      formData.append("file", imageFile);
+    try {
+      let imageMain = "";
+      let imageBathroom = "";
+      let imageBalcony = "";
+      let imageFacility = "";
 
-      const uploadRes = await fetch("/api/upload", {
+      if (fileMain) imageMain = await compressImage(fileMain);
+      if (fileBathroom) imageBathroom = await compressImage(fileBathroom);
+      if (fileBalcony) imageBalcony = await compressImage(fileBalcony);
+      if (fileFacility) imageFacility = await compressImage(fileFacility);
+
+      const res = await fetch("/api/rooms", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          propertyId, 
+          number, 
+          floor, 
+          rentPrice,
+          imageMain,
+          imageBathroom,
+          imageBalcony,
+          imageFacility
+        }),
       });
 
-      if (uploadRes.ok) {
-        const uploadData = await uploadRes.json();
-        imageUrl = uploadData.url;
+      if (res.ok) {
+        setNumber("");
+        setFloor("");
+        setRentPrice("");
+        setFileMain(null);
+        setFileBathroom(null);
+        setFileBalcony(null);
+        setFileFacility(null);
+        
+        // Reset file inputs manually
+        (document.getElementById("imageMain") as HTMLInputElement).value = "";
+        (document.getElementById("imageBathroom") as HTMLInputElement).value = "";
+        (document.getElementById("imageBalcony") as HTMLInputElement).value = "";
+        (document.getElementById("imageFacility") as HTMLInputElement).value = "";
+
+        fetchRooms(propertyId);
+      } else {
+        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
       }
-    }
-
-    const res = await fetch("/api/rooms", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ propertyId, number, floor, rentPrice, imageUrl }),
-    });
-
-    if (res.ok) {
-      setNumber("");
-      setFloor("");
-      setRentPrice("");
-      setImageFile(null);
-      fetchRooms(propertyId);
+    } catch (err) {
+      console.error(err);
+      alert("เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ");
     }
     
     setIsUploading(false);
@@ -171,24 +232,37 @@ export default function RoomsPage() {
                   placeholder="เช่น 4500"
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="image" className="text-slate-600 font-medium ml-1">ภาพถ่ายห้อง (อัปโหลด)</Label>
-                <div className="relative">
-                  <Input 
-                    id="image" 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={(e) => setImageFile(e.target.files?.[0] || null)} 
-                    className="rounded-2xl h-12 bg-slate-50 border-slate-200 focus:bg-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
-                  />
+
+              <div className="pt-4 border-t border-slate-100">
+                <h3 className="font-semibold text-slate-800 mb-4">รูปภาพบังคับ (4 มุม)</h3>
+                
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="imageMain" className="text-xs text-slate-500 font-medium ml-1">1. ภาพรวมห้อง</Label>
+                    <Input id="imageMain" type="file" accept="image/*" onChange={(e) => setFileMain(e.target.files?.[0] || null)} className="text-xs rounded-xl h-9 bg-slate-50 border-slate-200 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-emerald-50 file:text-emerald-700 px-2 cursor-pointer" required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="imageBathroom" className="text-xs text-slate-500 font-medium ml-1">2. ภาพห้องน้ำ</Label>
+                    <Input id="imageBathroom" type="file" accept="image/*" onChange={(e) => setFileBathroom(e.target.files?.[0] || null)} className="text-xs rounded-xl h-9 bg-slate-50 border-slate-200 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-blue-50 file:text-blue-700 px-2 cursor-pointer" required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="imageBalcony" className="text-xs text-slate-500 font-medium ml-1">3. ภาพระเบียง/วิว</Label>
+                    <Input id="imageBalcony" type="file" accept="image/*" onChange={(e) => setFileBalcony(e.target.files?.[0] || null)} className="text-xs rounded-xl h-9 bg-slate-50 border-slate-200 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-amber-50 file:text-amber-700 px-2 cursor-pointer" required />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="imageFacility" className="text-xs text-slate-500 font-medium ml-1">4. สิ่งอำนวยความสะดวก</Label>
+                    <Input id="imageFacility" type="file" accept="image/*" onChange={(e) => setFileFacility(e.target.files?.[0] || null)} className="text-xs rounded-xl h-9 bg-slate-50 border-slate-200 file:mr-2 file:py-1 file:px-2 file:rounded-lg file:border-0 file:text-[10px] file:font-semibold file:bg-purple-50 file:text-purple-700 px-2 cursor-pointer" required />
+                  </div>
                 </div>
+                <p className="text-[10px] text-slate-400 mt-3 text-center">* ระบบจะทำการย่อขนาดภาพอัตโนมัติเพื่อประหยัดพื้นที่เซิร์ฟเวอร์</p>
               </div>
+
               <Button 
                 type="submit" 
                 className="w-full rounded-full h-12 bg-[#34C759] hover:bg-[#2DB34D] text-white font-semibold shadow-md mt-4 transition-all hover:-translate-y-0.5" 
                 disabled={isUploading || properties.length === 0}
               >
-                {isUploading ? "กำลังบันทึก..." : "เพิ่มห้องพัก"}
+                {isUploading ? "กำลังบีบอัดและบันทึกรูปภาพ..." : "เพิ่มห้องพัก"}
               </Button>
             </form>
           </div>
@@ -199,10 +273,10 @@ export default function RoomsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {rooms.map((room) => (
               <div key={room.id} className="bg-white rounded-[32px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 group transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 flex flex-col">
-                {room.imageUrl ? (
+                {room.imageMain ? (
                   <div className="h-40 w-full bg-slate-200 relative overflow-hidden shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={room.imageUrl} alt={`Room ${room.number}`} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
+                    <img src={room.imageMain} alt={`Room ${room.number}`} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
                   </div>
                 ) : (
                   <div className="h-3 w-full bg-[#007AFF]"></div>
@@ -219,6 +293,16 @@ export default function RoomsPage() {
                       room.status === "OCCUPIED" ? "bg-[#E8F2FF] text-[#007AFF] border border-[#007AFF]/20" : "bg-red-50 text-red-600 border border-red-200"
                     }`}>
                       {room.status === "AVAILABLE" ? "ห้องว่าง" : room.status === "OCCUPIED" ? "มีผู้เช่า" : "ปรับปรุง"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 mb-4">
+                    <div className={`w-2 h-2 rounded-full ${room.imageMain ? "bg-emerald-400" : "bg-slate-200"}`}></div>
+                    <div className={`w-2 h-2 rounded-full ${room.imageBathroom ? "bg-emerald-400" : "bg-slate-200"}`}></div>
+                    <div className={`w-2 h-2 rounded-full ${room.imageBalcony ? "bg-emerald-400" : "bg-slate-200"}`}></div>
+                    <div className={`w-2 h-2 rounded-full ${room.imageFacility ? "bg-emerald-400" : "bg-slate-200"}`}></div>
+                    <span className="text-[10px] text-slate-400 ml-1">
+                      {[room.imageMain, room.imageBathroom, room.imageBalcony, room.imageFacility].filter(Boolean).length}/4 ภาพ
                     </span>
                   </div>
 
