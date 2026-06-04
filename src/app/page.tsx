@@ -94,7 +94,7 @@ export default async function Home() {
               ระบบจัดการหอพักยุคใหม่ อัปเดตฟีเจอร์ล่าสุด ปี 2026
             </div>
             
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight leading-[1.2] mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700 [word-break:keep-all]">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight leading-[1.2] mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700 break-words">
               {headline.includes("ง่าย จบ ครบ ในที่เดียว") ? (
                 <>
                   บริหารจัดการหอพักและ<wbr />อพาร์ตเม้นท์ <br className="hidden md:block"/>
