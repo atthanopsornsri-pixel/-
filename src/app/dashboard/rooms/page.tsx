@@ -61,6 +61,14 @@ export default function RoomsPage() {
 
   const [isUploading, setIsUploading] = useState(false);
 
+  // Edit states
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingRoom, setEditingRoom] = useState<any>(null);
+  const [editNumber, setEditNumber] = useState("");
+  const [editFloor, setEditFloor] = useState("");
+  const [editRentPrice, setEditRentPrice] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+
   useEffect(() => {
     fetchProperties();
     fetchRooms(propertyIdParam || undefined);
@@ -151,6 +159,44 @@ export default function RoomsPage() {
     }
     
     setIsUploading(false);
+  };
+
+  const openEditModal = (room: any) => {
+    setEditingRoom(room);
+    setEditNumber(room.number);
+    setEditFloor(room.floor || "");
+    setEditRentPrice(room.rentPrice.toString());
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRoom) return;
+
+    setIsEditing(true);
+    try {
+      const res = await fetch(`/api/rooms/${editingRoom.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          number: editNumber,
+          floor: editFloor,
+          rentPrice: editRentPrice
+        }),
+      });
+
+      if (res.ok) {
+        setIsEditModalOpen(false);
+        fetchRooms(propertyId);
+      } else {
+        alert("เกิดข้อผิดพลาดในการแก้ไขข้อมูล");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+    } finally {
+      setIsEditing(false);
+    }
   };
 
   return (
@@ -318,7 +364,7 @@ export default function RoomsPage() {
                   </div>
                   
                   <div className="mt-auto flex gap-3">
-                    <Button variant="outline" className="flex-1 rounded-full border-slate-200 text-slate-600 hover:bg-slate-50 h-11 font-semibold">
+                    <Button variant="outline" className="flex-1 rounded-full border-slate-200 text-slate-600 hover:bg-slate-50 h-11 font-semibold" onClick={() => openEditModal(room)}>
                       แก้ไข
                     </Button>
                     {room.status === "AVAILABLE" && (
@@ -343,6 +389,45 @@ export default function RoomsPage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h2 className="text-xl font-bold text-slate-800">แก้ไขห้องพัก</h2>
+              <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-200 transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            <form onSubmit={handleEditSubmit} className="p-6 space-y-4">
+              <div className="space-y-2">
+                <Label>หมายเลขห้อง</Label>
+                <Input value={editNumber} onChange={e => setEditNumber(e.target.value)} required className="rounded-xl h-11" />
+              </div>
+              <div className="space-y-2">
+                <Label>ชั้น (ไม่บังคับ)</Label>
+                <Input value={editFloor} onChange={e => setEditFloor(e.target.value)} className="rounded-xl h-11" />
+              </div>
+              <div className="space-y-2">
+                <Label>ค่าเช่าพื้นฐาน (บาท/เดือน)</Label>
+                <Input type="number" value={editRentPrice} onChange={e => setEditRentPrice(e.target.value)} required className="rounded-xl h-11" />
+              </div>
+              
+              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
+                <Button type="button" variant="ghost" onClick={() => setIsEditModalOpen(false)} className="rounded-xl h-11 font-semibold text-slate-600 hover:bg-slate-100">
+                  ยกเลิก
+                </Button>
+                <Button type="submit" disabled={isEditing} className="rounded-xl h-11 bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 shadow-sm">
+                  {isEditing ? "กำลังบันทึก..." : "บันทึกการแก้ไข"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
