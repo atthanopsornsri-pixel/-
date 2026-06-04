@@ -115,6 +115,8 @@ model Bill {
   totalAmount    Float
   status         BillStatus @default(UNPAID)
   dueDate        DateTime
+  slipUrl        String?    // ลิงก์/รูปสลิปโอนเงิน
+  paymentDate    DateTime?  // วันที่ผู้เช่าส่งสลิป
   payments       Payment[]
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
@@ -122,7 +124,7 @@ model Bill {
 
 enum BillStatus {
   UNPAID
-  PARTIAL
+  PENDING   // รอตรวจสอบสลิป
   PAID
   OVERDUE
 }

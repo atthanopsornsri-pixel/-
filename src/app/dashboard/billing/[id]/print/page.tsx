@@ -148,35 +148,45 @@ export default function BillPrintPage() {
 
           {/* Totals & Payment Info */}
           <div className="flex justify-between items-start mt-4">
-            {/* QR Code Section */}
-            <div className="w-1/2 pr-8">
-              {qrPayload ? (
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center gap-4">
-                  <div className="bg-white p-2 rounded-lg border border-slate-200 shadow-sm shrink-0">
-                    <QRCodeSVG value={qrPayload} size={80} level="M" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-[#003399] mb-1">สแกนจ่ายผ่าน Thai QR Payment</p>
-                    <p className="text-xs text-slate-600 mb-0.5">พร้อมเพย์: <span className="font-semibold text-slate-800">{prop.promptPayNo}</span></p>
-                    <p className="text-xs text-slate-600">ชื่อบัญชี: <span className="font-semibold text-slate-800">{prop.promptPayName || "-"}</span></p>
-                  </div>
+            {/* Payment & Upload Info */}
+            <div className="w-[60%] flex gap-4">
+              {/* QR 1: PromptPay */}
+              <div className="flex-1 bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col items-center text-center">
+                <p className="text-[10px] font-bold text-[#003399] mb-2">1. สแกนจ่ายผ่าน Thai QR</p>
+                {qrPayload ? (
+                  <>
+                    <div className="bg-white p-1.5 rounded-lg border border-slate-200 shadow-sm mb-2">
+                      <QRCodeSVG value={qrPayload} size={64} level="M" />
+                    </div>
+                    <p className="text-[9px] text-slate-600 truncate w-full px-1">{prop.promptPayName || prop.promptPayNo}</p>
+                  </>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-[9px] text-slate-400">ยังไม่ตั้งค่าพร้อมเพย์</div>
+                )}
+              </div>
+
+              {/* QR 2: Upload Slip URL */}
+              <div className="flex-1 bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col items-center text-center">
+                <p className="text-[10px] font-bold text-slate-700 mb-2">2. สแกนเพื่อส่งสลิปโอนเงิน</p>
+                <div className="bg-white p-1.5 rounded-lg border border-slate-200 shadow-sm mb-2">
+                  <QRCodeSVG 
+                    value={typeof window !== "undefined" ? `${window.location.origin}/pay/${bill.id}` : `https://apartmentos.com/pay/${bill.id}`} 
+                    size={64} 
+                    level="L" 
+                  />
                 </div>
-              ) : (
-                <div className="bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300 text-center h-full flex flex-col justify-center">
-                  <p className="text-xs text-slate-500">กรุณาตั้งค่าเบอร์พร้อมเพย์ในหน้าจัดการหอพัก</p>
-                  <p className="text-[10px] text-slate-400 mt-1">เพื่อเปิดใช้งาน QR Code รับชำระเงินอัตโนมัติ</p>
-                </div>
-              )}
+                <p className="text-[9px] text-slate-600">สแกนด้วยกล้องมือถือ</p>
+              </div>
             </div>
 
             {/* Totals */}
-            <div className="w-1/2">
+            <div className="w-[35%]">
               <div className="flex justify-between py-1 px-3">
-                <span className="text-slate-600 text-sm">รวมเป็นเงิน (Sub Total)</span>
+                <span className="text-slate-600 text-sm">รวมเป็นเงิน</span>
                 <span className="font-bold text-slate-800 text-sm">฿{bill.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
               </div>
               <div className="flex justify-between py-2 px-3 bg-[#E8F2FF] border border-[#007AFF]/20 rounded-lg mt-2">
-                <span className="font-bold text-[#007AFF]">ยอดสุทธิ (Grand Total)</span>
+                <span className="font-bold text-[#007AFF]">ยอดสุทธิ</span>
                 <span className="font-bold text-lg text-[#007AFF]">฿{bill.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
               </div>
             </div>

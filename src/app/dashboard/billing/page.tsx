@@ -29,6 +29,7 @@ export default function BillingPage() {
   const [otherFee, setOtherFee] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedSlip, setSelectedSlip] = useState<any>(null);
 
   useEffect(() => {
     fetchProperties();
@@ -105,6 +106,24 @@ export default function BillingPage() {
     }
     
     setIsLoading(false);
+  };
+
+  const handleApproveSlip = async (billId: string) => {
+    try {
+      const res = await fetch(`/api/bills/${billId}/approve`, {
+        method: "PATCH",
+      });
+      if (res.ok) {
+        alert("อนุมัติบิลสำเร็จ! สถานะเปลี่ยนเป็นชำระแล้ว");
+        setSelectedSlip(null);
+        fetchBills();
+      } else {
+        alert("เกิดข้อผิดพลาดในการอนุมัติ");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+    }
   };
 
   return (
@@ -227,7 +246,6 @@ export default function BillingPage() {
                       <th className="px-4 py-3">รอบบิล</th>
                       <th className="px-4 py-3">ยอดรวม (บาท)</th>
                       <th className="px-4 py-3">สถานะ</th>
-                      <th className="px-4 py-3">กำหนดชำระ</th>
                       <th className="px-4 py-3 text-right">จัดการ</th>
                     </tr>
                   </thead>
@@ -243,15 +261,18 @@ export default function BillingPage() {
                         <td className="px-4 py-3">
                           <span className={`px-2 py-1 rounded text-xs font-semibold ${
                             bill.status === "PAID" ? "bg-green-100 text-green-700" :
+                            bill.status === "PENDING" ? "bg-orange-100 text-orange-700 animate-pulse" :
                             bill.status === "UNPAID" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"
                           }`}>
-                            {bill.status}
+                            {bill.status === "PENDING" ? "รอตรวจสอบ" : bill.status}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-slate-500">
-                          {new Date(bill.dueDate).toLocaleDateString("th-TH")}
-                        </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-3 text-right space-x-2">
+                          {bill.status === "PENDING" && (
+                            <Button variant="default" size="sm" className="bg-orange-500 hover:bg-orange-600 text-white" onClick={() => setSelectedSlip(bill)}>
+                              ตรวจสอบสลิป
+                            </Button>
+                          )}
                           <Button variant="outline" size="sm" onClick={() => window.open(`/dashboard/billing/${bill.id}/print`, '_blank')}>
                             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                             พิมพ์
@@ -261,7 +282,7 @@ export default function BillingPage() {
                     ))}
                     {bills.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="px-4 py-8 text-center text-slate-500">
+                        <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
                           ยังไม่มีข้อมูลบิลในระบบ
                         </td>
                       </tr>
@@ -273,6 +294,53 @@ export default function BillingPage() {
           </Card>
         </div>
       </div>
+
+      {/* Verify Slip Modal */}
+      {selectedSlip && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h3 className="font-bold text-[#1D1D1F]">ตรวจสอบหลักฐานการโอนเงิน</h3>
+              <button onClick={() => setSelectedSlip(null)} className="p-2 bg-white rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shadow-sm border border-slate-200">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            <div className="p-4 flex-1 overflow-auto bg-slate-100/50 flex flex-col items-center">
+              <div className="w-full bg-white p-4 rounded-2xl shadow-sm border border-slate-100 mb-4">
+                <div className="flex justify-between items-center text-sm mb-2">
+                  <span className="text-slate-500">ห้องพัก:</span>
+                  <span className="font-bold text-slate-800">{selectedSlip.room.number}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm mb-2">
+                  <span className="text-slate-500">ยอดที่ต้องชำระ:</span>
+                  <span className="font-bold text-blue-600">฿{selectedSlip.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-slate-500">เวลาที่ส่งสลิป:</span>
+                  <span className="text-slate-700">{selectedSlip.paymentDate ? new Date(selectedSlip.paymentDate).toLocaleString("th-TH") : "-"}</span>
+                </div>
+              </div>
+
+              {selectedSlip.slipUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={selectedSlip.slipUrl} alt="Payment Slip" className="w-full max-w-[300px] object-contain rounded-xl shadow-md border border-slate-200" />
+              ) : (
+                <div className="p-8 text-slate-400 text-center">ไม่มีรูปภาพสลิป</div>
+              )}
+            </div>
+
+            <div className="p-4 bg-white border-t border-slate-100 flex gap-3">
+              <Button variant="outline" className="flex-1 rounded-full border-slate-200 h-12" onClick={() => setSelectedSlip(null)}>
+                ปิด
+              </Button>
+              <Button className="flex-1 rounded-full bg-green-600 hover:bg-green-700 text-white font-bold h-12 shadow-sm" onClick={() => handleApproveSlip(selectedSlip.id)}>
+                อนุมัติรับเงิน
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
