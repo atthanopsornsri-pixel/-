@@ -47,6 +47,7 @@ model Property {
   companyName   String?  // ชื่อบริษัท/ชื่อจดทะเบียน
   promptPayNo   String?  // เบอร์พร้อมเพย์
   promptPayName String?  // ชื่อบัญชีพร้อมเพย์
+  signatureUrl  String?  // ลายเซ็นผู้รับเงิน (Base64 หรือ URL)
 
   // Utility Rates & Default Fees
   electricRate      Float?  // ค่าไฟต่อหน่วย

@@ -52,6 +52,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         companyName: body.companyName !== undefined ? body.companyName : property.companyName,
         promptPayNo: body.promptPayNo !== undefined ? body.promptPayNo : property.promptPayNo,
         promptPayName: body.promptPayName !== undefined ? body.promptPayName : property.promptPayName,
+        signatureUrl: body.signatureUrl !== undefined ? body.signatureUrl : property.signatureUrl,
         electricRate: body.electricRate !== undefined ? body.electricRate : property.electricRate,
         waterRate: body.waterRate !== undefined ? body.waterRate : property.waterRate,
         defaultCommonFee: body.defaultCommonFee !== undefined ? body.defaultCommonFee : property.defaultCommonFee,

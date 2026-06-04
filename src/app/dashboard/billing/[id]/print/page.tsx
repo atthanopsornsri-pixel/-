@@ -205,7 +205,12 @@ export default function BillPrintPage() {
         {/* Signatures */}
         <div className="grid grid-cols-2 gap-12 text-center mt-auto pt-6 border-t border-slate-200">
           <div>
-            <div className="border-b border-slate-400 w-40 mx-auto mb-2 h-10"></div>
+            <div className="border-b border-slate-400 w-40 mx-auto mb-2 h-10 relative flex items-end justify-center">
+              {prop.signatureUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={prop.signatureUrl} alt="Signature" className="h-12 object-contain mix-blend-multiply absolute bottom-0" />
+              )}
+            </div>
             <p className="text-slate-800 text-sm font-bold">ผู้ออกเอกสาร / ผู้รับเงิน</p>
             <p className="text-xs text-slate-500 mt-1">วันที่ (Date) ____/____/____</p>
           </div>

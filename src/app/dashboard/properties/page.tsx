@@ -55,6 +55,7 @@ export default function PropertiesPage() {
   const [companyName, setCompanyName] = useState("");
   const [promptPayNo, setPromptPayNo] = useState("");
   const [promptPayName, setPromptPayName] = useState("");
+  const [signatureUrl, setSignatureUrl] = useState("");
   
   // Rate Settings
   const [electricRate, setElectricRate] = useState("");
@@ -74,6 +75,18 @@ export default function PropertiesPage() {
     if (res.ok) {
       const data = await res.json();
       setProperties(data);
+    }
+  };
+
+  const handleSignatureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      try {
+        const compressed = await compressImage(file, 400); // Smaller width for signature
+        setSignatureUrl(compressed);
+      } catch (err) {
+        console.error("Failed to compress signature", err);
+      }
     }
   };
 
@@ -116,6 +129,7 @@ export default function PropertiesPage() {
     setCompanyName(prop.companyName || "");
     setPromptPayNo(prop.promptPayNo || "");
     setPromptPayName(prop.promptPayName || "");
+    setSignatureUrl(prop.signatureUrl || "");
     
     setElectricRate(prop.electricRate?.toString() || "");
     setWaterRate(prop.waterRate?.toString() || "");
@@ -134,7 +148,7 @@ export default function PropertiesPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          taxId, companyName, promptPayNo, promptPayName,
+          taxId, companyName, promptPayNo, promptPayName, signatureUrl,
           electricRate: electricRate ? parseFloat(electricRate) : null,
           waterRate: waterRate ? parseFloat(waterRate) : null,
           defaultCommonFee: defaultCommonFee ? parseFloat(defaultCommonFee) : null,
@@ -318,6 +332,28 @@ export default function PropertiesPage() {
                   <div className="space-y-2">
                     <Label className="text-slate-600 font-medium ml-1">ชื่อบัญชีรับเงิน</Label>
                     <Input value={promptPayName} onChange={(e) => setPromptPayName(e.target.value)} className="rounded-2xl h-12 bg-slate-50 border-slate-200" placeholder="เช่น นาย สมชาย รักดี" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2.5: Signature */}
+              <div>
+                <h4 className="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">ลายเซ็นบนใบแจ้งหนี้ (ผู้ออกบิล)</h4>
+                <div className="flex gap-4 items-center bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  {signatureUrl ? (
+                    <div className="flex flex-col items-center gap-2">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={signatureUrl} alt="Signature Preview" className="h-16 object-contain mix-blend-multiply" />
+                      <Button type="button" variant="ghost" size="sm" onClick={() => setSignatureUrl("")} className="text-red-500 h-8">ลบลายเซ็น</Button>
+                    </div>
+                  ) : (
+                    <div className="text-center w-32 h-16 border-2 border-dashed border-slate-300 rounded flex items-center justify-center text-xs text-slate-400 shrink-0">
+                      ไม่มีลายเซ็น
+                    </div>
+                  )}
+                  <div className="flex-1 space-y-2">
+                    <Label className="text-slate-600 font-medium text-sm">อัปโหลดรูปลายเซ็น (พื้นหลังใส หรือขาว)</Label>
+                    <Input type="file" accept="image/*" onChange={handleSignatureChange} className="rounded-xl h-10 bg-white border-slate-200 text-sm" />
                   </div>
                 </div>
               </div>
