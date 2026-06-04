@@ -58,6 +58,7 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const propertyId = searchParams.get("propertyId");
+    const status = searchParams.get("status");
 
     let whereClause: any = {
       property: { ownerId: session.user.id },
@@ -65,6 +66,10 @@ export async function GET(req: Request) {
 
     if (propertyId) {
       whereClause.propertyId = propertyId;
+    }
+    
+    if (status) {
+      whereClause.status = status;
     }
 
     const rooms = await prisma.room.findMany({

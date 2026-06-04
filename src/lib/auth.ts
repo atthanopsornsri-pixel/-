@@ -20,7 +20,7 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { label: "Email", type: "email" },
+        email: { label: "Email/Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
@@ -28,11 +28,15 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        console.log("[LOGIN_DEBUG] Attempting login for email:", credentials.email);
+        console.log("[LOGIN_DEBUG] Attempting login for identifier:", credentials.email);
         try {
-          const user = await prisma.user.findUnique({
+          // Find user by either email or username
+          const user = await prisma.user.findFirst({
             where: {
-              email: credentials.email,
+              OR: [
+                { email: credentials.email },
+                { username: credentials.email }
+              ]
             },
           });
 

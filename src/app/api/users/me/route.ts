@@ -24,11 +24,19 @@ export async function PATCH(req: Request) {
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-    const { lineToken } = await req.json();
+    const { lineToken, password } = await req.json();
+
+    const dataToUpdate: any = {};
+    if (lineToken !== undefined) dataToUpdate.lineToken = lineToken;
+    if (password) {
+      const bcrypt = require("bcryptjs");
+      dataToUpdate.password = await bcrypt.hash(password, 10);
+      dataToUpdate.unencryptedPassword = password;
+    }
 
     const user = await prisma.user.update({
       where: { id: session.user.id },
-      data: { lineToken }
+      data: dataToUpdate
     });
 
     return NextResponse.json({ message: "Success" });
