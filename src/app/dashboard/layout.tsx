@@ -16,9 +16,9 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex font-sans">
+    <div className="min-h-screen bg-[#F5F5F7] flex font-sans text-[#1D1D1F]">
       {/* Sidebar - Light Pastel Design */}
-      <aside className="w-72 bg-white text-slate-700 hidden md:flex flex-col border-r border-slate-200/60 relative z-20">
+      <aside className="w-72 bg-[#F5F5F7] text-[#1D1D1F] hidden md:flex flex-col border-r border-slate-200/40 relative z-20">
         <div className="p-8 pb-4">
           <div className="flex items-center gap-3 mb-2">
             <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 shadow-sm border border-blue-200">
@@ -125,7 +125,7 @@ export default async function DashboardLayout({
       <div className="flex-1 flex flex-col relative min-h-screen">
         
         {/* Top Header - White minimal */}
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200/60 flex items-center justify-between px-8 sticky top-0 z-10">
+        <header className="h-20 bg-[#F5F5F7]/80 backdrop-blur-xl border-b border-slate-200/40 flex items-center justify-between px-8 sticky top-0 z-10">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200 text-slate-500 font-bold">
               {session.user.name?.charAt(0) || session.user.email?.charAt(0) || "U"}

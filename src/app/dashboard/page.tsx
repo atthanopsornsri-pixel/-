@@ -32,7 +32,7 @@ export default async function DashboardPage() {
           {/* Summary Metric Cards with Light Pastel Colors and Hover Animations */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             
-            <div className="bg-blue-50/80 border border-blue-100 p-6 rounded-3xl text-blue-900 relative overflow-hidden group transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:shadow-blue-200/50">
+            <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden group transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-500 text-blue-600">
                 <svg className="w-24 h-24 -mt-4 -mr-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
               </div>
@@ -44,7 +44,7 @@ export default async function DashboardPage() {
               <p className="text-blue-600/80 text-xs mt-2 font-medium relative z-10">สถานที่ทั้งหมดในระบบ</p>
             </div>
 
-            <div className="bg-emerald-50/80 border border-emerald-100 p-6 rounded-3xl text-emerald-900 relative overflow-hidden group transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:shadow-emerald-200/50">
+            <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden group transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-500 text-emerald-600">
                 <svg className="w-24 h-24 -mt-4 -mr-4" fill="currentColor" viewBox="0 0 20 20"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" /></svg>
               </div>
@@ -56,7 +56,7 @@ export default async function DashboardPage() {
               <p className="text-emerald-600/80 text-xs mt-2 font-medium relative z-10">จากทั้งหมด 60 ห้อง</p>
             </div>
 
-            <div className="bg-amber-50/80 border border-amber-100 p-6 rounded-3xl text-amber-900 relative overflow-hidden group transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:shadow-amber-200/50">
+            <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden group transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 group-hover:-rotate-12 transition-transform duration-500 text-amber-600">
                 <svg className="w-24 h-24 -mt-4 -mr-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
               </div>
@@ -68,7 +68,7 @@ export default async function DashboardPage() {
               <p className="text-amber-600/80 text-xs mt-2 font-medium relative z-10">รอตรวจสอบยอด</p>
             </div>
 
-            <div className="bg-rose-50/80 border border-rose-100 p-6 rounded-3xl text-rose-900 relative overflow-hidden group transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:shadow-rose-200/50">
+            <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden group transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-500 text-rose-600">
                 <svg className="w-24 h-24 -mt-4 -mr-4" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" /></svg>
               </div>
@@ -84,8 +84,8 @@ export default async function DashboardPage() {
 
           {/* Quick Actions Panel */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
-              <div className="w-10 h-10 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center mb-4">
+            <div className="bg-white p-8 rounded-[32px] shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100">
+              <div className="w-12 h-12 bg-[#E8F2FF] text-[#007AFF] rounded-2xl flex items-center justify-center mb-6">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
               </div>
               <h2 className="text-lg font-bold text-slate-800 mb-2">เริ่มต้นการตั้งค่าระบบ</h2>
@@ -102,8 +102,8 @@ export default async function DashboardPage() {
               </div>
             </div>
 
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
-              <div className="w-10 h-10 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center mb-4">
+            <div className="bg-white p-8 rounded-[32px] shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100">
+              <div className="w-12 h-12 bg-[#E8F8F5] text-[#34C759] rounded-2xl flex items-center justify-center mb-6">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
               </div>
               <h2 className="text-lg font-bold text-slate-800 mb-2">การเรียกเก็บเงินอัตโนมัติ</h2>
