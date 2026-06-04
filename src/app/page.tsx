@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { prisma } from "@/lib/prisma";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export default async function Home() {
   const settings = await prisma.systemSettings.findFirst();
@@ -11,6 +13,8 @@ export default async function Home() {
   const headline = settings?.heroHeadline || "บริหารจัดการหอพักและอพาร์ตเม้นท์";
   const subheadline = settings?.heroSubheadline || "หมดปัญหากระดาษกองโต! เปลี่ยนหอพักของคุณให้เป็นระบบดิจิทัล 100% ออกบิลอัตโนมัติ แจ้งเตือนผ่าน LINE รับชำระเงินด้วย QR Code";
   const heroImage = settings?.heroImageUrl || "/images/hero-mockup.png";
+
+  const session = await getServerSession(authOptions);
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans overflow-x-hidden selection:bg-blue-100 selection:text-blue-900">
@@ -33,33 +37,43 @@ export default async function Home() {
             <Link href="#contact" className="hover:text-blue-600 transition-colors">ติดต่อเรา</Link>
           </nav>
           <div className="flex items-center gap-2 sm:gap-4">
-            <div className="hidden lg:flex items-center gap-2">
-              <Link href="/login?role=tenant">
-                <Button variant="ghost" className="text-slate-600 hover:text-blue-600 font-semibold px-3 hover:bg-blue-50 rounded-full text-sm">
-                  เข้าสู่ระบบผู้เช่า
+            {session ? (
+              <Link href="/dashboard">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 sm:px-6 whitespace-nowrap text-sm sm:text-base shadow-md hover:shadow-xl hover:shadow-blue-500/20 transition-all font-semibold">
+                  กลับสู่หน้าแดชบอร์ด
                 </Button>
               </Link>
-              <Link href="/login?role=owner">
-                <Button variant="ghost" className="text-slate-600 hover:text-indigo-600 font-semibold px-3 hover:bg-indigo-50 rounded-full text-sm">
-                  เข้าสู่ระบบเจ้าของหอพัก
-                </Button>
-              </Link>
-            </div>
-            
-            {/* Mobile simplified login link */}
-            <div className="lg:hidden flex items-center">
-              <Link href="/login">
-                <Button variant="ghost" className="text-slate-600 hover:text-blue-600 font-semibold px-2 hover:bg-blue-50 rounded-full text-sm">
-                  เข้าสู่ระบบ
-                </Button>
-              </Link>
-            </div>
-            <Link href="/register">
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 sm:px-6 whitespace-nowrap text-sm sm:text-base shadow-md hover:shadow-xl hover:shadow-blue-500/20 transition-all font-semibold">
-                <span className="hidden sm:inline">สมัครใช้งานระบบ</span>
-                <span className="sm:hidden">สมัครเลย</span>
-              </Button>
-            </Link>
+            ) : (
+              <>
+                <div className="hidden lg:flex items-center gap-2">
+                  <Link href="/login?role=tenant">
+                    <Button variant="ghost" className="text-slate-600 hover:text-blue-600 font-semibold px-3 hover:bg-blue-50 rounded-full text-sm">
+                      เข้าสู่ระบบผู้เช่า
+                    </Button>
+                  </Link>
+                  <Link href="/login?role=owner">
+                    <Button variant="ghost" className="text-slate-600 hover:text-indigo-600 font-semibold px-3 hover:bg-indigo-50 rounded-full text-sm">
+                      เข้าสู่ระบบเจ้าของหอพัก
+                    </Button>
+                  </Link>
+                </div>
+                
+                {/* Mobile simplified login link */}
+                <div className="lg:hidden flex items-center">
+                  <Link href="/login">
+                    <Button variant="ghost" className="text-slate-600 hover:text-blue-600 font-semibold px-2 hover:bg-blue-50 rounded-full text-sm">
+                      เข้าสู่ระบบ
+                    </Button>
+                  </Link>
+                </div>
+                <Link href="/register">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 sm:px-6 whitespace-nowrap text-sm sm:text-base shadow-md hover:shadow-xl hover:shadow-blue-500/20 transition-all font-semibold">
+                    <span className="hidden sm:inline">สมัครใช้งานระบบ</span>
+                    <span className="sm:hidden">สมัครเลย</span>
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -96,11 +110,19 @@ export default async function Home() {
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
-              <Link href="/register">
-                <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-600/30 w-full sm:w-auto hover:-translate-y-1 transition-all">
-                  เริ่มต้นใช้งานระบบทันที
-                </Button>
-              </Link>
+              {session ? (
+                <Link href="/dashboard">
+                  <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-600/30 w-full sm:w-auto hover:-translate-y-1 transition-all">
+                    ไปที่แดชบอร์ดของคุณ
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/register">
+                  <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-600/30 w-full sm:w-auto hover:-translate-y-1 transition-all">
+                    เริ่มต้นใช้งานระบบทันที
+                  </Button>
+                </Link>
+              )}
               <Link href="#contact">
                 <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-full border-slate-300 text-slate-700 bg-white hover:bg-slate-50 w-full sm:w-auto hover:-translate-y-1 transition-all shadow-sm">
                   ติดต่อสอบถามแพ็กเกจ
