@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 
@@ -10,28 +11,34 @@ interface MobileNavProps {
 
 export default function MobileNav({ role }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
 
   const closeNav = () => setIsOpen(false);
 
-  return (
-    <>
-      <button 
-        onClick={() => setIsOpen(true)}
-        className="md:hidden flex items-center justify-center w-10 h-10 rounded-lg text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 shadow-sm transition-colors z-20"
-      >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
-      </button>
-
+  const sidebarContent = (
+    <div className="md:hidden">
       {/* Backdrop */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden" 
+          className="fixed inset-0 bg-black/60 z-[9998]" 
           onClick={closeNav}
         />
       )}
 
       {/* Sidebar Panel */}
-      <div className={`fixed top-0 left-0 h-full w-72 bg-[#F5F5F7] text-[#1D1D1F] z-50 transform transition-transform duration-300 ease-in-out md:hidden flex flex-col shadow-xl ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <div className={`fixed top-0 left-0 h-[100dvh] w-72 bg-[#F5F5F7] text-[#1D1D1F] z-[9999] transform transition-transform duration-300 ease-in-out flex flex-col shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 flex items-center justify-between border-b border-slate-200/40">
           <Link href="/" onClick={closeNav} className="flex items-center gap-3 group cursor-pointer hover:opacity-80 transition-opacity">
             <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 shadow-sm border border-blue-200">
@@ -41,7 +48,7 @@ export default function MobileNav({ role }: MobileNavProps) {
               Apartment<span className="text-blue-500">OS</span>
             </div>
           </Link>
-          <button onClick={closeNav} className="p-2 rounded-full hover:bg-slate-200 text-slate-500">
+          <button onClick={closeNav} className="p-2 rounded-full hover:bg-slate-200 text-slate-500 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -130,6 +137,19 @@ export default function MobileNav({ role }: MobileNavProps) {
           </Link>
         </nav>
       </div>
+    </div>
+  );
+
+  return (
+    <>
+      <button 
+        onClick={() => setIsOpen(true)}
+        className="md:hidden flex items-center justify-center w-10 h-10 shrink-0 rounded-lg text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 shadow-sm transition-colors z-20"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+      </button>
+
+      {mounted && createPortal(sidebarContent, document.body)}
     </>
   );
 }
