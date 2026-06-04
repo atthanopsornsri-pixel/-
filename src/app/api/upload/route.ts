@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { writeFile } from "fs/promises";
-import path from "path";
 
 export async function POST(req: Request) {
   try {
@@ -11,28 +9,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, message: "No file provided" }, { status: 400 });
     }
 
+    // Convert file to base64 for Vercel Serverless environment compatibility
+    // In a real production app with heavy traffic, consider using AWS S3, Supabase Storage, or Cloudinary.
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-
-    // Create unique filename
-    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const filename = `${uniqueSuffix}-${file.name.replace(/\s+/g, "-")}`;
-    const publicPath = path.join(process.cwd(), "public", "uploads");
-    const filePath = path.join(publicPath, filename);
-
-    // Ensure directory exists (you might want to use fs.mkdir in a real app, here we assume public/uploads exists or we create it)
-    import("fs").then(fs => {
-      if (!fs.existsSync(publicPath)) {
-        fs.mkdirSync(publicPath, { recursive: true });
-      }
-    });
-
-    await writeFile(filePath, buffer);
-    const fileUrl = `/uploads/${filename}`;
+    
+    // Create Data URL
+    const mimeType = file.type || 'image/jpeg';
+    const base64Data = buffer.toString('base64');
+    const fileUrl = `data:${mimeType};base64,${base64Data}`;
 
     return NextResponse.json({ success: true, url: fileUrl });
   } catch (error) {
-    console.error("Error uploading file:", error);
-    return NextResponse.json({ success: false, message: "Error uploading file" }, { status: 500 });
+    console.error("Error processing file:", error);
+    return NextResponse.json({ success: false, message: "Error processing file" }, { status: 500 });
   }
 }
