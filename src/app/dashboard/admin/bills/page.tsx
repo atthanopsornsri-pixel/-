@@ -23,7 +23,7 @@ export default function AdminBillsPage() {
     fetchData();
   }, []);
 
-  const fetchData = async () => {
+  async function fetchData() {
     setIsLoading(true);
     const [billsRes, ownersRes] = await Promise.all([
       fetch("/api/admin/bills"),

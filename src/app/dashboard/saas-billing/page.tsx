@@ -19,7 +19,7 @@ export default function OwnerBillingPage() {
     fetchBills();
   }, []);
 
-  const fetchBills = async () => {
+  async function fetchBills() {
     setIsLoading(true);
     const res = await fetch("/api/owner/bills");
     if (res.ok) {

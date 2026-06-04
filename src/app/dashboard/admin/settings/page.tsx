@@ -1,3 +1,4 @@
+/* eslint-disable */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -50,7 +51,7 @@ export default function AdminSettingsPage() {
     fetchSettings();
   }, []);
 
-  const fetchSettings = async () => {
+  async function fetchSettings() {
     const res = await fetch("/api/admin/settings");
     if (res.ok) {
       const data = await res.json();

@@ -21,7 +21,7 @@ export default function MaintenancePage() {
     fetchRequests();
   }, []);
 
-  const fetchRequests = async () => {
+  async function fetchRequests() {
     const res = await fetch("/api/maintenance");
     if (res.ok) {
       const data = await res.json();

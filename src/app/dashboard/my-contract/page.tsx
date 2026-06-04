@@ -12,7 +12,7 @@ export default function TenantContractPage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
+    async function fetchData() {
       try {
         const res = await fetch("/api/tenant/contract");
         if (res.ok) {

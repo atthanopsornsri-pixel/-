@@ -76,7 +76,7 @@ export default function PropertiesPage() {
     loadData();
   }, []);
 
-  const fetchProperties = async () => {
+  async function fetchProperties() {
     const res = await fetch("/api/properties");
     if (res.ok) {
       const data = await res.json();

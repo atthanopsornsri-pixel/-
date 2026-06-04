@@ -12,7 +12,7 @@ export default function LeasePrintPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const fetchTenant = async () => {
+    async function fetchTenant() {
       const res = await fetch(`/api/tenants/${params.id}`);
       if (res.ok) {
         const data = await res.json();

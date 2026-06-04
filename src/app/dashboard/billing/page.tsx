@@ -36,7 +36,7 @@ export default function BillingPage() {
     fetchBills();
   }, []);
 
-  const fetchProperties = async () => {
+  async function fetchProperties() {
     const res = await fetch("/api/properties");
     if (res.ok) {
       const data = await res.json();
@@ -44,7 +44,7 @@ export default function BillingPage() {
     }
   };
 
-  const fetchRooms = async (propId: string) => {
+  async function fetchRooms(propId: string) {
     const res = await fetch(`/api/rooms?propertyId=${propId}`);
     if (res.ok) {
       const data = await res.json();
@@ -52,7 +52,7 @@ export default function BillingPage() {
     }
   };
 
-  const fetchBills = async () => {
+  async function fetchBills() {
     const res = await fetch("/api/bills");
     if (res.ok) {
       const data = await res.json();

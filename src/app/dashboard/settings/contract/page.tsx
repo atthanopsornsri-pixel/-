@@ -18,7 +18,7 @@ export default function ContractSettingsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchProperties = async () => {
+    async function fetchProperties() {
       try {
         const res = await fetch("/api/properties");
         if (res.ok) {

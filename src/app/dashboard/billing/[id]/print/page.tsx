@@ -14,7 +14,7 @@ export default function BillPrintPage() {
   const [qrPayload, setQrPayload] = useState<string>("");
 
   useEffect(() => {
-    const fetchBill = async () => {
+    async function fetchBill() {
       const res = await fetch("/api/bills");
       if (res.ok) {
         const data = await res.json();

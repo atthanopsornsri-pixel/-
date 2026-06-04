@@ -80,7 +80,7 @@ export default function RoomsPage() {
     loadData();
   }, [propertyIdParam]);
 
-  const fetchProperties = async () => {
+  async function fetchProperties() {
     const res = await fetch("/api/properties");
     if (res.ok) {
       const data = await res.json();
@@ -91,7 +91,7 @@ export default function RoomsPage() {
     }
   };
 
-  const fetchRooms = async (propId?: string) => {
+  async function fetchRooms(propId?: string) {
     let url = "/api/rooms";
     const targetPropId = propId || propertyId;
     if (targetPropId) url += `?propertyId=${targetPropId}`;

@@ -34,7 +34,7 @@ export default function TenantsPage() {
     loadData();
   }, []);
 
-  const fetchTenants = async () => {
+  async function fetchTenants() {
     const res = await fetch("/api/tenants");
     if (res.ok) {
       const data = await res.json();
@@ -42,7 +42,7 @@ export default function TenantsPage() {
     }
   };
 
-  const fetchAvailableRooms = async () => {
+  async function fetchAvailableRooms() {
     const res = await fetch("/api/rooms?status=AVAILABLE");
     if (res.ok) {
       const data = await res.json();

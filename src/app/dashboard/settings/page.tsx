@@ -10,7 +10,7 @@ export default function SettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    async function fetchProfile() {
       const res = await fetch("/api/users/me");
       if (res.ok) {
         const data = await res.json();

@@ -14,7 +14,7 @@ export default function AdminCodesPage() {
     fetchCodes();
   }, []);
 
-  const fetchCodes = async () => {
+  async function fetchCodes() {
     const res = await fetch("/api/admin/codes");
     if (res.ok) {
       const data = await res.json();

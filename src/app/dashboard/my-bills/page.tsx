@@ -20,7 +20,7 @@ export default function MyBillsPage() {
     fetchBills();
   }, []);
 
-  const fetchBills = async () => {
+  async function fetchBills() {
     const res = await fetch("/api/bills");
     if (res.ok) {
       const data = await res.json();
