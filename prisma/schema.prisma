@@ -105,6 +105,14 @@ model Tenant {
   depositAmount Float?
   idCardNumber  String?
   phone         String?
+  
+  // E-Contract Fields
+  signatureUrl      String?   @db.Text
+  contractSignedAt  DateTime?
+  contractIpAddress String?
+  contractUserAgent String?
+  contractPdfUrl    String?   @db.Text // สำหรับเก็บไฟล์ PDF สัญญา หรือสลิปสัญญาที่อัปโหลด
+
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
