@@ -162,11 +162,11 @@ export default function TenantContractPage() {
       <h1 className="text-2xl font-bold text-slate-800">สัญญาเช่าห้องพักอาศัย</h1>
 
       <div className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-200">
-        <div className="prose max-w-none mb-12 whitespace-pre-wrap">
+        <div className="prose max-w-none mb-12 whitespace-pre-wrap font-sarabun text-xl leading-relaxed text-slate-800">
           {content ? (
             <div dangerouslySetInnerHTML={{ __html: content }} />
           ) : (
-            <div className="text-slate-500 italic">หอพักยังไม่ได้ตั้งค่าสัญญาเช่า</div>
+            <div className="text-slate-500 italic font-sans text-base">หอพักยังไม่ได้ตั้งค่าสัญญาเช่า</div>
           )}
         </div>
 

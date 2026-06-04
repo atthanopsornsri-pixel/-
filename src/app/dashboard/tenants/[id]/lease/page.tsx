@@ -110,22 +110,22 @@ export default function LeasePrintPage() {
       </div>
 
       {/* Contract Document (A4 Size) */}
-      <div className="max-w-[210mm] w-full bg-white shadow-xl min-h-[297mm] p-10 md:p-16 print:shadow-none print:w-[210mm] print:h-[297mm] relative">
+      <div className="max-w-[210mm] w-full bg-white shadow-xl min-h-[297mm] p-10 md:p-16 print:shadow-none print:w-[210mm] print:h-[297mm] relative font-sarabun text-lg">
         
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-800 tracking-tight">สัญญาเช่าห้องพักอาศัย</h1>
-          <h2 className="text-xl font-semibold text-slate-600 mt-2">{property?.name}</h2>
-          <p className="text-sm text-slate-500 mt-1">{property?.address}</p>
+        <div className="text-center mb-6">
+          <h1 className="text-4xl font-bold text-slate-800 tracking-tight">สัญญาเช่าห้องพักอาศัย</h1>
+          <h2 className="text-2xl font-bold text-slate-800 mt-2">{property?.name}</h2>
+          <p className="text-lg text-slate-700 mt-1">{property?.address}</p>
         </div>
 
-        <div className="mb-8 font-medium">
+        <div className="mb-6 font-bold text-lg text-slate-800">
           วันที่ทำสัญญา: {tenant.contractSignedAt ? new Date(tenant.contractSignedAt).toLocaleDateString("th-TH") : "________________"}
         </div>
 
         {/* Dynamic Contract Content */}
         {terms ? (
-          <div className="prose max-w-none text-sm text-slate-800 whitespace-pre-wrap leading-relaxed text-justify mb-12">
+          <div className="prose max-w-none text-xl text-slate-800 whitespace-pre-wrap leading-relaxed text-justify mb-10">
             <div dangerouslySetInnerHTML={{ __html: terms }} />
           </div>
         ) : (
