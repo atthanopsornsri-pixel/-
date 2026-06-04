@@ -102,6 +102,8 @@ export default function BillingPage() {
       } else {
         setWaterAmount("");
       }
+    } else {
+      setWaterAmount("");
     }
   };
 
@@ -115,7 +117,21 @@ export default function BillingPage() {
       } else {
         setElectricAmount("");
       }
+    } else {
+      setElectricAmount("");
     }
+  };
+
+  const calculateTotal = () => {
+    return (
+      (parseFloat(rentAmount) || 0) +
+      (parseFloat(waterAmount) || 0) +
+      (parseFloat(electricAmount) || 0) +
+      (parseFloat(commonFee) || 0) +
+      (parseFloat(parkingFee) || 0) +
+      (parseFloat(internetFee) || 0) +
+      (parseFloat(otherFee) || 0)
+    );
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -260,6 +276,11 @@ export default function BillingPage() {
                       <Input type="number" value={otherFee} onChange={e => setOtherFee(e.target.value)} />
                     </div>
                   </div>
+                </div>
+
+                <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 flex justify-between items-center">
+                  <span className="font-bold text-slate-700">ยอดรวมทั้งสิ้น</span>
+                  <span className="text-2xl font-black text-blue-700">฿ {calculateTotal().toLocaleString()}</span>
                 </div>
 
                 <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>

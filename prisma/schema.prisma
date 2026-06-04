@@ -27,6 +27,7 @@ model User {
   tenantProfile Tenant?    // สำหรับ Tenant
   accounts      Account[]
   sessions      Session[]
+  subscriptionBills SubscriptionBill[] // สำหรับ Owner
 }
 
 enum Role {
@@ -222,4 +223,33 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+// -----------------------------------------
+// SaaS Admin Models
+// -----------------------------------------
+
+model SystemSettings {
+  id              String   @id @default(cuid())
+  heroHeadline    String?
+  heroSubheadline String?
+  heroImageUrl    String?
+  contactEmail    String?
+  contactPhone    String?
+  pricingMonthly  Float?   @default(500)
+  pricingYearly   Float?   @default(5000)
+  updatedAt       DateTime @updatedAt
+}
+
+model SubscriptionBill {
+  id          String   @id @default(cuid())
+  ownerId     String
+  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  month       Int
+  year        Int
+  amount      Float
+  status      BillStatus @default(UNPAID)
+  slipUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
