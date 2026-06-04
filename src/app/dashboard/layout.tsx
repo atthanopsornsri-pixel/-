@@ -20,14 +20,14 @@ export default async function DashboardLayout({
       {/* Sidebar - Light Pastel Design */}
       <aside className="w-72 bg-[#F5F5F7] text-[#1D1D1F] hidden md:flex flex-col border-r border-slate-200/40 relative z-20">
         <div className="p-8 pb-4">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 shadow-sm border border-blue-200">
+          <Link href="/" className="flex items-center gap-3 mb-2 group cursor-pointer hover:opacity-80 transition-opacity">
+            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 shadow-sm border border-blue-200 group-hover:scale-105 transition-transform">
               <span className="font-bold text-xl">A</span>
             </div>
-            <Link href="/dashboard" className="text-2xl font-extrabold tracking-tight text-slate-800">
+            <div className="text-2xl font-extrabold tracking-tight text-slate-800">
               Apartment<span className="text-blue-500">OS</span>
-            </Link>
-          </div>
+            </div>
+          </Link>
           <div className="inline-block mt-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-medium text-slate-500">
             Role: {session.user.role}
           </div>
