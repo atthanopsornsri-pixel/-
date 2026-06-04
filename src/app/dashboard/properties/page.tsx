@@ -55,6 +55,14 @@ export default function PropertiesPage() {
   const [companyName, setCompanyName] = useState("");
   const [promptPayNo, setPromptPayNo] = useState("");
   const [promptPayName, setPromptPayName] = useState("");
+  
+  // Rate Settings
+  const [electricRate, setElectricRate] = useState("");
+  const [waterRate, setWaterRate] = useState("");
+  const [defaultCommonFee, setDefaultCommonFee] = useState("");
+  const [defaultParkingFee, setDefaultParkingFee] = useState("");
+  const [defaultInternetFee, setDefaultInternetFee] = useState("");
+
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   useEffect(() => {
@@ -108,6 +116,12 @@ export default function PropertiesPage() {
     setCompanyName(prop.companyName || "");
     setPromptPayNo(prop.promptPayNo || "");
     setPromptPayName(prop.promptPayName || "");
+    
+    setElectricRate(prop.electricRate?.toString() || "");
+    setWaterRate(prop.waterRate?.toString() || "");
+    setDefaultCommonFee(prop.defaultCommonFee?.toString() || "");
+    setDefaultParkingFee(prop.defaultParkingFee?.toString() || "");
+    setDefaultInternetFee(prop.defaultInternetFee?.toString() || "");
   };
 
   const handleSaveSettings = async (e: React.FormEvent) => {
@@ -119,7 +133,14 @@ export default function PropertiesPage() {
       const res = await fetch(`/api/properties/${selectedProp.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ taxId, companyName, promptPayNo, promptPayName }),
+        body: JSON.stringify({ 
+          taxId, companyName, promptPayNo, promptPayName,
+          electricRate: electricRate ? parseFloat(electricRate) : null,
+          waterRate: waterRate ? parseFloat(waterRate) : null,
+          defaultCommonFee: defaultCommonFee ? parseFloat(defaultCommonFee) : null,
+          defaultParkingFee: defaultParkingFee ? parseFloat(defaultParkingFee) : null,
+          defaultInternetFee: defaultInternetFee ? parseFloat(defaultInternetFee) : null,
+        }),
       });
 
       if (res.ok) {
@@ -261,73 +282,80 @@ export default function PropertiesPage() {
       {/* Settings Modal */}
       {selectedProp && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+          <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 shrink-0">
               <h3 className="text-xl font-bold text-[#1D1D1F]">ตั้งค่าข้อมูลใบแจ้งหนี้ / ภาษี</h3>
               <button onClick={() => setSelectedProp(null)} className="p-2 bg-white rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shadow-sm border border-slate-200">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
             
-            <form onSubmit={handleSaveSettings} className="p-6 space-y-5">
-              <div className="space-y-2">
-                <Label className="text-slate-600 font-medium ml-1">ชื่อบริษัท / ชื่อจดทะเบียน</Label>
-                <Input 
-                  value={companyName} 
-                  onChange={(e) => setCompanyName(e.target.value)} 
-                  className="rounded-2xl h-12 bg-slate-50 border-slate-200 focus:bg-white px-4"
-                  placeholder="ปล่อยว่างเพื่อใช้ชื่อหอพักแทน"
-                />
-              </div>
+            <form onSubmit={handleSaveSettings} className="p-6 overflow-y-auto space-y-6">
               
-              <div className="space-y-2">
-                <Label className="text-slate-600 font-medium ml-1">เลขประจำตัวผู้เสียภาษี (Tax ID)</Label>
-                <Input 
-                  value={taxId} 
-                  onChange={(e) => setTaxId(e.target.value)} 
-                  className="rounded-2xl h-12 bg-slate-50 border-slate-200 focus:bg-white px-4"
-                  placeholder="เลขประจำตัว 13 หลัก"
-                />
-              </div>
-
-              <div className="pt-4 border-t border-slate-100">
-                <h4 className="font-bold text-slate-800 mb-4">ข้อมูลการรับชำระเงิน (สร้าง QR Code บนบิล)</h4>
+              {/* Section 1: Legal */}
+              <div>
+                <h4 className="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">ข้อมูลผู้ประกอบการ</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-slate-600 font-medium ml-1">เบอร์พร้อมเพย์</Label>
-                    <Input 
-                      value={promptPayNo} 
-                      onChange={(e) => setPromptPayNo(e.target.value)} 
-                      className="rounded-2xl h-12 bg-slate-50 border-slate-200 focus:bg-white px-4"
-                      placeholder="เบอร์มือถือ หรือ บัตรประชาชน"
-                    />
+                    <Label className="text-slate-600 font-medium ml-1">ชื่อบริษัท / ชื่อจดทะเบียน</Label>
+                    <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="rounded-2xl h-12 bg-slate-50 border-slate-200" placeholder="ปล่อยว่างเพื่อใช้ชื่อหอพัก" />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-slate-600 font-medium ml-1">ชื่อบัญชีรับเงิน</Label>
-                    <Input 
-                      value={promptPayName} 
-                      onChange={(e) => setPromptPayName(e.target.value)} 
-                      className="rounded-2xl h-12 bg-slate-50 border-slate-200 focus:bg-white px-4"
-                      placeholder="เช่น นาย สมชาย รักดี"
-                    />
+                    <Label className="text-slate-600 font-medium ml-1">เลขประจำตัวผู้เสียภาษี (Tax ID)</Label>
+                    <Input value={taxId} onChange={(e) => setTaxId(e.target.value)} className="rounded-2xl h-12 bg-slate-50 border-slate-200" placeholder="เลขประจำตัว 13 หลัก" />
                   </div>
                 </div>
               </div>
 
-              <div className="pt-6 flex gap-3">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setSelectedProp(null)}
-                  className="flex-1 rounded-full h-12 border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold"
-                >
+              {/* Section 2: Payment */}
+              <div>
+                <h4 className="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">บัญชีรับชำระเงิน (PromptPay QR Code)</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-600 font-medium ml-1">เบอร์พร้อมเพย์</Label>
+                    <Input value={promptPayNo} onChange={(e) => setPromptPayNo(e.target.value)} className="rounded-2xl h-12 bg-slate-50 border-slate-200" placeholder="เบอร์มือถือ หรือ บัตรประชาชน" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-600 font-medium ml-1">ชื่อบัญชีรับเงิน</Label>
+                    <Input value={promptPayName} onChange={(e) => setPromptPayName(e.target.value)} className="rounded-2xl h-12 bg-slate-50 border-slate-200" placeholder="เช่น นาย สมชาย รักดี" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: Utility Rates */}
+              <div>
+                <h4 className="font-bold text-[#007AFF] mb-4 border-b border-slate-100 pb-2">เรทค่าน้ำ ค่าไฟ และค่าบริการ (คำนวณอัตโนมัติ)</h4>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-600 font-medium ml-1">ค่าไฟ (บาท/หน่วย)</Label>
+                    <Input type="number" step="0.1" value={electricRate} onChange={(e) => setElectricRate(e.target.value)} className="rounded-2xl h-12 border-blue-200 bg-blue-50/30 focus:bg-white" placeholder="เช่น 8" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-600 font-medium ml-1">ค่าน้ำ (บาท/หน่วย)</Label>
+                    <Input type="number" step="0.1" value={waterRate} onChange={(e) => setWaterRate(e.target.value)} className="rounded-2xl h-12 border-blue-200 bg-blue-50/30 focus:bg-white" placeholder="เช่น 18" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-600 font-medium ml-1">ค่าส่วนกลาง (บาท)</Label>
+                    <Input type="number" value={defaultCommonFee} onChange={(e) => setDefaultCommonFee(e.target.value)} className="rounded-2xl h-12 bg-slate-50 border-slate-200" placeholder="เช่น 500" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-600 font-medium ml-1">ค่าที่จอดรถ (บาท)</Label>
+                    <Input type="number" value={defaultParkingFee} onChange={(e) => setDefaultParkingFee(e.target.value)} className="rounded-2xl h-12 bg-slate-50 border-slate-200" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-600 font-medium ml-1">ค่าอินเทอร์เน็ต (บาท)</Label>
+                    <Input type="number" value={defaultInternetFee} onChange={(e) => setDefaultInternetFee(e.target.value)} className="rounded-2xl h-12 bg-slate-50 border-slate-200" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <Button type="button" variant="outline" onClick={() => setSelectedProp(null)} className="flex-1 rounded-full h-12 border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold">
                   ยกเลิก
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={isSavingSettings}
-                  className="flex-1 rounded-full h-12 bg-[#007AFF] hover:bg-[#0066CC] text-white font-semibold shadow-sm"
-                >
+                <Button type="submit" disabled={isSavingSettings} className="flex-1 rounded-full h-12 bg-[#007AFF] hover:bg-[#0066CC] text-white font-semibold shadow-sm">
                   {isSavingSettings ? "กำลังบันทึก..." : "บันทึกการตั้งค่า"}
                 </Button>
               </div>

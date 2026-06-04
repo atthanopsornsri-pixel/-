@@ -48,6 +48,13 @@ model Property {
   promptPayNo   String?  // เบอร์พร้อมเพย์
   promptPayName String?  // ชื่อบัญชีพร้อมเพย์
 
+  // Utility Rates & Default Fees
+  electricRate      Float?  // ค่าไฟต่อหน่วย
+  waterRate         Float?  // ค่าน้ำต่อหน่วย (หรือเหมาจ่าย)
+  defaultCommonFee  Float?  // ค่าส่วนกลาง (Default)
+  defaultParkingFee Float?  // ค่าที่จอดรถ (Default)
+  defaultInternetFee Float? // ค่าอินเทอร์เน็ต (Default)
+
   ownerId       String
   owner         User     @relation(fields: [ownerId], references: [id])
   rooms         Room[]

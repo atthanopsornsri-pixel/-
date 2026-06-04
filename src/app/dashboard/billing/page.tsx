@@ -77,6 +77,45 @@ export default function BillingPage() {
     if (room) {
       setRentAmount(room.rentPrice.toString());
     }
+
+    // Auto fill default fees from property
+    const prop = properties.find(p => p.id === propertyId);
+    if (prop) {
+      if (prop.defaultCommonFee) setCommonFee(prop.defaultCommonFee.toString());
+      else setCommonFee("");
+      
+      if (prop.defaultParkingFee) setParkingFee(prop.defaultParkingFee.toString());
+      else setParkingFee("");
+      
+      if (prop.defaultInternetFee) setInternetFee(prop.defaultInternetFee.toString());
+      else setInternetFee("");
+    }
+  };
+
+  const handleWaterUnitsChange = (val: string) => {
+    setWaterUnits(val);
+    const prop = properties.find(p => p.id === propertyId);
+    if (prop && prop.waterRate && val) {
+      const units = parseFloat(val);
+      if (!isNaN(units)) {
+        setWaterAmount((units * prop.waterRate).toString());
+      } else {
+        setWaterAmount("");
+      }
+    }
+  };
+
+  const handleElectricUnitsChange = (val: string) => {
+    setElectricUnits(val);
+    const prop = properties.find(p => p.id === propertyId);
+    if (prop && prop.electricRate && val) {
+      const units = parseFloat(val);
+      if (!isNaN(units)) {
+        setElectricAmount((units * prop.electricRate).toString());
+      } else {
+        setElectricAmount("");
+      }
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -182,7 +221,7 @@ export default function BillingPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>ค่าน้ำ (หน่วย)</Label>
-                      <Input type="number" step="0.1" value={waterUnits} onChange={e => setWaterUnits(e.target.value)} />
+                      <Input type="number" step="0.1" value={waterUnits} onChange={e => handleWaterUnitsChange(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                       <Label>รวมค่าน้ำ (บาท)</Label>
@@ -192,7 +231,7 @@ export default function BillingPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>ค่าไฟ (หน่วย)</Label>
-                      <Input type="number" step="0.1" value={electricUnits} onChange={e => setElectricUnits(e.target.value)} />
+                      <Input type="number" step="0.1" value={electricUnits} onChange={e => handleElectricUnitsChange(e.target.value)} />
                     </div>
                     <div className="space-y-2">
                       <Label>รวมค่าไฟ (บาท)</Label>
