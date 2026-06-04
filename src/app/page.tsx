@@ -15,7 +15,7 @@ export default function Home() {
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform duration-300">
               <span className="text-white font-extrabold text-xl">A</span>
             </div>
-            <span className="text-2xl font-extrabold text-slate-800 tracking-tight">
+            <span className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight">
               Apartment<span className="text-blue-600">OS</span>
             </span>
           </div>
@@ -25,9 +25,9 @@ export default function Home() {
             <Link href="#pricing" className="hover:text-blue-600 transition-colors">แพ็กเกจราคา</Link>
             <Link href="#contact" className="hover:text-blue-600 transition-colors">ติดต่อเรา</Link>
           </nav>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Link href="/login">
-              <Button variant="ghost" className="text-slate-600 hover:text-blue-600 font-semibold px-4 hover:bg-blue-50 rounded-full">
+              <Button variant="ghost" className="text-slate-600 hover:text-blue-600 font-semibold px-2 sm:px-4 hover:bg-blue-50 rounded-full text-sm sm:text-base">
                 เข้าสู่ระบบ
               </Button>
             </Link>
@@ -59,8 +59,8 @@ export default function Home() {
               ระบบจัดการหอพักยุคใหม่ อัปเดตฟีเจอร์ล่าสุด ปี 2026
             </div>
             
-            <h1 className="text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight leading-[1.15] mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
-              บริหารจัดการหอพักและอพาร์ตเม้นท์ <br className="hidden md:block"/>
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight leading-[1.2] mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700 [word-break:keep-all]">
+              บริหารจัดการหอพักและ<wbr />อพาร์ตเม้นท์ <br className="hidden md:block"/>
               <span className="text-blue-600">
                 ง่าย จบ ครบ ในที่เดียว
               </span>
