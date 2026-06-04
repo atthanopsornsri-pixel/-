@@ -49,6 +49,14 @@ export default function PropertiesPage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Billing Settings Modal State
+  const [selectedProp, setSelectedProp] = useState<any>(null);
+  const [taxId, setTaxId] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [promptPayNo, setPromptPayNo] = useState("");
+  const [promptPayName, setPromptPayName] = useState("");
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
   useEffect(() => {
     fetchProperties();
   }, []);
@@ -67,7 +75,6 @@ export default function PropertiesPage() {
 
     try {
       let imageUrl = "";
-
       if (imageFile) {
         imageUrl = await compressImage(imageFile);
       }
@@ -92,12 +99,45 @@ export default function PropertiesPage() {
       console.error(err);
       alert("เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ");
     }
-    
     setIsUploading(false);
   };
 
+  const openSettingsModal = (prop: any) => {
+    setSelectedProp(prop);
+    setTaxId(prop.taxId || "");
+    setCompanyName(prop.companyName || "");
+    setPromptPayNo(prop.promptPayNo || "");
+    setPromptPayName(prop.promptPayName || "");
+  };
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProp) return;
+    setIsSavingSettings(true);
+
+    try {
+      const res = await fetch(`/api/properties/${selectedProp.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taxId, companyName, promptPayNo, promptPayName }),
+      });
+
+      if (res.ok) {
+        alert("บันทึกการตั้งค่าบิลสำเร็จ!");
+        setSelectedProp(null);
+        fetchProperties();
+      } else {
+        alert("เกิดข้อผิดพลาดในการบันทึก");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+    }
+    setIsSavingSettings(false);
+  };
+
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out relative">
       <div className="flex justify-between items-center mb-2">
         <h1 className="text-3xl md:text-4xl font-extrabold text-[#1D1D1F] tracking-tight">
           จัดการหอพักและอพาร์ตเม้นท์
@@ -194,14 +234,12 @@ export default function PropertiesPage() {
                       จัดการห้องพัก
                     </Button>
                     <div className="grid grid-cols-2 gap-3">
+                      <Button variant="outline" className="rounded-full border-slate-200 text-slate-600 hover:bg-slate-50 h-11" onClick={() => openSettingsModal(prop)}>
+                        ตั้งค่าบิล/ภาษี
+                      </Button>
                       <Button variant="outline" className="rounded-full border-slate-200 text-slate-600 hover:bg-slate-50 h-11" onClick={() => router.push(`/dashboard/properties/${prop.id}/lease-settings`)}>
                         สัญญาเช่า
                       </Button>
-                      <a href={`/p/${prop.id}`} target="_blank" rel="noreferrer" className="flex-1">
-                        <Button variant="outline" className="w-full rounded-full border-[#E8F2FF] text-[#007AFF] bg-[#F4F9FF] hover:bg-[#E8F2FF] transition-colors h-11">
-                          หน้าโปรโมท
-                        </Button>
-                      </a>
                     </div>
                   </div>
                 </div>
@@ -219,6 +257,84 @@ export default function PropertiesPage() {
           </div>
         </div>
       </div>
+
+      {/* Settings Modal */}
+      {selectedProp && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h3 className="text-xl font-bold text-[#1D1D1F]">ตั้งค่าข้อมูลใบแจ้งหนี้ / ภาษี</h3>
+              <button onClick={() => setSelectedProp(null)} className="p-2 bg-white rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shadow-sm border border-slate-200">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            <form onSubmit={handleSaveSettings} className="p-6 space-y-5">
+              <div className="space-y-2">
+                <Label className="text-slate-600 font-medium ml-1">ชื่อบริษัท / ชื่อจดทะเบียน</Label>
+                <Input 
+                  value={companyName} 
+                  onChange={(e) => setCompanyName(e.target.value)} 
+                  className="rounded-2xl h-12 bg-slate-50 border-slate-200 focus:bg-white px-4"
+                  placeholder="ปล่อยว่างเพื่อใช้ชื่อหอพักแทน"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-slate-600 font-medium ml-1">เลขประจำตัวผู้เสียภาษี (Tax ID)</Label>
+                <Input 
+                  value={taxId} 
+                  onChange={(e) => setTaxId(e.target.value)} 
+                  className="rounded-2xl h-12 bg-slate-50 border-slate-200 focus:bg-white px-4"
+                  placeholder="เลขประจำตัว 13 หลัก"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-slate-100">
+                <h4 className="font-bold text-slate-800 mb-4">ข้อมูลการรับชำระเงิน (สร้าง QR Code บนบิล)</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-600 font-medium ml-1">เบอร์พร้อมเพย์</Label>
+                    <Input 
+                      value={promptPayNo} 
+                      onChange={(e) => setPromptPayNo(e.target.value)} 
+                      className="rounded-2xl h-12 bg-slate-50 border-slate-200 focus:bg-white px-4"
+                      placeholder="เบอร์มือถือ หรือ บัตรประชาชน"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-600 font-medium ml-1">ชื่อบัญชีรับเงิน</Label>
+                    <Input 
+                      value={promptPayName} 
+                      onChange={(e) => setPromptPayName(e.target.value)} 
+                      className="rounded-2xl h-12 bg-slate-50 border-slate-200 focus:bg-white px-4"
+                      placeholder="เช่น นาย สมชาย รักดี"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 flex gap-3">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setSelectedProp(null)}
+                  className="flex-1 rounded-full h-12 border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold"
+                >
+                  ยกเลิก
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={isSavingSettings}
+                  className="flex-1 rounded-full h-12 bg-[#007AFF] hover:bg-[#0066CC] text-white font-semibold shadow-sm"
+                >
+                  {isSavingSettings ? "กำลังบันทึก..." : "บันทึกการตั้งค่า"}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

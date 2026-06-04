@@ -41,6 +41,13 @@ model Property {
   address       String
   imageUrl      String?  // ภาพปกของหอพัก
   leaseTemplate String?  // ข้อความ/เงื่อนไขสัญญาเช่าที่ปรับแต่งได้
+  
+  // Billing & Legal Settings
+  taxId         String?  // เลขประจำตัวผู้เสียภาษี
+  companyName   String?  // ชื่อบริษัท/ชื่อจดทะเบียน
+  promptPayNo   String?  // เบอร์พร้อมเพย์
+  promptPayName String?  // ชื่อบัญชีพร้อมเพย์
+
   ownerId       String
   owner         User     @relation(fields: [ownerId], references: [id])
   rooms         Room[]

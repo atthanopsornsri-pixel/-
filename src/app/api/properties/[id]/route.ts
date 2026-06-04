@@ -48,6 +48,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       where: { id },
       data: {
         leaseTemplate: body.leaseTemplate !== undefined ? body.leaseTemplate : property.leaseTemplate,
+        taxId: body.taxId !== undefined ? body.taxId : property.taxId,
+        companyName: body.companyName !== undefined ? body.companyName : property.companyName,
+        promptPayNo: body.promptPayNo !== undefined ? body.promptPayNo : property.promptPayNo,
+        promptPayName: body.promptPayName !== undefined ? body.promptPayName : property.promptPayName,
       },
     });
 

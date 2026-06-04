@@ -4,10 +4,14 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
+import { QRCodeSVG } from "qrcode.react";
+import generatePayload from "promptpay-qr";
+
 export default function BillPrintPage() {
   const params = useParams();
   const router = useRouter();
   const [bill, setBill] = useState<any>(null);
+  const [qrPayload, setQrPayload] = useState<string>("");
 
   useEffect(() => {
     const fetchBill = async () => {
@@ -16,6 +20,11 @@ export default function BillPrintPage() {
         const data = await res.json();
         const found = data.find((b: any) => b.id === params.id);
         setBill(found);
+        
+        if (found?.room?.property?.promptPayNo) {
+          const payload = generatePayload(found.room.property.promptPayNo, { amount: found.totalAmount });
+          setQrPayload(payload);
+        }
       }
     };
     fetchBill();
@@ -23,7 +32,9 @@ export default function BillPrintPage() {
 
   if (!bill) return <div className="p-8 text-center font-sans">กำลังโหลดข้อมูล...</div>;
 
+  const prop = bill.room.property;
   const docNo = `INV-${bill.year}${bill.month.toString().padStart(2, '0')}-${bill.id.substring(0, 4).toUpperCase()}`;
+  const displayCompanyName = prop.companyName || prop.name;
 
   return (
     <div className="min-h-screen bg-slate-100 flex justify-center font-sans print:bg-white print:p-0 p-4 md:p-8">
@@ -45,9 +56,9 @@ export default function BillPrintPage() {
         {/* Header Section */}
         <div className="flex justify-between items-start mb-6 pt-4">
           <div className="max-w-[60%]">
-            <h1 className="text-2xl font-bold text-slate-800 uppercase tracking-wide">{bill.room.property.name}</h1>
-            <p className="text-sm text-slate-600 mt-1 whitespace-pre-wrap leading-relaxed">{bill.room.property.address || "ที่อยู่หอพัก (ตั้งค่าในหน้าจัดการหอพัก)"}</p>
-            <p className="text-sm text-slate-600">เลขประจำตัวผู้เสียภาษี: <span className="text-slate-400 font-light">(กรุณาตั้งค่าในระบบ)</span></p>
+            <h1 className="text-2xl font-bold text-slate-800 uppercase tracking-wide">{displayCompanyName}</h1>
+            <p className="text-sm text-slate-600 mt-1 whitespace-pre-wrap leading-relaxed">{prop.address || "ที่อยู่หอพัก (ตั้งค่าในหน้าจัดการหอพัก)"}</p>
+            <p className="text-sm text-slate-600 mt-1">เลขประจำตัวผู้เสียภาษี: <span className="font-medium text-slate-800">{prop.taxId || "ไม่ได้ระบุ"}</span></p>
           </div>
           <div className="text-right">
             <div className="inline-block border border-slate-800 text-slate-800 font-bold px-3 py-1 mb-2 text-sm tracking-widest">ต้นฉบับ (ORIGINAL)</div>
@@ -68,7 +79,7 @@ export default function BillPrintPage() {
               <span className="text-slate-800 font-bold">ห้องพักเลขที่ {bill.room.number}</span>
               
               <span className="text-slate-500">ที่อยู่:</span>
-              <span className="text-slate-800">{bill.room.property.name} ห้อง {bill.room.number}</span>
+              <span className="text-slate-800">{prop.name} ห้อง {bill.room.number}</span>
             </div>
           </div>
           <div>
@@ -135,16 +146,38 @@ export default function BillPrintPage() {
             </tbody>
           </table>
 
-          {/* Totals */}
-          <div className="flex justify-end mt-4">
+          {/* Totals & Payment Info */}
+          <div className="flex justify-between items-start mt-4">
+            {/* QR Code Section */}
+            <div className="w-1/2 pr-8">
+              {qrPayload ? (
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 flex items-center gap-4">
+                  <div className="bg-white p-2 rounded-lg border border-slate-200 shadow-sm shrink-0">
+                    <QRCodeSVG value={qrPayload} size={80} level="M" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-[#003399] mb-1">สแกนจ่ายผ่าน Thai QR Payment</p>
+                    <p className="text-xs text-slate-600 mb-0.5">พร้อมเพย์: <span className="font-semibold text-slate-800">{prop.promptPayNo}</span></p>
+                    <p className="text-xs text-slate-600">ชื่อบัญชี: <span className="font-semibold text-slate-800">{prop.promptPayName || "-"}</span></p>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300 text-center h-full flex flex-col justify-center">
+                  <p className="text-xs text-slate-500">กรุณาตั้งค่าเบอร์พร้อมเพย์ในหน้าจัดการหอพัก</p>
+                  <p className="text-[10px] text-slate-400 mt-1">เพื่อเปิดใช้งาน QR Code รับชำระเงินอัตโนมัติ</p>
+                </div>
+              )}
+            </div>
+
+            {/* Totals */}
             <div className="w-1/2">
               <div className="flex justify-between py-1 px-3">
                 <span className="text-slate-600 text-sm">รวมเป็นเงิน (Sub Total)</span>
                 <span className="font-bold text-slate-800 text-sm">฿{bill.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="flex justify-between py-2 px-3 bg-slate-100 border border-slate-300 mt-2">
-                <span className="font-bold text-slate-800">ยอดสุทธิ (Grand Total)</span>
-                <span className="font-bold text-lg text-slate-800">฿{bill.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+              <div className="flex justify-between py-2 px-3 bg-[#E8F2FF] border border-[#007AFF]/20 rounded-lg mt-2">
+                <span className="font-bold text-[#007AFF]">ยอดสุทธิ (Grand Total)</span>
+                <span className="font-bold text-lg text-[#007AFF]">฿{bill.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
               </div>
             </div>
           </div>
