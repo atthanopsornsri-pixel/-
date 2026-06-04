@@ -1,10 +1,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { prisma } from "@/lib/prisma";
 
-export default function Home() {
+export default async function Home() {
+  const settings = await prisma.systemSettings.findFirst();
+
+  const headline = settings?.heroHeadline || "บริหารจัดการหอพักและอพาร์ตเม้นท์";
+  const subheadline = settings?.heroSubheadline || "หมดปัญหากระดาษกองโต! เปลี่ยนหอพักของคุณให้เป็นระบบดิจิทัล 100% ออกบิลอัตโนมัติ แจ้งเตือนผ่าน LINE รับชำระเงินด้วย QR Code";
+  const heroImage = settings?.heroImageUrl || "/images/hero-mockup.png";
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-sans overflow-x-hidden selection:bg-blue-100 selection:text-blue-900">
       
@@ -33,8 +38,8 @@ export default function Home() {
             </Link>
             <Link href="/register">
               <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 sm:px-6 whitespace-nowrap text-sm sm:text-base shadow-md hover:shadow-xl hover:shadow-blue-500/20 transition-all font-semibold">
-                <span className="hidden sm:inline">ทดลองใช้ฟรี 14 วัน</span>
-                <span className="sm:hidden">ทดลองฟรี</span>
+                <span className="hidden sm:inline">สมัครใช้งานระบบ</span>
+                <span className="sm:hidden">สมัครเลย</span>
               </Button>
             </Link>
           </div>
@@ -45,10 +50,8 @@ export default function Home() {
         
         {/* ---------------- Hero Section ---------------- */}
         <section className="pt-20 pb-24 md:pt-32 md:pb-40 px-4 relative overflow-hidden bg-white">
-          {/* Subtle Grid Background */}
           <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
           
-          {/* Subtle Blue Glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full max-w-[1400px] pointer-events-none -z-10">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-blue-100/50 rounded-full blur-[100px]"></div>
           </div>
@@ -60,22 +63,24 @@ export default function Home() {
             </div>
             
             <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold text-slate-900 tracking-tight leading-[1.2] mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700 [word-break:keep-all]">
-              บริหารจัดการหอพักและ<wbr />อพาร์ตเม้นท์ <br className="hidden md:block"/>
-              <span className="text-blue-600">
-                ง่าย จบ ครบ ในที่เดียว
-              </span>
+              {headline.includes("ง่าย จบ ครบ ในที่เดียว") ? (
+                <>
+                  บริหารจัดการหอพักและ<wbr />อพาร์ตเม้นท์ <br className="hidden md:block"/>
+                  <span className="text-blue-600">ง่าย จบ ครบ ในที่เดียว</span>
+                </>
+              ) : (
+                <>{headline}</>
+              )}
             </h1>
             
             <p className="text-lg md:text-xl text-slate-600 mb-12 max-w-3xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100">
-              หมดปัญหากระดาษกองโต! เปลี่ยนหอพักของคุณให้เป็นระบบดิจิทัล 100% 
-              ออกบิลอัตโนมัติ แจ้งเตือนผ่าน LINE รับชำระเงินด้วย QR Code 
-              ดูแลครบตั้งแต่ผู้เช่าย้ายเข้าจนย้ายออก
+              {subheadline}
             </p>
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-20 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
               <Link href="/register">
                 <Button size="lg" className="h-14 px-8 text-lg rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-xl shadow-blue-600/30 w-full sm:w-auto hover:-translate-y-1 transition-all">
-                  เริ่มต้นใช้งานฟรีทันที
+                  เริ่มต้นใช้งานระบบทันที
                 </Button>
               </Link>
               <Link href="#contact">
@@ -88,9 +93,9 @@ export default function Home() {
             {/* Dashboard Mockup Image */}
             <div className="relative mx-auto max-w-5xl rounded-3xl overflow-hidden shadow-2xl shadow-slate-900/10 border border-white/50 animate-in fade-in zoom-in-95 duration-1000 delay-300 group">
               <div className="absolute inset-0 bg-gradient-to-t from-slate-900/10 to-transparent z-10 pointer-events-none"></div>
-              {/* Note: In production, user can replace this image */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img 
-                src="/images/hero-mockup.png" 
+                src={heroImage} 
                 alt="ApartmentOS Dashboard Preview" 
                 className="w-full h-auto object-cover transform group-hover:scale-[1.02] transition-transform duration-700"
               />

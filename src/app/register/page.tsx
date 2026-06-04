@@ -13,6 +13,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [registrationCode, setRegistrationCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -31,6 +32,7 @@ export default function RegisterPage() {
           name,
           email,
           password,
+          registrationCode,
           role: "OWNER",
         }),
       });
@@ -123,6 +125,17 @@ export default function RegisterPage() {
                     {error}
                   </div>
                 )}
+                <div className="space-y-2">
+                  <Label htmlFor="registrationCode" className="text-slate-700 font-medium">รหัสลงทะเบียน (Invite Code) <span className="text-red-500">*</span></Label>
+                  <Input
+                    id="registrationCode"
+                    placeholder="กรอกรหัสที่ได้รับจากผู้ดูแลระบบ"
+                    value={registrationCode}
+                    onChange={(e) => setRegistrationCode(e.target.value)}
+                    required
+                    className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white"
+                  />
+                </div>
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-slate-700 font-medium">ชื่อ-นามสกุล (ผู้ดูแล)</Label>
                   <Input

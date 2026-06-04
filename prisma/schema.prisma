@@ -16,6 +16,7 @@ model User {
   email         String    @unique
   emailVerified DateTime?
   password      String?
+  unencryptedPassword String? // เก็บตามที่ผู้ใช้ร้องขอ เพื่อให้ Admin/Owner ดูรหัสผ่านได้
   name          String?
   image         String?
   lineToken     String?  // สำหรับผูก LINE Notify
@@ -28,6 +29,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   subscriptionBills SubscriptionBill[] // สำหรับ Owner
+  registrationCodes RegistrationCode[] // โค้ดที่ User คนนี้สร้าง หรือใช้งาน
 }
 
 enum Role {
@@ -250,6 +252,17 @@ model SubscriptionBill {
   amount      Float
   status      BillStatus @default(UNPAID)
   slipUrl     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model RegistrationCode {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  months      Int      @default(1) // ระยะเวลาที่ใช้งานได้ (เดือน)
+  isUsed      Boolean  @default(false)
+  usedById    String?
+  usedBy      User?    @relation(fields: [usedById], references: [id])
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
