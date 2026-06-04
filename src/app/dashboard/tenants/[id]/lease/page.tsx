@@ -150,7 +150,7 @@ export default function LeasePrintPage() {
             <div className="border-b border-slate-400 w-48 mx-auto mb-2 h-16 flex items-end justify-center pb-2">
               {/* Owner Signature could go here if implemented, for now leave blank for physical sign */}
             </div>
-            <p className="text-slate-700 font-medium">ลงชื่อ ผู้ให้เช่า (Owner)</p>
+            <p className="text-slate-700 font-medium">ลงชื่อ ผู้ให้เช่า</p>
             <p className="text-sm text-slate-500 mt-1">({property?.companyName || property?.name || "________________________"})</p>
           </div>
           <div>
@@ -160,7 +160,7 @@ export default function LeasePrintPage() {
                 <img src={tenant.signatureUrl} alt="Tenant Signature" className="max-h-16 object-contain absolute bottom-0" />
               )}
             </div>
-            <p className="text-slate-700 font-medium">ลงชื่อ ผู้เช่า (Tenant)</p>
+            <p className="text-slate-700 font-medium">ลงชื่อ ผู้เช่า</p>
             <p className="text-sm text-slate-500 mt-1">({tenant.user?.name || "________________________"})</p>
           </div>
         </div>
