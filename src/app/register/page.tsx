@@ -53,47 +53,43 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row-reverse bg-white">
       {/* Left Panel: Branding / Image */}
-      <div className="hidden md:flex flex-1 flex-col justify-between bg-slate-900 text-white p-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-20"></div>
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/90 to-slate-900/95 z-0"></div>
-        
-        {/* Decorative blobs */}
-        <div className="absolute -top-24 -right-24 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl z-0"></div>
-        <div className="absolute bottom-[20%] left-[-10%] w-[400px] h-[400px] bg-blue-500/20 rounded-full blur-[100px] z-0"></div>
+      <div className="hidden md:flex flex-1 flex-col justify-between bg-blue-50 text-slate-800 p-12 relative overflow-hidden">
+        {/* Soft pastel blobs */}
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-200/50 rounded-full blur-3xl z-0"></div>
+        <div className="absolute bottom-[10%] left-[-10%] w-[400px] h-[400px] bg-indigo-200/50 rounded-full blur-[100px] z-0"></div>
 
         <div className="relative z-10 flex justify-end">
           <Link href="/" className="flex items-center gap-2 group w-fit cursor-pointer">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
               <span className="text-white font-extrabold text-xl">A</span>
             </div>
-            <span className="text-2xl font-extrabold tracking-tight">
-              Apartment<span className="text-blue-400">OS</span>
+            <span className="text-2xl font-extrabold tracking-tight text-slate-900">
+              Apartment<span className="text-blue-600">OS</span>
             </span>
           </Link>
         </div>
 
-        <div className="relative z-10 max-w-lg mt-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-200 text-sm mb-4 md:mb-6 border border-indigo-400/30">
-            ✨ ทดลองใช้ฟรี 14 วัน
+        <div className="relative z-10 mt-10 flex flex-col items-center justify-center flex-1">
+          <div className="w-full max-w-md text-center mb-10">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-blue-600 text-sm mb-6 border border-blue-100 shadow-sm font-semibold">
+              ✨ ทดลองใช้ฟรี 14 วัน
+            </div>
+            <h1 className="text-3xl md:text-4xl font-extrabold mb-4 leading-tight text-slate-900">จัดการหอพักยุคใหม่ <br/><span className="text-blue-600">ง่าย ครบ จบในที่เดียว</span></h1>
+            <p className="text-slate-600">
+              ยกระดับอพาร์ตเมนต์ของคุณให้เป็นระบบดิจิทัล จัดการห้องพัก บิลค่าน้ำไฟ และผู้เช่าได้อย่างมืออาชีพ
+            </p>
           </div>
-          <h1 className="text-3xl md:text-4xl font-extrabold mb-4 md:mb-6 leading-tight">เริ่มเปลี่ยนหอพักของคุณ ให้เป็นระบบดิจิทัลวันนี้</h1>
-          <ul className="space-y-3 md:space-y-4 text-sm md:text-base text-indigo-100">
-            <li className="flex items-center">
-              <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-indigo-500/30 flex items-center justify-center mr-3 text-xs md:text-sm">✓</div>
-              จัดการห้องพักและผู้เช่าไม่จำกัด
-            </li>
-            <li className="flex items-center">
-              <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-indigo-500/30 flex items-center justify-center mr-3 text-xs md:text-sm">✓</div>
-              ออกบิลค่าน้ำค่าไฟอัตโนมัติ
-            </li>
-            <li className="flex items-center">
-              <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-indigo-500/30 flex items-center justify-center mr-3 text-xs md:text-sm">✓</div>
-              แจ้งเตือนบิลและพัสดุผ่าน LINE Notify
-            </li>
-          </ul>
+          
+          <div className="w-full max-w-lg relative">
+            {/* Minimalist Apartment Illustration */}
+            <div className="relative w-full aspect-square md:aspect-[4/3] rounded-3xl overflow-hidden mix-blend-multiply">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/apartment-illustration.png" alt="Apartment Illustration" className="w-full h-full object-contain opacity-90" />
+            </div>
+          </div>
         </div>
         
-        <div className="relative z-10 flex items-center gap-4 text-sm text-slate-400 mt-10">
+        <div className="relative z-10 flex items-center justify-center gap-4 text-sm text-slate-400 mt-10 font-medium">
           <span>© 2026 ApartmentOS.</span>
         </div>
       </div>
