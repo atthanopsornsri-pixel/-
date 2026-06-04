@@ -196,7 +196,7 @@ export default async function DashboardLayout({
       <div className="flex-1 flex flex-col relative min-h-screen max-w-[100vw]">
         
         {/* Top Header - White minimal */}
-        <header className="h-20 bg-[#F5F5F7]/80 backdrop-blur-xl border-b border-slate-200/40 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 w-full max-w-[100vw]">
+        <header className="h-20 bg-[#F5F5F7] border-b border-slate-200/40 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 w-full max-w-[100vw]">
           <div className="flex items-center gap-3 md:gap-4 truncate">
             <MobileNav role={session.user.role} />
             
