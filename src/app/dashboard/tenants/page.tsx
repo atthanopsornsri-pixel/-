@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 export default function TenantsPage() {
   const [tenants, setTenants] = useState<any[]>([]);
   const [availableRooms, setAvailableRooms] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,8 +26,12 @@ export default function TenantsPage() {
   const [visiblePasswords, setVisiblePasswords] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
-    fetchTenants();
-    fetchAvailableRooms();
+    const loadData = async () => {
+      setIsLoading(true);
+      await Promise.all([fetchTenants(), fetchAvailableRooms()]);
+      setIsLoading(false);
+    };
+    loadData();
   }, []);
 
   const fetchTenants = async () => {

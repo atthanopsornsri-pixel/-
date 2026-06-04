@@ -44,6 +44,7 @@ const compressImage = (file: File, maxWidth = 1000): Promise<string> => {
 export default function PropertiesPage() {
   const router = useRouter();
   const [properties, setProperties] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -67,7 +68,12 @@ export default function PropertiesPage() {
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   useEffect(() => {
-    fetchProperties();
+    const loadData = async () => {
+      setIsLoading(true);
+      await fetchProperties();
+      setIsLoading(false);
+    };
+    loadData();
   }, []);
 
   const fetchProperties = async () => {
@@ -237,7 +243,20 @@ export default function PropertiesPage() {
         {/* Property List */}
         <div className="lg:col-span-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {properties.map((prop) => (
+            {isLoading ? (
+              <div className="col-span-1 md:col-span-2 py-20 flex flex-col items-center justify-center">
+                <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="mt-4 text-slate-500">กำลังโหลดข้อมูลหอพัก...</p>
+              </div>
+            ) : properties.length === 0 ? (
+              <div className="col-span-1 md:col-span-2 text-center py-16 bg-white rounded-[32px] border border-dashed border-slate-300">
+                <div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                </div>
+                <h3 className="text-lg font-bold text-[#1D1D1F] mb-1">ยังไม่มีข้อมูลหอพัก</h3>
+                <p className="text-slate-500">เริ่มเพิ่มหอพักแรกของคุณทางด้านซ้ายเพื่อเริ่มต้นใช้งานระบบ</p>
+              </div>
+            ) : properties.map((prop) => (
               <div key={prop.id} className="bg-white rounded-[32px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 group transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 flex flex-col">
                 {prop.imageUrl ? (
                   <div className="h-48 w-full bg-slate-200 relative overflow-hidden shrink-0">
@@ -280,15 +299,6 @@ export default function PropertiesPage() {
                 </div>
               </div>
             ))}
-            {properties.length === 0 && (
-              <div className="md:col-span-2 text-center py-16 bg-white rounded-[32px] border border-dashed border-slate-300">
-                <div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-                </div>
-                <h3 className="text-lg font-bold text-[#1D1D1F] mb-1">ยังไม่มีข้อมูลหอพัก</h3>
-                <p className="text-slate-500">เริ่มเพิ่มหอพักแรกของคุณทางด้านซ้ายเพื่อเริ่มต้นใช้งานระบบ</p>
-              </div>
-            )}
           </div>
         </div>
       </div>
