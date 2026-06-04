@@ -41,7 +41,7 @@ export default async function DashboardLayout({
             ภาพรวมระบบ
           </Link>
 
-          {session.user.role === "OWNER" && (
+          {(session.user.role === "OWNER" || session.user.role === "ADMIN") && (
             <>
               <div className="pt-6 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">การจัดการ</div>
               
