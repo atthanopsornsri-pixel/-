@@ -33,11 +33,27 @@ export default async function Home() {
             <Link href="#contact" className="hover:text-blue-600 transition-colors">ติดต่อเรา</Link>
           </nav>
           <div className="flex items-center gap-2 sm:gap-4">
-            <Link href="/login">
-              <Button variant="ghost" className="text-slate-600 hover:text-blue-600 font-semibold px-2 sm:px-4 hover:bg-blue-50 rounded-full text-sm sm:text-base">
-                เข้าสู่ระบบ
-              </Button>
-            </Link>
+            <div className="hidden lg:flex items-center gap-2">
+              <Link href="/login?role=tenant">
+                <Button variant="ghost" className="text-slate-600 hover:text-blue-600 font-semibold px-3 hover:bg-blue-50 rounded-full text-sm">
+                  เข้าสู่ระบบผู้เช่า
+                </Button>
+              </Link>
+              <Link href="/login?role=owner">
+                <Button variant="ghost" className="text-slate-600 hover:text-indigo-600 font-semibold px-3 hover:bg-indigo-50 rounded-full text-sm">
+                  เข้าสู่ระบบเจ้าของหอพัก
+                </Button>
+              </Link>
+            </div>
+            
+            {/* Mobile simplified login link */}
+            <div className="lg:hidden flex items-center">
+              <Link href="/login">
+                <Button variant="ghost" className="text-slate-600 hover:text-blue-600 font-semibold px-2 hover:bg-blue-50 rounded-full text-sm">
+                  เข้าสู่ระบบ
+                </Button>
+              </Link>
+            </div>
             <Link href="/register">
               <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-4 sm:px-6 whitespace-nowrap text-sm sm:text-base shadow-md hover:shadow-xl hover:shadow-blue-500/20 transition-all font-semibold">
                 <span className="hidden sm:inline">สมัครใช้งานระบบ</span>

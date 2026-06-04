@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,10 +10,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 
 export function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const role = searchParams.get("role");
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const isTenant = role === "tenant";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +32,7 @@ export function LoginForm() {
     });
 
     if (res?.error) {
-      setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+      setError("อีเมล/รหัสลูกบ้าน หรือรหัสผ่านไม่ถูกต้อง");
       setLoading(false);
     } else {
       router.push("/dashboard");
@@ -38,9 +43,11 @@ export function LoginForm() {
   return (
     <div className="w-full">
       <div className="space-y-2 text-left mb-8">
-        <h2 className="text-3xl font-extrabold text-slate-900">เข้าสู่ระบบ</h2>
+        <h2 className="text-3xl font-extrabold text-slate-900">
+          {isTenant ? "เข้าสู่ระบบ (สำหรับลูกบ้าน)" : role === "owner" ? "เข้าสู่ระบบ (สำหรับเจ้าของหอพัก)" : "เข้าสู่ระบบ"}
+        </h2>
         <p className="text-base text-slate-500">
-          กรอกอีเมลและรหัสผ่านของคุณ
+          {isTenant ? "กรอกรหัสลูกบ้าน (เช่น AP-001) และรหัสผ่าน" : "กรอกอีเมลและรหัสผ่านของคุณ"}
         </p>
       </div>
       <form onSubmit={handleSubmit}>
@@ -52,11 +59,13 @@ export function LoginForm() {
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-slate-700 font-medium">อีเมล</Label>
+            <Label htmlFor="email" className="text-slate-700 font-medium">
+              {isTenant ? "รหัสลูกบ้าน หรือ อีเมล" : "อีเมล"}
+            </Label>
             <Input
               id="email"
-              type="email"
-              placeholder="name@example.com"
+              type="text"
+              placeholder={isTenant ? "เช่น AP-001" : "name@example.com"}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
