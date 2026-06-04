@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 import NotificationBell from "@/components/NotificationBell";
+import MobileNav from "@/components/MobileNav";
 
 export default async function DashboardLayout({
   children,
@@ -192,32 +193,34 @@ export default async function DashboardLayout({
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col relative min-h-screen">
+      <div className="flex-1 flex flex-col relative min-h-screen max-w-[100vw]">
         
         {/* Top Header - White minimal */}
-        <header className="h-20 bg-[#F5F5F7]/80 backdrop-blur-xl border-b border-slate-200/40 flex items-center justify-between px-8 sticky top-0 z-10">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200 text-slate-500 font-bold">
+        <header className="h-20 bg-[#F5F5F7]/80 backdrop-blur-xl border-b border-slate-200/40 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 w-full max-w-[100vw]">
+          <div className="flex items-center gap-3 md:gap-4 truncate">
+            <MobileNav role={session.user.role} />
+            
+            <div className="w-8 h-8 md:w-10 md:h-10 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200 text-slate-500 font-bold shrink-0">
               {session.user.name?.charAt(0) || session.user.email?.charAt(0) || "U"}
             </div>
-            <div>
-              <div className="font-bold text-slate-700 text-sm md:text-base leading-tight">
+            <div className="truncate">
+              <div className="font-bold text-slate-700 text-sm md:text-base leading-tight truncate">
                 {session.user.name || "ผู้ใช้งานระบบ"}
               </div>
-              <div className="text-xs text-slate-500">
+              <div className="text-[10px] md:text-xs text-slate-500 truncate">
                 {session.user.email}
               </div>
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2 shrink-0">
             {/* Notification Bell */}
             {session.user.role === "OWNER" && (
               <NotificationBell hasUnpaidBills={hasUnpaidBills} />
             )}
 
             <form action="/api/auth/signout" method="POST">
-              <Button type="submit" variant="ghost" className="text-slate-500 hover:text-red-600 hover:bg-red-50 font-medium rounded-full px-6 transition-colors">
+              <Button type="submit" variant="ghost" className="text-slate-500 hover:text-red-600 hover:bg-red-50 font-medium rounded-full px-3 md:px-6 transition-colors text-xs md:text-sm">
                 ออกจากระบบ
               </Button>
             </form>
@@ -225,7 +228,7 @@ export default async function DashboardLayout({
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6 md:p-10 overflow-auto">
+        <main className="flex-1 p-4 md:p-10 overflow-auto w-full max-w-[100vw]">
           {children}
         </main>
       </div>

@@ -29,7 +29,7 @@ export default function RootLayout({
       lang="th"
       className={`${inter.variable} ${kanit.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col" style={{ fontFamily: 'var(--font-inter), var(--font-kanit), sans-serif' }}>
+      <body className="min-h-full flex flex-col overflow-x-hidden" style={{ fontFamily: 'var(--font-inter), var(--font-kanit), sans-serif' }}>
         <Providers>{children}</Providers>
       </body>
     </html>
