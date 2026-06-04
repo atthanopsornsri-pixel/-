@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,12 +14,13 @@ export async function PATCH(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     const { leaseTemplate } = body;
 
     // Verify ownership
     const property = await prisma.property.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!property || property.ownerId !== session.user.id) {
@@ -27,7 +28,7 @@ export async function PATCH(
     }
 
     const updatedProperty = await prisma.property.update({
-      where: { id: params.id },
+      where: { id },
       data: { leaseTemplate },
     });
 

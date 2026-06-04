@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth";
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,6 +14,7 @@ export async function POST(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    const { id } = await params;
     const body = await request.json();
     const { pdfUrl } = body;
 
@@ -23,7 +24,7 @@ export async function POST(
 
     // Update the tenant's contractPdfUrl
     const updatedTenant = await prisma.tenant.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         contractPdfUrl: pdfUrl,
       },
