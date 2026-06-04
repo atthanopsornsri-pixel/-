@@ -76,7 +76,7 @@ export default async function DashboardLayout({
                 </div>
                 รายชื่อผู้เช่า
               </Link>
-              <Link href="/dashboard/billing" className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-rose-50 hover:text-rose-700 transition-all group font-medium">
+              <Link href="/dashboard/saas-billing" className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-rose-50 hover:text-rose-700 transition-all group font-medium">
                 <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center mr-3 group-hover:scale-105 group-hover:bg-rose-100 transition-transform">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
                 </div>
@@ -200,7 +200,7 @@ export default async function DashboardLayout({
           <div className="flex items-center gap-2">
             {/* Notification Bell */}
             {session.user.role === "OWNER" && (
-              <Link href="/dashboard/billing" className="relative p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors mr-2 group">
+              <Link href="/dashboard/saas-billing" className="relative p-2 rounded-full hover:bg-slate-100 text-slate-500 transition-colors mr-2 group">
                 <svg className="w-5 h-5 group-hover:text-slate-700 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
                 {hasUnpaidBills && (
                   <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
