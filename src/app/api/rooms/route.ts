@@ -74,7 +74,16 @@ export async function GET(req: Request) {
 
     const rooms = await prisma.room.findMany({
       where: whereClause,
-      include: {
+      select: {
+        id: true,
+        number: true,
+        floor: true,
+        rentPrice: true,
+        status: true,
+        inviteCode: true,
+        imageMain: true,
+        // Omit imageBathroom, imageBalcony, imageFacility to save bandwidth
+        propertyId: true,
         property: { select: { name: true } },
         tenants: true,
       },
