@@ -238,11 +238,26 @@ export default function OwnerBillingPage() {
             </p>
             
             <form onSubmit={handlePayment} className="space-y-4">
-              <div className="bg-slate-50 p-4 rounded-xl text-sm text-slate-700 mb-4 border border-slate-200">
-                <p className="font-bold mb-1">โอนเงินมาที่บัญชี (JadHor OS):</p>
-                <p>ธนาคาร: {process.env.NEXT_PUBLIC_ADMIN_BANK_NAME || "กสิกรไทย (KBank)"}</p>
-                <p>ชื่อบัญชี: {process.env.NEXT_PUBLIC_ADMIN_BANK_ACCOUNT_NAME || "บจก. จัดหอ โอเอส"}</p>
-                <p>เลขที่บัญชี: {process.env.NEXT_PUBLIC_ADMIN_BANK_ACCOUNT_NUMBER || "012-3-45678-9"}</p>
+              <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 mb-4 text-sm text-gray-700">
+                <p className="font-semibold mb-2 text-gray-900">โอนเงินมาที่บัญชี (JadHor OS):</p>
+                <div className="space-y-1">
+                  <p>
+                    <span className="inline-block w-20 text-gray-500">ธนาคาร:</span> 
+                    <span className="font-medium">ธนาคารกสิกรไทย (KBank)</span>
+                  </p>
+                  <p>
+                    <span className="inline-block w-20 text-gray-500">ชื่อบัญชี:</span> 
+                    <span className="font-medium">นายอรรถณพ ศรศรี</span>
+                  </p>
+                  <p>
+                    <span className="inline-block w-20 text-gray-500">เลขที่บัญชี:</span> 
+                    <span className="font-medium tracking-wider text-blue-600">223-2-58643-8</span>
+                  </p>
+                  <p>
+                    <span className="inline-block w-20 text-gray-500">พร้อมเพย์:</span> 
+                    <span className="font-medium tracking-wider text-blue-600">064-035-3806</span>
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-2">
