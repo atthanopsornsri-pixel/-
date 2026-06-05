@@ -179,7 +179,7 @@ export default function RegisterPage() {
                     className="mt-1 w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
                   <Label htmlFor="pdpa" className="text-sm text-slate-600 leading-relaxed cursor-pointer font-normal">
-                    ฉันได้อ่านและยอมรับ <Link href="/terms" className="text-blue-600 hover:underline font-medium">เงื่อนไขการให้บริการ</Link> และ <Link href="/privacy" className="text-blue-600 hover:underline font-medium">นโยบายความเป็นส่วนตัว (PDPA)</Link>
+                    ฉันได้อ่านและยอมรับ <Link href="/terms" className="text-blue-600 hover:underline font-medium">ข้อตกลงการใช้งาน (Terms of Service)</Link> และ <Link href="/privacy" className="text-blue-600 hover:underline font-medium">นโยบายความเป็นส่วนตัว (Privacy Policy)</Link> และยินยอมให้ระบบประมวลผลข้อมูลส่วนบุคคลเพื่อใช้ในการจัดการห้องพัก
                   </Label>
                 </div>
 
