@@ -62,7 +62,7 @@ export default function RegisterPage() {
         <div className="relative z-10 flex justify-end">
           <Link href="/" className="flex items-center gap-2 group w-fit cursor-pointer">
             <div className="relative h-16 w-auto flex items-center justify-start group-hover:scale-105 transition-transform">
-              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={240} height={64} className="object-contain h-16 w-auto mix-blend-multiply" priority />
+              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={240} height={64} className="object-contain h-16 w-auto" priority />
             </div>
           </Link>
         </div>
@@ -97,7 +97,7 @@ export default function RegisterPage() {
         <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-700 py-10">
           <div className="md:hidden flex items-center justify-center gap-2 mb-10">
             <div className="relative h-14 w-auto flex items-center justify-center">
-              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={220} height={56} className="object-contain h-14 w-auto mix-blend-multiply" priority />
+              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={220} height={56} className="object-contain h-14 w-auto" priority />
             </div>
           </div>
 

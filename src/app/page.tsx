@@ -24,7 +24,7 @@ export default async function Home() {
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3 group cursor-pointer">
             <div className="relative h-16 flex items-center group-hover:scale-105 transition-transform duration-300">
-              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={240} height={64} className="object-contain h-16 w-auto mix-blend-multiply" priority />
+              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={240} height={64} className="object-contain h-16 w-auto" priority />
             </div>
           </div>
           <nav className="hidden md:flex gap-8 text-[15px] font-semibold text-slate-600">
