@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getSecurePrisma } from "@/lib/prisma-secure";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -11,12 +11,14 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     }
 
     const { id } = await params;
-    const property = await prisma.property.findUnique({
+    const secureDb = await getSecurePrisma();
+
+    const property = await secureDb.property.findUnique({
       where: { id },
     });
 
-    if (!property || property.ownerId !== session.user.id) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
+    if (!property) {
+      return NextResponse.json({ message: "Not found" }, { status: 404 });
     }
 
     return NextResponse.json(property);
@@ -34,17 +36,18 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     const body = await req.json();
     const { id } = await params;
+    const secureDb = await getSecurePrisma();
 
-    // Verify ownership
-    const property = await prisma.property.findUnique({
+    // Verify ownership via SecureDB automatically
+    const property = await secureDb.property.findUnique({
       where: { id },
     });
 
-    if (!property || property.ownerId !== session.user.id) {
-      return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
+    if (!property) {
+      return NextResponse.json({ message: "Not found or forbidden" }, { status: 403 });
     }
 
-    const updated = await prisma.property.update({
+    const updated = await secureDb.property.update({
       where: { id },
       data: {
         leaseTemplate: body.leaseTemplate !== undefined ? body.leaseTemplate : property.leaseTemplate,

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getSecurePrisma } from "@/lib/prisma-secure";
 import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: Request) {
   try {
@@ -17,11 +18,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "ข้อมูลไม่ครบถ้วน (ต้องมี Username, Password, Room)" }, { status: 400 });
     }
 
-    // Verify room belongs to this owner
-    const room = await prisma.room.findFirst({
+    const secureDb = await getSecurePrisma();
+
+    // Verify room belongs to this owner using secureDb
+    const room = await secureDb.room.findFirst({
       where: {
         id: roomId,
-        property: { ownerId: session.user.id }
       }
     });
 

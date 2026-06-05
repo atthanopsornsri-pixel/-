@@ -196,7 +196,7 @@ export default async function DashboardLayout({
         {/* Top Header - White minimal */}
         <header className="h-20 bg-[#F5F5F7] border-b border-slate-200/40 flex items-center justify-between px-4 md:px-8 sticky top-0 z-10 w-full max-w-[100vw]">
           <div className="flex items-center gap-3 md:gap-4 truncate">
-            <MobileNav role={session.user.role} />
+            <MobileNav role={session.user.role || "TENANT"} />
             
             <div className="w-8 h-8 md:w-10 md:h-10 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200 text-slate-500 font-bold shrink-0">
               {session.user.name?.charAt(0) || session.user.email?.charAt(0) || "U"}

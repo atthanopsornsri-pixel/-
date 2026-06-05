@@ -65,6 +65,7 @@ model Property {
   rooms         Room[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  isDeleted     Boolean  @default(false)
 }
 
 model Room {
@@ -86,6 +87,7 @@ model Room {
   status      RoomStatus @default(AVAILABLE)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  isDeleted   Boolean  @default(false)
 }
 
 enum RoomStatus {
@@ -104,8 +106,9 @@ model Tenant {
   leaseEnd      DateTime?
   depositAmount Float?
   idCardNumber  String?
-  phone         String?
-  
+  phoneNumber   String?   @unique
+  lineUserId    String?   @unique
+
   // E-Contract Fields
   signatureUrl      String?   @db.Text
   contractSignedAt  DateTime?
@@ -115,6 +118,7 @@ model Tenant {
 
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  isDeleted     Boolean   @default(false)
 }
 
 model Bill {
@@ -140,6 +144,9 @@ model Bill {
   payments       Payment[]
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  isDeleted      Boolean   @default(false)
+
+  @@unique([roomId, month, year])
 }
 
 enum BillStatus {
@@ -177,6 +184,7 @@ model MaintenanceRequest {
   status       MaintenanceStatus @default(PENDING)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
+  isDeleted    Boolean   @default(false)
 }
 
 enum MaintenanceStatus {
@@ -194,6 +202,7 @@ model Parcel {
   status          ParcelStatus @default(PENDING)
   receivedAt      DateTime     @default(now())
   pickedUpAt      DateTime?
+  isDeleted       Boolean      @default(false)
 }
 
 enum ParcelStatus {

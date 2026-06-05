@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getSecurePrisma } from "@/lib/prisma-secure";
+import { Prisma } from "@prisma/client";
 
 export async function POST(req: Request) {
   try {
@@ -21,18 +23,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
 
-    // Verify room belongs to this owner
-    const room = await prisma.room.findUnique({
+    const secureDb = await getSecurePrisma();
+
+    // Verify room belongs to this owner (secureDb does this automatically)
+    const room = await secureDb.room.findUnique({
       where: { id: roomId },
-      include: { property: true }
     });
 
-    if (!room || room.property.ownerId !== session.user.id) {
+    if (!room) {
       return NextResponse.json({ message: "Unauthorized room access" }, { status: 403 });
     }
 
     // Check if bill already exists for this room, month, year
-    const existingBill = await prisma.bill.findFirst({
+    const existingBill = await secureDb.bill.findFirst({
       where: { roomId, month: Number(month), year: Number(year) }
     });
 
@@ -49,6 +52,7 @@ export async function POST(req: Request) {
       Number(internetFee || 0) + 
       Number(otherFee || 0);
 
+    // secureDb doesn't filter create by default to avoid issues, we verified room ownership above.
     const bill = await prisma.bill.create({
       data: {
         month: Number(month),
@@ -72,7 +76,7 @@ export async function POST(req: Request) {
     });
 
     // Notify Tenant if they have Line Token setup
-    const tenant = await prisma.tenant.findFirst({
+    const tenant = await secureDb.tenant.findFirst({
       where: { roomId },
       include: { user: { select: { lineToken: true } } }
     });
@@ -88,6 +92,15 @@ export async function POST(req: Request) {
 
     return NextResponse.json(bill, { status: 201 });
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        return NextResponse.json(
+          { message: "A bill for this room in this specific month/year already exists (Double-Billing Prevented)." }, 
+          { status: 400 }
+        );
+      }
+    }
+    
     console.error("Error creating bill:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
@@ -104,27 +117,14 @@ export async function GET(req: Request) {
     const propertyId = searchParams.get("propertyId");
 
     let whereClause: any = {};
-    
-    if (session.user.role === "OWNER") {
-      whereClause = {
-        room: {
-          property: { ownerId: session.user.id }
-        }
-      };
-      if (propertyId) {
-        whereClause.room.propertyId = propertyId;
-      }
-    } else if (session.user.role === "TENANT") {
-      const tenant = await prisma.tenant.findUnique({
-        where: { userId: session.user.id }
-      });
-      if (!tenant?.roomId) {
-        return NextResponse.json([]);
-      }
-      whereClause = { roomId: tenant.roomId };
+    if (propertyId && session.user.role === "OWNER") {
+      whereClause = { room: { propertyId } };
     }
 
-    const bills = await prisma.bill.findMany({
+    const secureDb = await getSecurePrisma();
+    
+    // getSecurePrisma automatically isolates OWNERs and TENANTs correctly!
+    const bills = await secureDb.bill.findMany({
       where: whereClause,
       include: {
         room: { select: { number: true, property: { select: { name: true } } } },

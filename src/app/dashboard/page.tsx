@@ -2,52 +2,28 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { prisma } from "@/lib/prisma";
+import { getDashboardMetrics } from "@/app/actions/dashboard";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
   const role = session?.user?.role;
   const isOwnerOrAdmin = role === "OWNER" || role === "ADMIN";
-  const isAdmin = role === "ADMIN";
   
-  let propertiesCount = 0;
-  let totalRooms = 0;
-  let occupiedRooms = 0;
-  let pendingBillsCount = 0;
-  let totalIncome = 0;
-  
-  if (isOwnerOrAdmin && session?.user?.id) {
-    const ownerId = session.user.id;
-    
-    // For ADMIN, fetch everything. For OWNER, fetch only their own.
-    const propertyWhere = isAdmin ? {} : { ownerId };
-    
-    propertiesCount = await prisma.property.count({
-      where: propertyWhere
-    });
-    
-    const rooms = await prisma.room.findMany({
-      where: isAdmin ? {} : { property: { ownerId } },
-      select: { status: true }
-    });
-    
-    totalRooms = rooms.length;
-    occupiedRooms = rooms.filter(r => r.status === 'OCCUPIED').length;
-    
-    const currentMonth = new Date().getMonth() + 1;
-    const currentYear = new Date().getFullYear();
-    
-    const bills = await prisma.bill.findMany({
-      where: { 
-        ...(isAdmin ? {} : { room: { property: { ownerId } } }),
-        month: currentMonth,
-        year: currentYear
-      },
-      select: { status: true, totalAmount: true }
-    });
-    
-    pendingBillsCount = bills.filter(b => b.status === 'UNPAID' || b.status === 'PENDING').length;
-    totalIncome = bills.filter(b => b.status === 'PAID').reduce((sum, b) => sum + b.totalAmount, 0);
+  // Initialize metrics with default 0s
+  let metrics = {
+    totalProperties: 0,
+    totalRooms: 0,
+    occupiedRooms: 0,
+    occupancyRate: 0,
+    outstandingDebt: 0,
+    totalRevenue: 0
+  };
+
+  if (isOwnerOrAdmin) {
+    const result = await getDashboardMetrics();
+    if (result.success && result.data) {
+      metrics = result.data;
+    }
   }
 
   const formatIncome = (amount: number) => {
@@ -90,7 +66,7 @@ export default async function DashboardPage() {
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
               </div>
               <span className="text-blue-700 text-sm font-bold tracking-wide relative z-10">อพาร์ตเม้นท์ของคุณ</span>
-              <div className="text-4xl font-black mt-2 text-blue-900 relative z-10">{propertiesCount}</div>
+              <div className="text-4xl font-black mt-2 text-blue-900 relative z-10">{metrics.totalProperties}</div>
               <p className="text-blue-600/80 text-xs mt-2 font-medium relative z-10">สถานที่ทั้งหมดในระบบ</p>
             </div>
 
@@ -101,9 +77,9 @@ export default async function DashboardPage() {
               <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" /></svg>
               </div>
-              <span className="text-emerald-700 text-sm font-bold tracking-wide relative z-10">ห้องที่มีผู้เช่า</span>
-              <div className="text-4xl font-black mt-2 text-emerald-900 relative z-10">{occupiedRooms}</div>
-              <p className="text-emerald-600/80 text-xs mt-2 font-medium relative z-10">จากทั้งหมด {totalRooms} ห้อง</p>
+              <span className="text-emerald-700 text-sm font-bold tracking-wide relative z-10">อัตราการเข้าพัก</span>
+              <div className="text-4xl font-black mt-2 text-emerald-900 relative z-10">{metrics.occupancyRate}%</div>
+              <p className="text-emerald-600/80 text-xs mt-2 font-medium relative z-10">{metrics.occupiedRooms} จากทั้งหมด {metrics.totalRooms} ห้อง</p>
             </div>
 
             <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden group transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
@@ -113,9 +89,9 @@ export default async function DashboardPage() {
               <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mb-4 group-hover:bg-amber-500 group-hover:text-white transition-colors duration-300">
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
               </div>
-              <span className="text-amber-700 text-sm font-bold tracking-wide relative z-10">บิลค้างชำระเดือนนี้</span>
-              <div className="text-4xl font-black mt-2 text-amber-900 relative z-10">{pendingBillsCount}</div>
-              <p className="text-amber-600/80 text-xs mt-2 font-medium relative z-10">รอตรวจสอบยอด</p>
+              <span className="text-amber-700 text-sm font-bold tracking-wide relative z-10">หนี้ค้างชำระ (เดือนนี้)</span>
+              <div className="text-3xl font-black mt-2 text-amber-900 tracking-tight relative z-10">{formatIncome(metrics.outstandingDebt)}</div>
+              <p className="text-amber-600/80 text-xs mt-2 font-medium relative z-10">กำลังรอการชำระเงิน</p>
             </div>
 
             <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden group transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
@@ -126,7 +102,7 @@ export default async function DashboardPage() {
                 <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" /></svg>
               </div>
               <span className="text-rose-700 text-sm font-bold tracking-wide relative z-10">รายรับเดือนนี้ (ประเมิน)</span>
-              <div className="text-3xl font-black mt-2 text-rose-900 tracking-tight relative z-10">{formatIncome(totalIncome)}</div>
+              <div className="text-3xl font-black mt-2 text-rose-900 tracking-tight relative z-10">{formatIncome(metrics.totalRevenue)}</div>
               <p className="text-rose-600/80 text-xs mt-2 font-medium relative z-10">จากค่าเช่าและบริการ</p>
             </div>
             

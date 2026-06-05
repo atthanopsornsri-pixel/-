@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { getSecurePrisma } from "@/lib/prisma-secure";
 
 export async function POST(req: Request) {
   try {
@@ -16,7 +16,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
 
-    const property = await prisma.property.create({
+    const secureDb = await getSecurePrisma();
+
+    const property = await secureDb.property.create({
       data: {
         name,
         address,
@@ -39,8 +41,9 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const properties = await prisma.property.findMany({
-      where: { ownerId: session.user.id },
+    const secureDb = await getSecurePrisma();
+
+    const properties = await secureDb.property.findMany({
       include: {
         _count: {
           select: { rooms: true },
