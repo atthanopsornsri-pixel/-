@@ -1,7 +1,7 @@
 "use client";
 
 import { useOptimistic, useTransition, useState } from "react";
-import { approveBill, rejectBill } from "@/app/actions/payment-approval";
+import { approveBill, rejectBill, approvePartialBill } from "@/app/actions/payment-approval";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Search, Loader2 } from "lucide-react";
 
@@ -44,6 +44,28 @@ export function ApprovalCards({ initialBills }: { initialBills: ApprovalBill[] }
       removeOptimisticBill(billId);
     });
     await rejectBill(billId, "Slip Invalid or Unreadable");
+    setLoadingId(null);
+  };
+
+  const handlePartialApprove = async (billId: string, total: number) => {
+    const inputAmount = window.prompt(`ยอดโอนตามบิลคือ ${formatTHB(total)}\nกรุณาระบุยอดที่ผู้เช่าโอนมาจริง (จ่ายไม่ครบ):`);
+    if (!inputAmount) return;
+    
+    const paidAmount = parseFloat(inputAmount);
+    if (isNaN(paidAmount) || paidAmount <= 0) {
+      alert("ระบุยอดเงินไม่ถูกต้อง");
+      return;
+    }
+    if (paidAmount >= total) {
+      alert("ถ้ายอดเงินครบถ้วน ให้กดยืนยันปกติครับ");
+      return;
+    }
+
+    setLoadingId(billId);
+    startTransition(() => {
+      removeOptimisticBill(billId);
+    });
+    await approvePartialBill(billId, paidAmount);
     setLoadingId(null);
   };
 
@@ -98,21 +120,31 @@ export function ApprovalCards({ initialBills }: { initialBills: ApprovalBill[] }
               <div className="text-sm text-slate-500 font-medium">ยอดโอน (เดือน {bill.month}/{bill.year})</div>
               <div className="text-2xl font-black text-slate-800 mb-4">{formatTHB(bill.totalAmount)}</div>
               
-              <div className="mt-auto grid grid-cols-2 gap-3">
+              <div className="mt-auto flex flex-col gap-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <Button 
+                    onClick={() => handleReject(bill.id)}
+                    disabled={loadingId === bill.id}
+                    variant="outline" 
+                    className="w-full border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 font-bold shadow-sm"
+                  >
+                    {loadingId === bill.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4 mr-2" />} ปฏิเสธ
+                  </Button>
+                  <Button 
+                    onClick={() => handleApprove(bill.id)}
+                    disabled={loadingId === bill.id}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm"
+                  >
+                    {loadingId === bill.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />} ยืนยัน
+                  </Button>
+                </div>
                 <Button 
-                  onClick={() => handleReject(bill.id)}
-                  disabled={loadingId === bill.id}
-                  variant="outline" 
-                  className="w-full border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 font-bold shadow-sm"
-                >
-                  {loadingId === bill.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4 mr-2" />} ปฏิเสธ
-                </Button>
-                <Button 
-                  onClick={() => handleApprove(bill.id)}
-                  disabled={loadingId === bill.id}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm"
-                >
-                  {loadingId === bill.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4 mr-2" />} ยืนยัน
+                    onClick={() => handlePartialApprove(bill.id, bill.totalAmount)}
+                    disabled={loadingId === bill.id}
+                    variant="ghost"
+                    className="w-full text-amber-600 hover:bg-amber-50 hover:text-amber-700 text-xs font-semibold"
+                  >
+                    ลูกบ้านโอนยอดไม่ครบ? (ระบุยอดจริง)
                 </Button>
               </div>
             </div>

@@ -17,9 +17,14 @@ export default function RegisterPage() {
   const [registrationCode, setRegistrationCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [acceptPdpa, setAcceptPdpa] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!acceptPdpa) {
+      setError("กรุณายอมรับเงื่อนไขการให้บริการและนโยบายความเป็นส่วนตัว");
+      return;
+    }
     setLoading(true);
     setError("");
 
@@ -165,16 +170,22 @@ export default function RegisterPage() {
                 </div>
               </div>
               <div className="flex flex-col space-y-6 mt-8">
+                <div className="flex items-start space-x-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <input
+                    type="checkbox"
+                    id="pdpa"
+                    checked={acceptPdpa}
+                    onChange={(e) => setAcceptPdpa(e.target.checked)}
+                    className="mt-1 w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                  />
+                  <Label htmlFor="pdpa" className="text-sm text-slate-600 leading-relaxed cursor-pointer font-normal">
+                    ฉันได้อ่านและยอมรับ <Link href="/terms" className="text-blue-600 hover:underline font-medium">เงื่อนไขการให้บริการ</Link> และ <Link href="/privacy" className="text-blue-600 hover:underline font-medium">นโยบายความเป็นส่วนตัว (PDPA)</Link>
+                  </Label>
+                </div>
+
                 <Button className="w-full h-12 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-base shadow-lg shadow-blue-600/20" type="submit" disabled={loading}>
                   {loading ? "กำลังสร้างบัญชี..." : "ลงทะเบียนเข้าใช้งาน"}
                 </Button>
-                
-                <p className="text-sm text-center text-slate-500">
-                  เมื่อกดลงทะเบียน ถือว่าคุณยอมรับ
-                  <Link href="#" className="text-blue-600 hover:underline mx-1">เงื่อนไขการให้บริการ</Link>
-                  และ
-                  <Link href="#" className="text-blue-600 hover:underline mx-1">นโยบายความเป็นส่วนตัว</Link>
-                </p>
                 
                 <div className="text-center text-slate-600 pt-4 border-t border-slate-100 w-full">
                   มีบัญชีอยู่แล้ว?{" "}

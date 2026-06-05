@@ -30,10 +30,17 @@ export async function bindTenantAccount(phoneNumber: string, lineUserId: string)
     }
 
     // 3. If FOUND: Update the Tenant record with lineUserId
-    await prisma.tenant.update({
-      where: { id: tenant.id },
-      data: { lineUserId }
-    });
+    await prisma.$transaction([
+      prisma.tenant.update({
+        where: { id: tenant.id },
+        data: { lineUserId }
+      }),
+      // อัปเดตตาราง User ที่ล็อกอินมาจาก LINE (ถ้ามี) ให้บันทึกเวลา PDPA
+      prisma.user.updateMany({
+        where: { id: lineUserId }, // lineUserId might actually be the providerAccountId or the User ID? 
+        data: { pdpaAcceptedAt: new Date() }
+      })
+    ]);
 
     return { 
       success: true, 

@@ -145,9 +145,19 @@ export default function TenantsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <Button variant="outline" size="sm" className="rounded-xl border-slate-200 text-slate-600 hover:text-slate-900" onClick={() => window.open(`/dashboard/tenants/${tenant.id}/lease`, '_blank')}>
-                        พิมพ์สัญญาเช่า
-                      </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button variant="outline" size="sm" className="rounded-xl border-slate-200 text-slate-600 hover:text-slate-900" onClick={() => window.open(`/dashboard/tenants/${tenant.id}/lease`, '_blank')}>
+                          พิมพ์สัญญาเช่า
+                        </Button>
+                        <Button variant="outline" size="sm" className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={async () => {
+                          if(confirm('คุณแน่ใจหรือไม่ที่จะให้ผู้เช่าคนนี้ย้ายออก? ระบบจะลบบัญชีและคืนสถานะห้องเป็น "ว่าง"')) {
+                            const res = await fetch(`/api/owner/tenants/${tenant.id}`, { method: 'DELETE' });
+                            if(res.ok) { fetchTenants(); fetchAvailableRooms(); } else { alert('เกิดข้อผิดพลาด'); }
+                          }
+                        }}>
+                          ย้ายออก
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}

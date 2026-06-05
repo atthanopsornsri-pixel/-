@@ -11,13 +11,15 @@ export async function approveBill(billId: string) {
   try {
     const secureDb = await getSecurePrisma();
 
-    // The secureDb wrapper ensures that the owner can only update bills
-    // that belong to their properties.
+    const bill = await secureDb.bill.findUnique({ where: { id: billId }});
+    if (!bill) throw new Error("Bill not found");
+
     await secureDb.bill.update({
       where: { id: billId },
       data: {
         status: "PAID",
         paymentDate: new Date(),
+        paidAmount: bill.totalAmount, // บันทึกว่าจ่ายเต็ม
       },
     });
 
@@ -58,5 +60,30 @@ export async function rejectBill(billId: string, reason?: string) {
   } catch (error: any) {
     console.error("Failed to reject bill:", error);
     return { success: false, error: "Unauthorized or failed to reject bill." };
+  }
+}
+
+/**
+ * PHASE 13: Partial Payment (Edge Case)
+ * Approves a bill but with a partial amount, marking it as PARTIAL.
+ */
+export async function approvePartialBill(billId: string, paidAmount: number) {
+  try {
+    const secureDb = await getSecurePrisma();
+
+    await secureDb.bill.update({
+      where: { id: billId },
+      data: {
+        status: "PARTIAL",
+        paymentDate: new Date(),
+        paidAmount: paidAmount, // บันทึกยอดที่จ่ายจริง
+      },
+    });
+
+    revalidatePath("/dashboard", "layout");
+    return { success: true, message: "Partial bill recorded successfully." };
+  } catch (error: any) {
+    console.error("Failed to record partial bill:", error);
+    return { success: false, error: "Unauthorized or failed." };
   }
 }

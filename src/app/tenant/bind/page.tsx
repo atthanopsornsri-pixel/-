@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { bindTenantAccount } from "@/app/actions/tenant-binding";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Phone, AlertCircle, CheckCircle2 } from "lucide-react";
@@ -13,6 +14,7 @@ export default function TenantBindingPage() {
   const router = useRouter();
   
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [acceptPdpa, setAcceptPdpa] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -41,6 +43,11 @@ export default function TenantBindingPage() {
 
     if (!phoneNumber || phoneNumber.length < 9) {
       setErrorMsg("กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง");
+      return;
+    }
+
+    if (!acceptPdpa) {
+      setErrorMsg("กรุณายอมรับเงื่อนไขและนโยบายความเป็นส่วนตัว");
       return;
     }
 
@@ -120,6 +127,19 @@ export default function TenantBindingPage() {
                 disabled={isLoading || !!successMsg}
               />
             </div>
+          </div>
+
+          <div className="flex items-start space-x-3 bg-slate-50 p-4 rounded-xl border border-slate-100 mt-4">
+            <input
+              type="checkbox"
+              id="pdpa"
+              checked={acceptPdpa}
+              onChange={(e) => setAcceptPdpa(e.target.checked)}
+              className="mt-1 w-5 h-5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+            />
+            <label htmlFor="pdpa" className="text-sm text-slate-600 leading-relaxed cursor-pointer font-normal">
+              ฉันยอมรับ <Link href="/terms" className="text-emerald-600 hover:underline font-medium">เงื่อนไขการให้บริการ</Link> และ <Link href="/privacy" className="text-emerald-600 hover:underline font-medium">นโยบายความเป็นส่วนตัว</Link>
+            </label>
           </div>
 
           <Button 
