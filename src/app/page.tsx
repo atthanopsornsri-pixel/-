@@ -16,7 +16,7 @@ export default async function Home() {
       
       {/* ---------------- Navbar (Minimalist like iCloud) ---------------- */}
       <header className="absolute top-0 w-full z-50">
-        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="w-full px-4 md:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 text-slate-800 font-semibold text-[19px] tracking-tight">
             <div className="relative w-8 h-8">
               <Image src="/images/logo.png" alt="Apartment OS Logo" fill className="object-contain" />
