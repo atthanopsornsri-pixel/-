@@ -19,17 +19,25 @@ export async function POST(req: Request) {
     }
 
     let validCode = null;
+    let trialEndDate = new Date();
+    let planTier = "FREE_TRIAL";
+
     if (!role || role === "OWNER") {
-      if (!registrationCode) {
-        return NextResponse.json({ message: "ต้องใช้รหัสลงทะเบียน (Invite Code) จากผู้ดูแลระบบ" }, { status: 400 });
-      }
+      if (registrationCode) {
+        validCode = await prisma.registrationCode.findUnique({
+          where: { code: registrationCode }
+        });
 
-      validCode = await prisma.registrationCode.findUnique({
-        where: { code: registrationCode }
-      });
-
-      if (!validCode || validCode.isUsed) {
-        return NextResponse.json({ message: "รหัสลงทะเบียนไม่ถูกต้อง หรือถูกใช้งานไปแล้ว" }, { status: 400 });
+        if (!validCode || validCode.isUsed) {
+          return NextResponse.json({ message: "รหัสลงทะเบียนไม่ถูกต้อง หรือถูกใช้งานไปแล้ว" }, { status: 400 });
+        }
+        
+        // If they use a code, they get STARTER tier and the number of months specified
+        planTier = "STARTER";
+        trialEndDate.setMonth(trialEndDate.getMonth() + validCode.months);
+      } else {
+        // No code: Give them 14 days FREE_TRIAL
+        trialEndDate.setDate(trialEndDate.getDate() + 14);
       }
     }
 
@@ -43,6 +51,9 @@ export async function POST(req: Request) {
         name,
         role: role || "OWNER", 
         pdpaAcceptedAt: new Date(),
+        // 🚀 ฝังระเบิดเวลา (Trial Expiration)
+        planTier: planTier as any,
+        planExpiresAt: trialEndDate,
       },
     });
 
@@ -54,8 +65,6 @@ export async function POST(req: Request) {
           usedById: user.id
         }
       });
-      // Here we might want to automatically create a Subscription/Lease based on validCode.months, 
-      // but for now we just mark it as used.
     }
 
     return NextResponse.json(

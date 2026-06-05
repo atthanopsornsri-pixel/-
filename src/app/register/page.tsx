@@ -122,14 +122,14 @@ export default function RegisterPage() {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label htmlFor="registrationCode" className="text-slate-700 font-medium">รหัสลงทะเบียน (Invite Code) <span className="text-red-500">*</span></Label>
-                  <Input
-                    id="registrationCode"
-                    placeholder="กรอกรหัสที่ได้รับจากผู้ดูแลระบบ"
+                  <Label htmlFor="registrationCode" className="text-slate-700 font-medium">รหัสลงทะเบียน (Invite Code) <span className="text-slate-400 text-sm font-normal">(ถ้ามี)</span></Label>
+                  <Input 
+                    id="registrationCode" 
+                    type="text" 
                     value={registrationCode}
                     onChange={(e) => setRegistrationCode(e.target.value)}
-                    required
-                    className="h-12 rounded-xl bg-slate-50 border-slate-200 focus:bg-white"
+                    placeholder="กรอกรหัสสำหรับรับแพ็กเกจพิเศษ"
+                    className="h-12 rounded-xl border-slate-200 focus:bg-white bg-slate-50 transition-colors"
                   />
                 </div>
                 <div className="space-y-2">
