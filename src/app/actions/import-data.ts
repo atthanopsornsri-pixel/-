@@ -2,6 +2,21 @@
 
 import { getSecurePrisma } from "@/lib/prisma-secure";
 import { revalidatePath } from "next/cache";
+import Papa from "papaparse";
+import { z } from "zod";
+
+const RowSchema = z.object({
+  RoomNumber: z.string().min(1).trim(),
+  RentPrice: z.preprocess((val) => {
+    if (typeof val === 'string') {
+      const stripped = val.replace(/,/g, '').trim();
+      return stripped ? Number(stripped) : 0;
+    }
+    return Number(val) || 0;
+  }, z.number()),
+  TenantName: z.string().trim().optional(),
+  TenantPhone: z.string().trim().optional(),
+});
 
 export async function importRoomsAndTenants(propertyId: string, formData: FormData) {
   try {
@@ -21,90 +36,93 @@ export async function importRoomsAndTenants(propertyId: string, formData: FormDa
       return { success: false, error: "ไม่พบหอพัก หรือคุณไม่มีสิทธิ์จัดการหอพักนี้" };
     }
 
-    // Parse CSV safely
+    // Parse CSV
     const csvText = await file.text();
-    const rows = csvText.split(/\r?\n/).filter(r => r.trim().length > 0);
-    
-    // Assume first row is header, skip it
-    const dataRows = rows.slice(1);
+    const parsed = Papa.parse(csvText, { 
+      header: false, 
+      skipEmptyLines: true 
+    });
+
+    // In this app, we assume the CSV has no headers or the user might pass headers.
+    // If the first row looks like a header (e.g., contains "Room" or "Name"), we skip it.
+    let dataRows = parsed.data as string[][];
+    if (dataRows.length > 0 && /room|ห้อง/i.test(dataRows[0][0] || '')) {
+      dataRows = dataRows.slice(1);
+    }
     
     let importedCount = 0;
 
-    // Use a transaction for bulk inserts to ensure atomic rollback if catastrophic failure occurs
-    // However, since we want to skip/update, we will loop sequentially inside the transaction
     await secureDb.$transaction(async (tx) => {
       for (const row of dataRows) {
-        // Simple CSV parse handling potential spaces
-        const [roomNumber, rentPriceStr, tenantName, tenantPhone] = row.split(",").map(s => s.trim());
+        // Safely extract at least 4 columns
+        const [rawRoom, rawRent, rawTenantName, rawTenantPhone] = row;
         
-        if (!roomNumber) continue;
+        // Zod Validation and Preprocessing
+        const parsedRow = RowSchema.safeParse({
+          RoomNumber: rawRoom || "",
+          RentPrice: rawRent || "0",
+          TenantName: rawTenantName || "",
+          TenantPhone: rawTenantPhone || ""
+        });
 
-        const rentPrice = parseFloat(rentPriceStr) || 0;
+        if (!parsedRow.success) {
+          // Ignore invalid rows or empty room numbers
+          continue;
+        }
 
-        // 1. Create or Update Room
-        let room = await tx.room.findFirst({
+        const { RoomNumber, RentPrice, TenantName, TenantPhone } = parsedRow.data;
+
+        // 1. Upsert Room (Now possible thanks to @@unique([propertyId, number]))
+        const room = await tx.room.upsert({
           where: {
+            propertyId_number: {
+              propertyId: propertyId,
+              number: RoomNumber
+            }
+          },
+          update: {
+            rentPrice: RentPrice,
+            status: TenantName && TenantPhone ? "OCCUPIED" : "AVAILABLE"
+          },
+          create: {
             propertyId: propertyId,
-            number: roomNumber
+            number: RoomNumber,
+            rentPrice: RentPrice,
+            status: TenantName && TenantPhone ? "OCCUPIED" : "AVAILABLE"
           }
         });
 
-        if (room) {
-          room = await tx.room.update({
-            where: { id: room.id },
-            data: {
-              rentPrice: rentPrice,
-              status: tenantName && tenantPhone ? "OCCUPIED" : "AVAILABLE"
-            }
-          });
-        } else {
-          room = await tx.room.create({
-            data: {
-              propertyId: propertyId,
-              number: roomNumber,
-              rentPrice: rentPrice,
-              status: tenantName && tenantPhone ? "OCCUPIED" : "AVAILABLE"
-            }
-          });
-        }
-
-        // 2. Create Tenant if provided
-        if (tenantName && tenantPhone) {
-          // Check if a user with this phone exists (as we mapped phone to user earlier, 
-          // wait, our Tenant schema has `phoneNumber` and `name` is on User schema.)
-          // Actually, our previous schema was:
-          // User: name, email, phone (no phone in User), role
-          // Tenant: userId, roomId, phoneNumber
-          // To create a Tenant, we need a User record first.
-          
+        // 2. Upsert Tenant if provided
+        if (TenantName && TenantPhone) {
           let user = await tx.user.findFirst({
-            where: { 
-              // Create a unique dummy email/username based on phone
-              username: tenantPhone 
-            }
+            where: { username: TenantPhone }
           });
 
           if (!user) {
             user = await tx.user.create({
               data: {
-                name: tenantName,
-                username: tenantPhone,
-                email: `${tenantPhone}@apartment-os.local`, // dummy email
+                name: TenantName,
+                username: TenantPhone,
+                email: `${TenantPhone}@apartment-os.local`,
                 role: "TENANT",
-                // password can be null if relying on LINE login later
               }
             });
+          } else {
+             // Optional: Update existing user name if it changed
+             await tx.user.update({
+               where: { id: user.id },
+               data: { name: TenantName }
+             });
           }
 
-          // Create or update Tenant record
           await tx.tenant.upsert({
-            where: { phoneNumber: tenantPhone },
+            where: { phoneNumber: TenantPhone },
             update: {
               roomId: room.id,
               userId: user.id
             },
             create: {
-              phoneNumber: tenantPhone,
+              phoneNumber: TenantPhone,
               roomId: room.id,
               userId: user.id
             }

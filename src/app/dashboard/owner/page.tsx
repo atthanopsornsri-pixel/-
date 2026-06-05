@@ -3,6 +3,8 @@ import { TrendingUp, AlertCircle, Home } from "lucide-react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { getSecurePrisma } from "@/lib/prisma-secure";
+import { ExportButton } from "@/components/ExportButton";
 
 export default async function OwnerDashboardPage() {
   const session = await getServerSession(authOptions);
@@ -10,6 +12,9 @@ export default async function OwnerDashboardPage() {
   if (!session || (session.user.role !== "OWNER" && session.user.role !== "ADMIN")) {
     redirect("/dashboard"); // Redirect unauthorized users
   }
+
+  const secureDb = await getSecurePrisma();
+  const property = await secureDb.property.findFirst();
 
   const result = await getDashboardMetrics();
   
@@ -40,13 +45,20 @@ export default async function OwnerDashboardPage() {
     <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       
       {/* Page Header */}
-      <div>
-        <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">
-          ภาพรวมธุรกิจ (Business Overview)
-        </h1>
-        <p className="text-slate-500 mt-2 font-medium">
-          สรุปผลประกอบการและสถานะห้องพักประจำเดือนของคุณ
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">
+            ภาพรวมธุรกิจ (Business Overview)
+          </h1>
+          <p className="text-slate-500 mt-2 font-medium">
+            สรุปผลประกอบการและสถานะห้องพักประจำเดือนของคุณ
+          </p>
+        </div>
+        {property && (
+          <div>
+            <ExportButton propertyId={property.id} />
+          </div>
+        )}
       </div>
 
       {/* KPI Cards Grid */}
