@@ -143,3 +143,24 @@
     @apply font-sans;
   }
 }
+
+@media print {
+  html, body {
+    background-color: white !important;
+  }
+  /* Force all wrapper divs to have a white background during print */
+  .bg-\[\#F5F5F7\] {
+    background-color: white !important;
+  }
+  /* Hide sidebar and header during print */
+  aside, header {
+    display: none !important;
+  }
+  /* Remove shadows and borders for cleaner print */
+  * {
+    box-shadow: none !important;
+  }
+  @page {
+    margin: 1cm;
+  }
+}
