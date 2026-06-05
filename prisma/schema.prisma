@@ -23,6 +23,8 @@ model User {
   lineToken     String?  // สำหรับผูก LINE Notify
   role          Role      @default(TENANT)
   pdpaAcceptedAt DateTime? // เก็บวันที่กดยอมรับ PDPA
+  planTier      PlanTier  @default(FREE_TRIAL)
+  planExpiresAt DateTime? // วันหมดอายุแพ็กเกจ (ถ้าหมดแล้วอาจจะใช้งานต่อไม่ได้ถ้าไม่ต่ออายุ)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -38,6 +40,13 @@ enum Role {
   ADMIN
   OWNER
   TENANT
+}
+
+enum PlanTier {
+  FREE_TRIAL
+  STARTER
+  GROWTH
+  ENTERPRISE
 }
 
 model Property {
@@ -276,6 +285,8 @@ model SubscriptionBill {
   amount      Float
   status      BillStatus @default(UNPAID)
   slipUrl     String?
+  planTier    PlanTier @default(STARTER)
+  cycle       String   @default("MONTHLY") // "MONTHLY" หรือ "YEARLY"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

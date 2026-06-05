@@ -25,6 +25,43 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Unauthorized property access" }, { status: 403 });
     }
 
+    // Check Plan Limits
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      include: {
+        properties: {
+          include: {
+            _count: {
+              select: { rooms: { where: { isDeleted: false } } }
+            }
+          }
+        }
+      }
+    });
+
+    if (!user) return NextResponse.json({ message: "User not found" }, { status: 404 });
+
+    const totalRooms = user.properties.reduce((acc: number, p: any) => acc + p._count.rooms, 0);
+
+    let roomLimit = 0;
+    if (user.planTier === "FREE_TRIAL" || user.planTier === "STARTER") {
+      roomLimit = 30;
+    } else if (user.planTier === "GROWTH") {
+      roomLimit = 100;
+    } else if (user.planTier === "ENTERPRISE") {
+      roomLimit = 999999;
+    }
+
+    if (totalRooms >= roomLimit) {
+      return NextResponse.json({ 
+        message: "Room limit reached. Please upgrade your plan.", 
+        code: "LIMIT_REACHED",
+        currentTotal: totalRooms,
+        limit: roomLimit,
+        plan: user.planTier
+      }, { status: 403 });
+    }
+
     // Generate a unique 6-character invite code
     const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
 

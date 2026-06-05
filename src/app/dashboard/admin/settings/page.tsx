@@ -147,6 +147,7 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
+          {/* 
           <div className="space-y-4 pt-6">
             <h2 className="text-xl font-bold text-slate-800 border-b pb-2">ราคาแพ็กเกจ (Pricing)</h2>
             <div className="grid grid-cols-2 gap-4">
@@ -160,6 +161,7 @@ export default function AdminSettingsPage() {
               </div>
             </div>
           </div>
+          */}
 
           <div className="space-y-4 pt-6">
             <h2 className="text-xl font-bold text-slate-800 border-b pb-2">ข้อมูลติดต่อ (Contact)</h2>
