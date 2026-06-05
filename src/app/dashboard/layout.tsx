@@ -54,7 +54,7 @@ export default async function DashboardLayout({
       isExpired = isFreeTrial && now > expiresAt;
       daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
-      const headersList = headers();
+      const headersList = await headers();
       const pathname = headersList.get("x-pathname") || "";
 
       // Redirect if expired AND NOT on the billing page already to prevent loop
