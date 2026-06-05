@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { Cloud, Building2 } from "lucide-react";
+import DashboardButton from "@/components/DashboardButton";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -50,11 +51,7 @@ export default async function Home() {
 
         {/* Primary Action Button */}
         {session ? (
-          <Link href="/dashboard">
-            <Button className="rounded-full bg-slate-900 hover:bg-black text-white px-8 h-[44px] text-[15px] font-medium shadow-md transition-all w-fit min-w-[140px]">
-              ไปที่แดชบอร์ด
-            </Button>
-          </Link>
+          <DashboardButton className="rounded-full bg-slate-900 hover:bg-black text-white px-8 h-[44px] text-[15px] font-medium shadow-md transition-all w-fit min-w-[140px]" />
         ) : (
           <Link href="/login">
             <Button className="rounded-full bg-slate-900 hover:bg-black text-white px-8 h-[44px] text-[15px] font-medium shadow-md transition-all w-fit min-w-[140px]">
