@@ -51,7 +51,15 @@ export default withAuth(
       }
     }
 
-    return NextResponse.next();
+    // Inject pathname into headers for Server Components to read
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set('x-pathname', req.nextUrl.pathname);
+
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      }
+    });
   },
   {
     callbacks: {

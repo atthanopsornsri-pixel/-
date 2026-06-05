@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -34,6 +35,35 @@ export default async function DashboardLayout({
   if (!session) {
     redirect("/login");
   }
+
+  // >>> TRIAL EXPIRATION LOGIC >>>
+  let isExpired = false;
+  let daysLeft = 0;
+  let isFreeTrial = false;
+
+  if (session.user.role === "OWNER") {
+    const dbUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { planTier: true, planExpiresAt: true }
+    });
+
+    if (dbUser) {
+      const now = new Date();
+      const expiresAt = dbUser.planExpiresAt ? new Date(dbUser.planExpiresAt) : now;
+      isFreeTrial = dbUser.planTier === "FREE_TRIAL";
+      isExpired = isFreeTrial && now > expiresAt;
+      daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+      const headersList = headers();
+      const pathname = headersList.get("x-pathname") || "";
+
+      // Redirect if expired AND NOT on the billing page already to prevent loop
+      if (isExpired && pathname !== "/dashboard/saas-billing") {
+        redirect("/dashboard/saas-billing?expired=true");
+      }
+    }
+  }
+  // <<< END TRIAL EXPIRATION LOGIC <<<
 
   // Check for unpaid SaaS bills (Deferred to AsyncNotificationBell)
 
@@ -232,6 +262,16 @@ export default async function DashboardLayout({
             <SignOutButton />
           </div>
         </header>
+
+        {/* 🟡 แถบแบนเนอร์กดดันจิตวิทยา (โชว์เฉพาะคนที่ยังไม่หมดเวลาและใช้ฟรีอยู่) */}
+        {isFreeTrial && daysLeft > 0 && (
+          <div className="bg-amber-50 px-4 py-2.5 text-center text-sm font-medium text-amber-800 border-b border-amber-200 shadow-sm z-40 relative flex flex-col sm:flex-row items-center justify-center gap-2">
+            <span>คุณกำลังอยู่ในช่วงทดลองใช้ฟรี (เหลือเวลาอีก <strong className="text-amber-900">{daysLeft} วัน</strong>)</span>
+            <Link href="/dashboard/saas-billing" className="inline-flex items-center gap-1 font-bold bg-amber-100 hover:bg-amber-200 text-amber-900 px-3 py-1 rounded-full transition-colors text-xs">
+              ดูแพ็กเกจอัปเกรด <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+            </Link>
+          </div>
+        )}
 
         {/* Page Content */}
         <main className="flex-1 p-4 md:p-10 overflow-auto w-full max-w-[100vw]">
