@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -96,11 +97,11 @@ export default function PayBillPage() {
         const updated = await res.json();
         setBill(updated);
       } else {
-        alert("เกิดข้อผิดพลาดในการอัปโหลดหลักฐาน");
+        toast.error("เกิดข้อผิดพลาดในการอัปโหลดหลักฐาน");
       }
     } catch (err) {
       console.error(err);
-      alert("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
     }
     setIsUploading(false);
   };

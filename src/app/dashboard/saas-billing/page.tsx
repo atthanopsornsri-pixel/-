@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -72,14 +73,14 @@ export default function OwnerBillingPage() {
         const uploadData = await uploadRes.json();
         finalSlipUrl = uploadData.url;
       } else {
-        alert("อัปโหลดสลิปไม่สำเร็จ กรุณาลองใหม่");
+        toast.success("อัปโหลดสลิปไม่สำเร็จ กรุณาลองใหม่");
         setIsSubmitting(false);
         return;
       }
     }
 
     if (!finalSlipUrl) {
-      alert("กรุณาแนบสลิปการโอนเงิน");
+      toast.error("กรุณาแนบสลิปการโอนเงิน");
       setIsSubmitting(false);
       return;
     }
@@ -91,11 +92,11 @@ export default function OwnerBillingPage() {
     });
 
     if (res.ok) {
-      alert("ส่งหลักฐานการโอนเงินเรียบร้อย รอผู้ดูแลระบบตรวจสอบ");
+      toast.success("ส่งหลักฐานการโอนเงินเรียบร้อย รอผู้ดูแลระบบตรวจสอบ");
       setIsModalOpen(false);
       fetchData();
     } else {
-      alert("เกิดข้อผิดพลาด");
+      toast.error("เกิดข้อผิดพลาด");
     }
     setIsSubmitting(false);
   };
@@ -109,11 +110,11 @@ export default function OwnerBillingPage() {
     });
     
     if (res.ok) {
-      alert("สร้างบิลแจ้งชำระเงินเรียบร้อย กรุณาแนบสลิปในรายการบิลด้านล่าง");
+      toast.success("สร้างบิลแจ้งชำระเงินเรียบร้อย กรุณาแนบสลิปในรายการบิลด้านล่าง");
       setIsUpgradeOpen(false);
       fetchData();
     } else {
-      alert("เกิดข้อผิดพลาด");
+      toast.error("เกิดข้อผิดพลาด");
     }
     setIsUpgrading(false);
   };

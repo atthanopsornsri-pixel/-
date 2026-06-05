@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -61,13 +62,13 @@ export default function MaintenancePage() {
         setDescription("");
         setImageFile(null);
         fetchRequests();
-        alert("แจ้งซ่อมสำเร็จ");
+        toast.success("แจ้งซ่อมสำเร็จ");
       } else {
         const data = await res.json();
-        alert(data.message || "เกิดข้อผิดพลาด");
+        toast.error(data.message || "เกิดข้อผิดพลาด");
       }
     } catch (err) {
-      alert("เกิดข้อผิดพลาด");
+      toast.error("เกิดข้อผิดพลาด");
     } finally {
       setIsSubmitting(false);
     }

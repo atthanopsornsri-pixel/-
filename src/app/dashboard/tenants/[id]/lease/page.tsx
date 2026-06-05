@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 
 import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -41,16 +42,16 @@ export default function LeasePrintPage() {
         });
 
         if (res.ok) {
-          alert("อัปโหลดสัญญาเช่าเรียบร้อยแล้ว");
+          toast.success("อัปโหลดสัญญาเช่าเรียบร้อยแล้ว");
           window.location.reload();
         } else {
-          alert("เกิดข้อผิดพลาดในการอัปโหลด");
+          toast.error("เกิดข้อผิดพลาดในการอัปโหลด");
         }
       };
       reader.readAsDataURL(file);
     } catch (error) {
       console.error(error);
-      alert("เกิดข้อผิดพลาด");
+      toast.error("เกิดข้อผิดพลาด");
     } finally {
       setIsUploading(false);
     }
@@ -92,7 +93,7 @@ export default function LeasePrintPage() {
   const handleViewContract = () => {
     const url = tenant.contractPdfUrl;
     if (!url) {
-      alert("ไม่พบไฟล์สัญญา หรืออัปโหลดไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      toast.success("ไม่พบไฟล์สัญญา หรืออัปโหลดไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
       return;
     }
     
@@ -115,7 +116,7 @@ export default function LeasePrintPage() {
         window.open(blobUrl, "_blank", "noopener,noreferrer");
       } catch (error) {
         console.error("Failed to parse base64 file", error);
-        alert("ไฟล์มีปัญหา ไม่สามารถเปิดได้");
+        toast.error("ไฟล์มีปัญหา ไม่สามารถเปิดได้");
       }
     } else {
       // ถ้าเป็นลิงก์ Cloud Storage ทั่วไป

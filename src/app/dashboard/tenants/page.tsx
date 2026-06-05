@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -74,10 +75,10 @@ export default function TenantsPage() {
         fetchAvailableRooms();
       } else {
         const errorData = await res.json();
-        alert(errorData.message || "เกิดข้อผิดพลาดในการสร้างบัญชี");
+        toast.error(errorData.message || "เกิดข้อผิดพลาดในการสร้างบัญชี");
       }
     } catch (error) {
-      alert("เกิดข้อผิดพลาดในการสร้างบัญชี");
+      toast.error("เกิดข้อผิดพลาดในการสร้างบัญชี");
     } finally {
       setIsSubmitting(false);
     }
@@ -152,7 +153,7 @@ export default function TenantsPage() {
                         <Button variant="outline" size="sm" className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={async () => {
                           if(confirm('คุณแน่ใจหรือไม่ที่จะให้ผู้เช่าคนนี้ย้ายออก? ระบบจะลบบัญชีและคืนสถานะห้องเป็น "ว่าง"')) {
                             const res = await fetch(`/api/owner/tenants/${tenant.id}`, { method: 'DELETE' });
-                            if(res.ok) { fetchTenants(); fetchAvailableRooms(); } else { alert('เกิดข้อผิดพลาด'); }
+                            if(res.ok) { fetchTenants(); fetchAvailableRooms(); } else { toast.error('เกิดข้อผิดพลาด'); }
                           }
                         }}>
                           ย้ายออก

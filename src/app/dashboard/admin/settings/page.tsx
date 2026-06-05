@@ -1,5 +1,6 @@
 /* eslint-disable */
 "use client";
+import { toast } from "sonner";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -92,13 +93,13 @@ export default function AdminSettingsPage() {
       });
 
       if (res.ok) {
-        alert("บันทึกการตั้งค่าหน้า Landing Page สำเร็จ!");
+        toast.success("บันทึกการตั้งค่าหน้า Landing Page สำเร็จ!");
       } else {
-        alert("เกิดข้อผิดพลาดในการบันทึก");
+        toast.error("เกิดข้อผิดพลาดในการบันทึก");
       }
     } catch (error) {
       console.error(error);
-      alert("เกิดข้อผิดพลาด");
+      toast.error("เกิดข้อผิดพลาด");
     }
 
     setIsSaving(false);

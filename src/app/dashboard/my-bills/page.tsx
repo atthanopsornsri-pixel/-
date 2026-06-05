@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -34,7 +35,7 @@ export default function MyBillsPage() {
   };
 
   const submitSlip = async () => {
-    if (!slipFile) return alert("กรุณาแนบสลิปก่อนยืนยัน");
+    if (!slipFile) return toast.error("กรุณาแนบสลิปก่อนยืนยัน");
     setIsUploading(true);
 
     try {
@@ -65,17 +66,17 @@ export default function MyBillsPage() {
       });
 
       if (res.ok) {
-        alert("ตรวจสอบสลิปอัตโนมัติสำเร็จ! ชำระเงินเรียบร้อยแล้ว");
+        toast.success("ตรวจสอบสลิปอัตโนมัติสำเร็จ! ชำระเงินเรียบร้อยแล้ว");
         setIsPaying(false);
         setSlipFile(null);
         setSelectedBill(null);
         fetchBills();
       } else {
-        alert("ตรวจสอบสลิปไม่ผ่าน กรุณาลองใหม่อีกครั้ง");
+        toast.error("ตรวจสอบสลิปไม่ผ่าน กรุณาลองใหม่อีกครั้ง");
       }
     } catch (err) {
       console.error(err);
-      alert("เกิดข้อผิดพลาดในการตรวจสอบสลิป");
+      toast.error("เกิดข้อผิดพลาดในการตรวจสอบสลิป");
     } finally {
       setIsUploading(false);
     }

@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 
 import { useState, useEffect, useRef, ChangeEvent, FormEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -108,14 +109,14 @@ export default function ContractSettingsPage() {
       });
 
       if (res.ok) {
-        alert("บันทึกแม่แบบสัญญาเช่าเรียบร้อยแล้ว");
+        toast.success("บันทึกแม่แบบสัญญาเช่าเรียบร้อยแล้ว");
         setProperties(properties.map(p => p.id === selectedPropertyId ? { ...p, leaseTemplate: template } : p));
       } else {
-        alert("เกิดข้อผิดพลาดในการบันทึก");
+        toast.error("เกิดข้อผิดพลาดในการบันทึก");
       }
     } catch (error) {
       console.error(error);
-      alert("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
     } finally {
       setIsSaving(false);
     }

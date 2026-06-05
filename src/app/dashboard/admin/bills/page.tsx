@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -46,10 +47,10 @@ export default function AdminBillsPage() {
     });
 
     if (res.ok) {
-      alert("ออกบิลสำเร็จ");
+      toast.success("ออกบิลสำเร็จ");
       fetchData(); // Refresh list
     } else {
-      alert("เกิดข้อผิดพลาดในการออกบิล");
+      toast.error("เกิดข้อผิดพลาดในการออกบิล");
     }
     setIsCreating(false);
   };

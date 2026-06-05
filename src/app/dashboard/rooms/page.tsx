@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -105,11 +106,11 @@ export default function RoomsPage() {
         
         fetchRooms(propertyId);
       } else {
-        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+        toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
       }
     } catch (error) {
       console.error(error);
-      alert("Error saving room");
+      toast.error("Error saving room");
     } finally {
       setIsUploading(false);
     }
@@ -120,7 +121,7 @@ export default function RoomsPage() {
     try {
       const res = await fetch(`/api/rooms/${id}`, { method: "DELETE" });
       if (res.ok) fetchRooms();
-      else alert("ไม่สามารถลบห้องได้ อาจมีผู้เช่าอยู่");
+      else toast.error("ไม่สามารถลบห้องได้ อาจมีผู้เช่าอยู่");
     } catch (error) {
       console.error(error);
     }
@@ -164,7 +165,7 @@ export default function RoomsPage() {
         setIsEditModalOpen(false);
         fetchRooms();
       } else {
-        alert("เกิดข้อผิดพลาดในการแก้ไข");
+        toast.error("เกิดข้อผิดพลาดในการแก้ไข");
       }
     } catch (error) {
       console.error(error);

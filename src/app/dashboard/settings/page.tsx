@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -30,9 +31,9 @@ export default function SettingsPage() {
     });
 
     if (res.ok) {
-      alert("บันทึกการตั้งค่าสำเร็จ");
+      toast.success("บันทึกการตั้งค่าสำเร็จ");
     } else {
-      alert("เกิดข้อผิดพลาด");
+      toast.error("เกิดข้อผิดพลาด");
     }
     setIsSaving(false);
   };
@@ -79,7 +80,7 @@ export default function SettingsPage() {
           };
           const password = target.password.value;
           if (password !== target.confirmPassword.value) {
-            alert("รหัสผ่านไม่ตรงกัน!");
+            toast.error("รหัสผ่านไม่ตรงกัน!");
             return;
           }
           setIsSaving(true);
@@ -89,11 +90,11 @@ export default function SettingsPage() {
             body: JSON.stringify({ password }),
           });
           if (res.ok) {
-            alert("เปลี่ยนรหัสผ่านสำเร็จ!");
+            toast.success("เปลี่ยนรหัสผ่านสำเร็จ!");
             target.password.value = "";
             target.confirmPassword.value = "";
           } else {
-            alert("เกิดข้อผิดพลาด");
+            toast.error("เกิดข้อผิดพลาด");
           }
           setIsSaving(false);
         }} className="space-y-4">

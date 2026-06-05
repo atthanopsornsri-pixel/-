@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -121,7 +122,7 @@ export default function TenantContractPage() {
       ctx!.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height).data.buffer
     );
     if (!pixelBuffer.some(color => color !== 0)) {
-      alert("กรุณาเซ็นชื่อก่อนกดยืนยัน");
+      toast.error("กรุณาเซ็นชื่อก่อนกดยืนยัน");
       return;
     }
 
@@ -134,14 +135,14 @@ export default function TenantContractPage() {
       });
 
       if (res.ok) {
-        alert("เซ็นสัญญาสำเร็จ");
+        toast.success("เซ็นสัญญาสำเร็จ");
         window.location.reload();
       } else {
-        alert("เกิดข้อผิดพลาดในการบันทึก");
+        toast.error("เกิดข้อผิดพลาดในการบันทึก");
       }
     } catch (error) {
       console.error(error);
-      alert("เกิดข้อผิดพลาด");
+      toast.error("เกิดข้อผิดพลาด");
     } finally {
       setIsSubmitting(false);
     }

@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -136,7 +137,7 @@ export default function BillingPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!roomId) return alert("กรุณาเลือกห้องพัก");
+    if (!roomId) return toast.error("กรุณาเลือกห้องพัก");
     setIsLoading(true);
 
     const res = await fetch("/api/bills", {
@@ -150,14 +151,14 @@ export default function BillingPage() {
     });
 
     if (res.ok) {
-      alert("สร้างบิลสำเร็จ");
+      toast.success("สร้างบิลสำเร็จ");
       fetchBills();
       // Reset some fields
       setWaterUnits(""); setWaterAmount("");
       setElectricUnits(""); setElectricAmount("");
     } else {
       const data = await res.json();
-      alert(data.message || "เกิดข้อผิดพลาด");
+      toast.error(data.message || "เกิดข้อผิดพลาด");
     }
     
     setIsLoading(false);
@@ -169,15 +170,15 @@ export default function BillingPage() {
         method: "PATCH",
       });
       if (res.ok) {
-        alert("อนุมัติบิลสำเร็จ! สถานะเปลี่ยนเป็นชำระแล้ว");
+        toast.success("อนุมัติบิลสำเร็จ! สถานะเปลี่ยนเป็นชำระแล้ว");
         setSelectedSlip(null);
         fetchBills();
       } else {
-        alert("เกิดข้อผิดพลาดในการอนุมัติ");
+        toast.error("เกิดข้อผิดพลาดในการอนุมัติ");
       }
     } catch (err) {
       console.error(err);
-      alert("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
     }
   };
 

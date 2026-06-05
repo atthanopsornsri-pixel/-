@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -32,10 +33,10 @@ export default function AdminCodesPage() {
     });
 
     if (res.ok) {
-      alert("สร้างโค้ดสำเร็จ");
+      toast.success("สร้างโค้ดสำเร็จ");
       fetchCodes();
     } else {
-      alert("เกิดข้อผิดพลาดในการสร้างโค้ด");
+      toast.error("เกิดข้อผิดพลาดในการสร้างโค้ด");
     }
     setIsLoading(false);
   };

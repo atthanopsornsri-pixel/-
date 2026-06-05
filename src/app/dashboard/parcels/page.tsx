@@ -1,5 +1,6 @@
 /* eslint-disable */
 "use client";
+import { toast } from "sonner";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -63,7 +64,7 @@ export default function ParcelsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!roomId) return alert("กรุณาเลือกห้อง");
+    if (!roomId) return toast.error("กรุณาเลือกห้อง");
 
     setIsSubmitting(true);
     const res = await fetch("/api/parcels", {
@@ -77,9 +78,9 @@ export default function ParcelsPage() {
       setRecipientName("");
       setRoomId("");
       fetchParcels();
-      alert("บันทึกพัสดุสำเร็จ");
+      toast.success("บันทึกพัสดุสำเร็จ");
     } else {
-      alert("เกิดข้อผิดพลาด");
+      toast.error("เกิดข้อผิดพลาด");
     }
     setIsSubmitting(false);
   };

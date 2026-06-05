@@ -1,4 +1,5 @@
 "use client";
+import { toast } from "sonner";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -120,11 +121,11 @@ export default function PropertiesPage() {
         fetchProperties();
         router.refresh();
       } else {
-        alert("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+        toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
       }
     } catch (err) {
       console.error(err);
-      alert("เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ");
+      toast.error("เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ");
     }
     setIsUploading(false);
   };
@@ -164,15 +165,15 @@ export default function PropertiesPage() {
       });
 
       if (res.ok) {
-        alert("บันทึกการตั้งค่าบิลสำเร็จ!");
+        toast.success("บันทึกการตั้งค่าบิลสำเร็จ!");
         setSelectedProp(null);
         fetchProperties();
       } else {
-        alert("เกิดข้อผิดพลาดในการบันทึก");
+        toast.error("เกิดข้อผิดพลาดในการบันทึก");
       }
     } catch (err) {
       console.error(err);
-      alert("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
     }
     setIsSavingSettings(false);
   };

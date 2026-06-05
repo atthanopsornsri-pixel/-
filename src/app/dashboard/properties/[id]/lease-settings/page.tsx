@@ -1,5 +1,6 @@
 /* eslint-disable */
 "use client";
+import { toast } from "sonner";
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -42,10 +43,10 @@ export default function LeaseSettingsPage() {
     });
 
     if (res.ok) {
-      alert("บันทึกเทมเพลตสัญญาเช่าสำเร็จ");
+      toast.success("บันทึกเทมเพลตสัญญาเช่าสำเร็จ");
       router.push("/dashboard/properties");
     } else {
-      alert("เกิดข้อผิดพลาดในการบันทึก");
+      toast.error("เกิดข้อผิดพลาดในการบันทึก");
     }
     setIsSaving(false);
   };
