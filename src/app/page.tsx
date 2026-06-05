@@ -369,8 +369,8 @@ export default async function Home() {
             <p className="mt-1 text-xs text-slate-600">© 2026 JadHor OS. All rights reserved.</p>
           </div>
           <div className="flex gap-8 text-sm font-medium">
-            <Link href="#" className="hover:text-white transition-colors">เงื่อนไขการใช้งาน</Link>
-            <Link href="#" className="hover:text-white transition-colors">นโยบายความเป็นส่วนตัว</Link>
+            <Link href="/terms" className="hover:text-white transition-colors">เงื่อนไขการใช้งาน</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors">นโยบายความเป็นส่วนตัว</Link>
           </div>
         </div>
       </footer>
