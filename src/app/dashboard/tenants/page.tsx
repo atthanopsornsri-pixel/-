@@ -146,7 +146,7 @@ export default function TenantsPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="outline" size="sm" className="rounded-xl border-slate-200 text-slate-600 hover:text-slate-900" onClick={() => window.open(`/dashboard/tenants/${tenant.id}/lease`, '_blank')}>
+                        <Button variant="outline" size="sm" className="rounded-xl border-slate-200 text-slate-600 hover:text-slate-900" onClick={() => window.open(`/dashboard/tenants/${tenant.id}/contract`, '_blank')}>
                           พิมพ์สัญญาเช่า
                         </Button>
                         <Button variant="outline" size="sm" className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={async () => {
