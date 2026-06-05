@@ -40,21 +40,52 @@ export default async function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
-            <h3 className="text-sm font-bold tracking-wide text-blue-700">เจ้าของหอพักทั้งหมด</h3>
-            <p className="text-4xl font-black mt-2 text-blue-900">{totalOwners} <span className="text-sm font-normal text-blue-600/80">บัญชี</span></p>
+          <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden group transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-500 text-blue-600">
+              <svg className="w-24 h-24 -mt-4 -mr-4" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" /></svg>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-blue-100 text-blue-500 flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" /></svg>
+            </div>
+            <span className="text-blue-700 text-sm font-bold tracking-wide relative z-10">เจ้าของหอพักทั้งหมด</span>
+            <div className="text-4xl font-black mt-2 text-blue-900 relative z-10">{totalOwners}</div>
+            <p className="text-blue-600/80 text-xs mt-2 font-medium relative z-10">บัญชีผู้ให้บริการในระบบ</p>
           </div>
-          <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
-            <h3 className="text-sm font-bold tracking-wide text-emerald-700">หอพักในระบบ</h3>
-            <p className="text-4xl font-black mt-2 text-emerald-900">{totalProperties} <span className="text-sm font-normal text-emerald-600/80">แห่ง</span></p>
+
+          <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden group transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-500 text-emerald-600">
+              <svg className="w-24 h-24 -mt-4 -mr-4" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4 group-hover:bg-emerald-600 group-hover:text-white transition-colors duration-300">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
+            </div>
+            <span className="text-emerald-700 text-sm font-bold tracking-wide relative z-10">หอพักในระบบ</span>
+            <div className="text-4xl font-black mt-2 text-emerald-900 relative z-10">{totalProperties}</div>
+            <p className="text-emerald-600/80 text-xs mt-2 font-medium relative z-10">สถานที่ให้บริการทั้งหมด</p>
           </div>
-          <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
-            <h3 className="text-sm font-bold tracking-wide text-purple-700">รายได้แพลตฟอร์ม (SaaS)</h3>
-            <p className="text-4xl font-black mt-2 text-purple-900">฿{totalRevenue.toLocaleString()} <span className="text-sm font-normal text-purple-600/80">รวม</span></p>
+
+          <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden group transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 group-hover:-rotate-12 transition-transform duration-500 text-purple-600">
+              <svg className="w-24 h-24 -mt-4 -mr-4" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" /></svg>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center mb-4 group-hover:bg-purple-600 group-hover:text-white transition-colors duration-300">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" /><path fillRule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clipRule="evenodd" /></svg>
+            </div>
+            <span className="text-purple-700 text-sm font-bold tracking-wide relative z-10">รายได้แพลตฟอร์ม (SaaS)</span>
+            <div className="text-4xl font-black mt-2 text-purple-900 tracking-tight relative z-10">฿{totalRevenue.toLocaleString()}</div>
+            <p className="text-purple-600/80 text-xs mt-2 font-medium relative z-10">ยอดชำระแล้วรวม</p>
           </div>
-          <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
-            <h3 className="text-sm font-bold tracking-wide text-orange-700">Invite Code รอใช้งาน</h3>
-            <p className="text-4xl font-black mt-2 text-orange-900">{pendingInvites} <span className="text-sm font-normal text-orange-600/80">โค้ด</span></p>
+
+          <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden group transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-500 text-orange-600">
+              <svg className="w-24 h-24 -mt-4 -mr-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm4.707 3.707a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L8.414 9H14a1 1 0 100-2H8.414l1.293-1.293z" clipRule="evenodd" /></svg>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center mb-4 group-hover:bg-orange-500 group-hover:text-white transition-colors duration-300">
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm4.707 3.707a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L8.414 9H14a1 1 0 100-2H8.414l1.293-1.293z" clipRule="evenodd" /></svg>
+            </div>
+            <span className="text-orange-700 text-sm font-bold tracking-wide relative z-10">Invite Code รอใช้งาน</span>
+            <div className="text-4xl font-black mt-2 text-orange-900 tracking-tight relative z-10">{pendingInvites}</div>
+            <p className="text-orange-600/80 text-xs mt-2 font-medium relative z-10">โค้ดที่ยังไม่ถูกเปิดใช้</p>
           </div>
         </div>
       </div>
