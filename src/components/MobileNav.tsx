@@ -47,7 +47,7 @@ export default function MobileNav({ role }: MobileNavProps) {
         <div className="p-6 flex items-center justify-between border-b border-slate-200/40">
           <Link href="/" onClick={closeNav} className="flex items-center gap-3 group cursor-pointer hover:opacity-80 transition-opacity">
             <div className="relative h-12 w-auto flex items-center justify-start">
-              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={180} height={48} className="object-contain h-12 w-auto" priority />
+              <Image src="/images/logo.png" alt="JadHor OS Logo" width={180} height={48} className="object-contain h-12 w-auto" priority />
             </div>
           </Link>
           <button onClick={closeNav} className="p-2 rounded-full hover:bg-slate-200 text-slate-500 transition-colors">

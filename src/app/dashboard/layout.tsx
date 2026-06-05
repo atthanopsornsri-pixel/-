@@ -38,7 +38,7 @@ export default async function DashboardLayout({
         <div className="p-8 pb-4">
           <Link href="/" className="flex items-center gap-3 mb-2 group cursor-pointer hover:opacity-80 transition-opacity">
             <div className="relative h-14 w-full flex items-center justify-start group-hover:scale-105 transition-transform">
-              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={220} height={56} className="object-contain h-14 w-auto" priority />
+              <Image src="/images/logo.png" alt="JadHor OS Logo" width={220} height={56} className="object-contain h-14 w-auto" priority />
             </div>
           </Link>
           <div className="inline-block mt-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-medium text-slate-500">

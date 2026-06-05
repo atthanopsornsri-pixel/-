@@ -7,12 +7,12 @@ export default function PrivacyPage() {
       <div className="max-w-3xl mx-auto bg-white rounded-3xl shadow-sm border border-slate-100 p-8 md:p-12 space-y-8">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">นโยบายการคุ้มครองข้อมูลส่วนบุคคล (Privacy Policy)</h1>
-          <p className="text-slate-500 mt-2">สำหรับผู้เช่า (Apartment OS)</p>
+          <p className="text-slate-500 mt-2">สำหรับผู้เช่า (JadHor OS)</p>
         </div>
         
         <div className="space-y-6 text-slate-700 leading-relaxed">
           <p>
-            เพื่อให้การใช้งานระบบ Apartment OS เป็นไปอย่างสมบูรณ์และปลอดภัย ทางเราจำเป็นต้องเก็บรวบรวมและประมวลผลข้อมูลส่วนบุคคลของคุณ ดังนี้:
+            เพื่อให้การใช้งานระบบ JadHor OS เป็นไปอย่างสมบูรณ์และปลอดภัย ทางเราจำเป็นต้องเก็บรวบรวมและประมวลผลข้อมูลส่วนบุคคลของคุณ ดังนี้:
           </p>
 
           <div className="space-y-3">
@@ -37,7 +37,7 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-bold text-slate-900">3. การเปิดเผยข้อมูล:</h2>
             <ul className="list-disc pl-5 space-y-2">
               <li>ข้อมูลของคุณจะถูกเข้าถึงได้โดย <strong>&quot;เจ้าของหอพักหรือผู้ดูแลระบบของอาคารที่คุณพักอาศัยอยู่เท่านั้น&quot;</strong></li>
-              <li>Apartment OS ในฐานะผู้ให้บริการซอฟต์แวร์ จะไม่นำข้อมูลของคุณไปขายต่อ หรือส่งมอบให้บุคคลที่สามเพื่อการโฆษณาเด็ดขาด</li>
+              <li>JadHor OS ในฐานะผู้ให้บริการซอฟต์แวร์ จะไม่นำข้อมูลของคุณไปขายต่อ หรือส่งมอบให้บุคคลที่สามเพื่อการโฆษณาเด็ดขาด</li>
             </ul>
           </div>
 

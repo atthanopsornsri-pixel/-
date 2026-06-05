@@ -159,7 +159,7 @@ export default function BillPrintPage() {
             <div className="flex-1 bg-white border border-slate-300 rounded p-1 flex flex-col items-center text-center">
               <p className="text-[11px] font-bold mb-1 leading-tight">2. สแกนส่งสลิป</p>
               <QRCodeSVG 
-                value={typeof window !== "undefined" ? `${window.location.origin}/pay/${bill.id}` : `https://apartmentos.com/pay/${bill.id}`} 
+                value={typeof window !== "undefined" ? `${window.location.origin}/pay/${bill.id}` : `https://JadHor OS.com/pay/${bill.id}`} 
                 size={50} 
                 level="L" 
               />

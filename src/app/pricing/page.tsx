@@ -8,7 +8,7 @@ export default function PricingPage() {
       <nav className="p-6">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Link href="/" className="text-2xl font-black text-blue-600 tracking-tighter">
-            Apartment<span className="text-slate-800">OS</span>
+            JadHor<span className="text-slate-800">OS</span>
           </Link>
           <div className="space-x-4">
             <Link href="/login">

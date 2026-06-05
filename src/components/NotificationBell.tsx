@@ -44,7 +44,7 @@ export default function NotificationBell({ hasUnpaidBills }: { hasUnpaidBills: b
               </div>
               <div>
                 <p className="text-sm font-bold text-slate-800">บิลค่าบริการใหม่</p>
-                <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">คุณมียอดค้างชำระค่าบริการระบบ ApartmentOS กรุณาตรวจสอบและชำระเงิน</p>
+                <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">คุณมียอดค้างชำระค่าบริการระบบ JadHor OS กรุณาตรวจสอบและชำระเงิน</p>
               </div>
             </Link>
           ) : (

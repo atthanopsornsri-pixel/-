@@ -45,7 +45,7 @@ export function LoginForm() {
       {/* Logo */}
       <div className="mb-8 relative flex items-center justify-center">
         <div className="relative h-20 w-auto flex items-center justify-center">
-          <Image src="/images/logo.png" alt="ApartmentOS Logo" width={280} height={80} className="object-contain h-20 w-auto" priority />
+          <Image src="/images/logo.png" alt="JadHor OS Logo" width={280} height={80} className="object-contain h-20 w-auto" priority />
         </div>
       </div>
 
@@ -54,7 +54,7 @@ export function LoginForm() {
           ลงชื่อเข้าสู่ระบบ
         </h2>
         <p className="text-[15px] text-slate-500">
-          {isTenant ? "ด้วยรหัสลูกบ้าน หรือ อีเมลของคุณ" : "ด้วยบัญชี ApartmentOS ของคุณ"}
+          {isTenant ? "ด้วยรหัสลูกบ้าน หรือ อีเมลของคุณ" : "ด้วยบัญชี JadHor OS ของคุณ"}
         </p>
       </div>
 
@@ -101,7 +101,7 @@ export function LoginForm() {
           {/* Links */}
           <div className="flex flex-col items-center gap-3 text-[14px]">
             <Link href="/register" className="text-blue-600 hover:text-blue-700 hover:underline">
-              สร้างบัญชี ApartmentOS ของคุณ
+              สร้างบัญชี JadHor OS ของคุณ
             </Link>
             
             {!isTenant && (
@@ -114,7 +114,7 @@ export function LoginForm() {
         
         {/* Additional Info / Footer text */}
         <div className="mt-10 text-center text-[12px] text-slate-400 leading-relaxed px-4">
-          ข้อมูลบัญชี ApartmentOS ของคุณได้รับการปกป้องเพื่อให้แน่ใจว่าข้อมูลของคุณปลอดภัย การใช้บริการถือว่าคุณยอมรับเงื่อนไขและข้อตกลงของเรา <br/>
+          ข้อมูลบัญชี JadHor OS ของคุณได้รับการปกป้องเพื่อให้แน่ใจว่าข้อมูลของคุณปลอดภัย การใช้บริการถือว่าคุณยอมรับเงื่อนไขและข้อตกลงของเรา <br/>
           <Link href="/" className="text-blue-600 hover:underline mt-2 inline-block">กลับหน้าเว็บไซต์หลัก</Link>
         </div>
       </form>

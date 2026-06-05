@@ -19,9 +19,9 @@ export default async function Home() {
         <div className="w-full px-4 md:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 text-slate-800 font-semibold text-[19px] tracking-tight">
             <div className="relative w-8 h-8">
-              <Image src="/images/logo.png" alt="Apartment OS Logo" fill className="object-contain" />
+              <Image src="/images/logo.png" alt="JadHor OS Logo" fill className="object-contain" />
             </div>
-            Apartment OS
+            JadHor OS
           </div>
           <div className="flex items-center gap-4">
             {/* Optional right nav icons like iCloud */}
@@ -36,13 +36,16 @@ export default async function Home() {
         {/* Center Logo Icon */}
         <div className="mb-8 relative mt-16 md:mt-0">
           <div className="relative w-32 h-32 md:w-48 md:h-48 drop-shadow-xl hover:scale-105 transition-transform duration-500">
-             <Image src="/images/logo.png" alt="Apartment OS Logo" fill className="object-contain" priority />
+             <Image src="/images/logo.png" alt="JadHor OS Logo" fill className="object-contain" priority />
           </div>
         </div>
         
         {/* Large Brand Text */}
-        <h1 className="text-[42px] md:text-[56px] font-semibold text-slate-900 tracking-tight leading-none mb-10">
-          Apartment OS
+        <h1 className="text-[42px] md:text-[56px] font-semibold text-slate-900 tracking-tight leading-none mb-10 text-center flex flex-col items-center gap-2">
+          JadHor OS
+          <span className="text-2xl md:text-3xl font-medium text-slate-500 tracking-normal">
+            (จัดหอ)
+          </span>
         </h1>
 
         {/* Primary Action Button */}
@@ -72,7 +75,7 @@ export default async function Home() {
         {/* Register link underneath like Apple ID creation */}
         {!session && (
           <div className="mt-10 text-[14px] text-slate-600">
-            ยังไม่มีบัญชีใช่หรือไม่? <Link href="/register" className="text-blue-600 hover:underline">สร้างบัญชี Apartment OS ทันที</Link>
+            ยังไม่มีบัญชีใช่หรือไม่? <Link href="/register" className="text-blue-600 hover:underline">สร้างบัญชี JadHor OS ทันที</Link>
           </div>
         )}
 
@@ -82,7 +85,7 @@ export default async function Home() {
             <div className="absolute inset-0 bg-gradient-to-t from-slate-900/5 to-transparent z-10 pointer-events-none"></div>
             <Image 
               src="/images/dashboard-mockup.png" 
-              alt="Apartment OS Dashboard Preview" 
+              alt="JadHor OS Dashboard Preview" 
               width={1400} 
               height={900} 
               className="w-full h-auto object-cover"
@@ -330,10 +333,10 @@ export default async function Home() {
         <div className="container mx-auto px-4 max-w-6xl flex flex-col md:flex-row justify-between items-center">
           <div className="mb-6 md:mb-0 text-center md:text-left">
             <div className="relative inline-flex items-center bg-white px-3 py-1.5 rounded-xl mb-2">
-              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={160} height={40} className="object-contain h-10 w-auto" />
+              <Image src="/images/logo.png" alt="JadHor OS Logo" width={160} height={40} className="object-contain h-10 w-auto" />
             </div>
             <p className="mt-2 text-sm text-slate-500">แพลตฟอร์มบริหารจัดการหอพักยุคใหม่</p>
-            <p className="mt-1 text-xs text-slate-600">© 2026 ApartmentOS. All rights reserved.</p>
+            <p className="mt-1 text-xs text-slate-600">© 2026 JadHor OS. All rights reserved.</p>
           </div>
           <div className="flex gap-8 text-sm font-medium">
             <Link href="#" className="hover:text-white transition-colors">เงื่อนไขการใช้งาน</Link>

@@ -183,7 +183,7 @@ export default function LeasePrintPage() {
         </div>
         
         <div className="mt-16 pt-4 border-t border-slate-200 text-center text-slate-400 text-xs print:absolute print:bottom-8 print:w-full print:left-0 print:border-none">
-          สร้างโดยระบบบริหารจัดการหอพัก ApartmentOS (Paperless Lease Agreement)
+          สร้างโดยระบบบริหารจัดการหอพัก JadHor OS (Paperless Lease Agreement)
         </div>
       </div>
     </div>

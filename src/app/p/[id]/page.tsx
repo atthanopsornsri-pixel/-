@@ -151,7 +151,7 @@ export default async function PropertyPublicPage({ params }: { params: Promise<{
       {/* Footer Branding */}
       <footer className="py-8 text-center border-t border-slate-200 bg-white">
         <p className="text-sm text-slate-400">
-          Powered by <span className="font-bold text-slate-600">ApartmentOS</span>
+          Powered by <span className="font-bold text-slate-600">JadHor OS</span>
         </p>
       </footer>
     </div>
