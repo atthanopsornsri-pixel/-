@@ -68,6 +68,15 @@ export default function RoomsPage() {
   const [editNumber, setEditNumber] = useState("");
   const [editFloor, setEditFloor] = useState("");
   const [editRentPrice, setEditRentPrice] = useState("");
+  
+  // New MVP States
+  const [editStatus, setEditStatus] = useState("AVAILABLE");
+  const [editWaterMeter, setEditWaterMeter] = useState("");
+  const [editElectricMeter, setEditElectricMeter] = useState("");
+  const [editHasAircon, setEditHasAircon] = useState(false);
+  const [editHasFan, setEditHasFan] = useState(false);
+  const [editHasFurniture, setEditHasFurniture] = useState(false);
+  
   const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
@@ -182,6 +191,12 @@ export default function RoomsPage() {
     setEditNumber(room.number);
     setEditFloor(room.floor || "");
     setEditRentPrice(room.rentPrice.toString());
+    setEditStatus(room.status || "AVAILABLE");
+    setEditWaterMeter(room.waterMeterStart?.toString() || "");
+    setEditElectricMeter(room.electricMeterStart?.toString() || "");
+    setEditHasAircon(room.hasAircon || false);
+    setEditHasFan(room.hasFan || false);
+    setEditHasFurniture(room.hasFurniture || false);
     setIsEditModalOpen(true);
   };
 
@@ -195,7 +210,13 @@ export default function RoomsPage() {
         body: JSON.stringify({
           number: editNumber,
           floor: editFloor,
-          rentPrice: parseFloat(editRentPrice)
+          rentPrice: parseFloat(editRentPrice),
+          status: editStatus,
+          waterMeterStart: parseFloat(editWaterMeter) || 0,
+          electricMeterStart: parseFloat(editElectricMeter) || 0,
+          hasAircon: editHasAircon,
+          hasFan: editHasFan,
+          hasFurniture: editHasFurniture
         }),
       });
 
@@ -430,6 +451,73 @@ export default function RoomsPage() {
               <div className="space-y-2">
                 <Label>ค่าเช่าพื้นฐาน (บาท/เดือน)</Label>
                 <Input type="number" value={editRentPrice} onChange={e => setEditRentPrice(e.target.value)} required className="rounded-xl h-11" />
+              </div>
+
+              <div className="mt-6 space-y-4 border-t border-slate-100 py-4">
+                <h3 className="text-md font-semibold text-slate-800">การจัดการสถานะและมิเตอร์ (MVP)</h3>
+                
+                {/* 1. เลือกสถานะห้อง */}
+                <div className="space-y-2">
+                  <Label>สถานะห้องพัก</Label>
+                  <select 
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value)}
+                    className="w-full rounded-xl h-11 bg-slate-50 border border-slate-200 focus:bg-white px-4 text-sm"
+                  >
+                    <option value="AVAILABLE">🟢 ว่าง (พร้อมปล่อยเช่า)</option>
+                    <option value="OCCUPIED">🔵 มีผู้เช่า</option>
+                    <option value="MAINTENANCE">🔴 ปรับปรุง / ซ่อมแซม</option>
+                  </select>
+                </div>
+
+                {/* 2. มิเตอร์ตั้งต้น */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>เลขมิเตอร์น้ำ (ตั้งต้น)</Label>
+                    <Input 
+                      type="number" 
+                      step="0.01"
+                      value={editWaterMeter}
+                      onChange={(e) => setEditWaterMeter(e.target.value)}
+                      placeholder="เช่น 120.5" 
+                      className="rounded-xl h-11 bg-slate-50 border-slate-200 focus:bg-white" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>เลขมิเตอร์ไฟ (ตั้งต้น)</Label>
+                    <Input 
+                      type="number" 
+                      step="0.01"
+                      value={editElectricMeter}
+                      onChange={(e) => setEditElectricMeter(e.target.value)}
+                      placeholder="เช่น 4500" 
+                      className="rounded-xl h-11 bg-slate-50 border-slate-200 focus:bg-white" 
+                    />
+                  </div>
+                </div>
+                
+                {/* 3. สิ่งอำนวยความสะดวก */}
+                <div className="space-y-2 mt-4">
+                  <Label>สิ่งอำนวยความสะดวก</Label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2 text-sm text-slate-600">
+                      <input type="checkbox" checked={editHasAircon} onChange={(e) => setEditHasAircon(e.target.checked)} className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                      แอร์
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-slate-600">
+                      <input type="checkbox" checked={editHasFan} onChange={(e) => setEditHasFan(e.target.checked)} className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                      พัดลม
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-slate-600">
+                      <input type="checkbox" checked={editHasFurniture} onChange={(e) => setEditHasFurniture(e.target.checked)} className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+                      เฟอร์นิเจอร์
+                    </label>
+                  </div>
+                </div>
+
+                <p className="text-xs text-slate-500 mt-2">
+                  *หมายเหตุ: เลขมิเตอร์ตั้งต้นจะถูกใช้เป็นฐานในการคำนวณบิลค่าเช่าในเดือนแรกที่ลูกบ้านย้ายเข้า
+                </p>
               </div>
               
               <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
