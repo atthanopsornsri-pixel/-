@@ -15,6 +15,8 @@ export default function OwnerBillingPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBill, setSelectedBill] = useState<any>(null);
   const [slipUrl, setSlipUrl] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Upgrade Modal
@@ -41,6 +43,7 @@ export default function OwnerBillingPage() {
   const openPaymentModal = (bill: any) => {
     setSelectedBill(bill);
     setSlipUrl("");
+    setSelectedFile(null);
     setIsModalOpen(true);
   };
 
@@ -49,10 +52,41 @@ export default function OwnerBillingPage() {
     if (!selectedBill) return;
     
     setIsSubmitting(true);
+    let finalSlipUrl = slipUrl;
+
+    // ถ้าอัปโหลดไฟล์ใหม่
+    if (selectedFile) {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      
+      const uploadRes = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      
+      setIsUploading(false);
+      
+      if (uploadRes.ok) {
+        const uploadData = await uploadRes.json();
+        finalSlipUrl = uploadData.url;
+      } else {
+        alert("อัปโหลดสลิปไม่สำเร็จ กรุณาลองใหม่");
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    if (!finalSlipUrl) {
+      alert("กรุณาแนบสลิปการโอนเงิน");
+      setIsSubmitting(false);
+      return;
+    }
+
     const res = await fetch(`/api/owner/bills/${selectedBill.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slipUrl }),
+      body: JSON.stringify({ slipUrl: finalSlipUrl }),
     });
 
     if (res.ok) {
@@ -205,20 +239,24 @@ export default function OwnerBillingPage() {
             
             <form onSubmit={handlePayment} className="space-y-4">
               <div className="bg-slate-50 p-4 rounded-xl text-sm text-slate-700 mb-4 border border-slate-200">
-                <p className="font-bold mb-1">โอนเงินมาที่บัญชี:</p>
-                <p>ธนาคาร: กสิกรไทย (KBank)</p>
-                <p>ชื่อบัญชี: บจก. อพาร์ทเมนท์ โอเอส</p>
-                <p>เลขที่บัญชี: 012-3-45678-9</p>
+                <p className="font-bold mb-1">โอนเงินมาที่บัญชี (JadHor OS):</p>
+                <p>ธนาคาร: {process.env.NEXT_PUBLIC_ADMIN_BANK_NAME || "กสิกรไทย (KBank)"}</p>
+                <p>ชื่อบัญชี: {process.env.NEXT_PUBLIC_ADMIN_BANK_ACCOUNT_NAME || "บจก. จัดหอ โอเอส"}</p>
+                <p>เลขที่บัญชี: {process.env.NEXT_PUBLIC_ADMIN_BANK_ACCOUNT_NUMBER || "012-3-45678-9"}</p>
               </div>
 
               <div className="space-y-2">
-                <Label>ลิงก์รูปภาพสลิปการโอนเงิน</Label>
+                <Label>อัปโหลดสลิปการโอนเงิน</Label>
                 <Input 
-                  required 
-                  placeholder="เช่น https://imgur.com/..." 
-                  className="rounded-xl"
-                  value={slipUrl}
-                  onChange={e => setSlipUrl(e.target.value)}
+                  type="file"
+                  accept="image/*"
+                  className="rounded-xl cursor-pointer"
+                  onChange={e => {
+                    if (e.target.files && e.target.files[0]) {
+                      setSelectedFile(e.target.files[0]);
+                    }
+                  }}
+                  required
                 />
               </div>
 
@@ -226,8 +264,8 @@ export default function OwnerBillingPage() {
                 <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="rounded-xl">
                   ยกเลิก
                 </Button>
-                <Button type="submit" disabled={isSubmitting} className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
-                  {isSubmitting ? "กำลังบันทึก..." : "ส่งหลักฐาน"}
+                <Button type="submit" disabled={isSubmitting || isUploading} className="rounded-xl bg-blue-600 hover:bg-blue-700 text-white">
+                  {isSubmitting || isUploading ? "กำลังบันทึก..." : "ส่งหลักฐาน"}
                 </Button>
               </div>
             </form>
