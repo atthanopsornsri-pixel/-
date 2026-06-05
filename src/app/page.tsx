@@ -197,69 +197,99 @@ export default async function Home() {
 
         {/* ---------------- Pricing Section ---------------- */}
         <section id="pricing" className="py-24 bg-white">
-          <div className="container mx-auto px-4 max-w-5xl">
+          <div className="container mx-auto px-4 max-w-6xl">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4">แพ็กเกจราคา</h2>
-              <p className="text-lg text-slate-600">เลือกแพ็กเกจที่เหมาะสมกับขนาดธุรกิจของคุณ</p>
+              <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4">แพ็กเกจที่เติบโตไปพร้อมกับธุรกิจคุณ</h2>
+              <p className="text-lg text-slate-600">เลือกแพ็กเกจที่เหมาะสมกับขนาดหอพักของคุณ จ่ายเท่าที่ใช้งานจริง</p>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {/* Monthly Plan */}
-              <div className="bg-slate-50 border border-slate-200 rounded-3xl p-10 relative">
-                <h3 className="text-2xl font-bold text-slate-900 mb-2">รายเดือน (Monthly)</h3>
-                <p className="text-slate-500 mb-6">เหมาะสำหรับผู้เริ่มต้น หรืออพาร์ตเม้นท์ขนาดเล็ก</p>
+            <div className="grid md:grid-cols-3 gap-8">
+              
+              {/* STARTER */}
+              <div className="bg-slate-50 rounded-3xl p-8 border border-slate-200 shadow-sm flex flex-col hover:border-blue-300 transition-colors">
                 <div className="mb-6">
-                  <span className="text-5xl font-black text-slate-900">฿490</span>
+                  <h3 className="text-xl font-bold text-slate-900">Starter</h3>
+                  <p className="text-slate-500 text-sm mt-1">เริ่มต้นอย่างโปร</p>
+                </div>
+                <div className="mb-6">
+                  <span className="text-4xl font-black text-slate-900">฿199</span>
                   <span className="text-slate-500 font-medium"> / เดือน</span>
                 </div>
-                <ul className="space-y-4 mb-8">
-                  <li className="flex items-center text-slate-700">
-                    <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                    ไม่จำกัดจำนวนห้องพัก
+                <ul className="space-y-4 mb-8 flex-grow">
+                  <li className="flex items-start text-sm text-slate-700">
+                    <svg className="w-5 h-5 text-emerald-500 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    จัดการได้สูงสุด 30 ห้อง
                   </li>
-                  <li className="flex items-center text-slate-700">
-                    <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                    ระบบแจ้งเตือน LINE Notify
-                  </li>
-                  <li className="flex items-center text-slate-700">
-                    <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                    ระบบตรวจสลิป 100 รายการ/เดือน
+                  <li className="flex items-start text-sm text-slate-700">
+                    <svg className="w-5 h-5 text-emerald-500 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    ระบบออกบิล & ส่ง LINE
                   </li>
                 </ul>
-                <Button className="w-full h-12 rounded-full bg-slate-800 hover:bg-slate-900 text-white font-semibold text-base">
-                  ทดลองใช้ฟรี 14 วัน
-                </Button>
+                <Link href="/register">
+                  <Button variant="outline" className="w-full rounded-xl h-12 font-bold border-slate-300">ทดลองใช้ฟรี 14 วัน</Button>
+                </Link>
               </div>
 
-              {/* Yearly Plan */}
-              <div className="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl p-10 relative text-white shadow-2xl shadow-blue-900/20 transform md:-translate-y-4">
-                <div className="absolute top-0 right-6 transform -translate-y-1/2">
-                  <span className="bg-amber-400 text-amber-900 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">คุ้มค่าที่สุด (ประหยัด 15%)</span>
+              {/* GROWTH */}
+              <div className="bg-blue-600 rounded-3xl p-8 border border-blue-500 shadow-xl shadow-blue-900/10 flex flex-col transform md:-translate-y-4 relative">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold px-4 py-1 rounded-full shadow-sm whitespace-nowrap">
+                  แนะนำ (ยอดนิยม)
                 </div>
-                <h3 className="text-2xl font-bold mb-2">รายปี (Yearly)</h3>
-                <p className="text-blue-100 mb-6">คุ้มค่ากว่า สำหรับผู้ที่ต้องการใช้งานระยะยาว</p>
                 <div className="mb-6">
-                  <span className="text-5xl font-black">฿4,990</span>
-                  <span className="text-blue-200 font-medium"> / ปี</span>
+                  <h3 className="text-xl font-bold text-white">Growth</h3>
+                  <p className="text-blue-200 text-sm mt-1">สำหรับอพาร์ตเมนต์ที่กำลังขยาย</p>
                 </div>
-                <ul className="space-y-4 mb-8">
-                  <li className="flex items-center text-blue-50">
-                    <svg className="w-5 h-5 text-cyan-300 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                    ฟีเจอร์ทุกอย่างในแพ็กเกจรายเดือน
+                <div className="mb-6">
+                  <span className="text-4xl font-black text-white">฿599</span>
+                  <span className="text-blue-200 font-medium"> / เดือน</span>
+                </div>
+                <ul className="space-y-4 mb-8 flex-grow text-blue-50">
+                  <li className="flex items-start text-sm">
+                    <svg className="w-5 h-5 text-emerald-300 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    จัดการได้สูงสุด 100 ห้อง
                   </li>
-                  <li className="flex items-center text-blue-50">
-                    <svg className="w-5 h-5 text-cyan-300 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                    ระบบตรวจสลิป ไม่จำกัดจำนวน
+                  <li className="flex items-start text-sm">
+                    <svg className="w-5 h-5 text-emerald-300 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    ฟีเจอร์ทั้งหมดในแพ็กเกจ Starter
                   </li>
-                  <li className="flex items-center text-blue-50">
-                    <svg className="w-5 h-5 text-cyan-300 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                    ฟรี บริการช่วยเหลือแบบพรีเมียม 24 ชม.
+                  <li className="flex items-start text-sm">
+                    <svg className="w-5 h-5 text-emerald-300 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    ระบบตรวจสลิปอัตโนมัติ
                   </li>
                 </ul>
-                <Button className="w-full h-12 rounded-full bg-white hover:bg-slate-100 text-blue-700 font-bold text-base shadow-lg">
-                  สมัครแพ็กเกจรายปี
-                </Button>
+                <Link href="/register">
+                  <Button className="w-full rounded-xl h-12 font-bold bg-white text-blue-600 hover:bg-slate-50">ทดลองใช้ฟรี 14 วัน</Button>
+                </Link>
               </div>
+
+              {/* ENTERPRISE */}
+              <div className="bg-slate-50 rounded-3xl p-8 border border-slate-200 shadow-sm flex flex-col hover:border-blue-300 transition-colors">
+                <div className="mb-6">
+                  <h3 className="text-xl font-bold text-slate-900">Enterprise</h3>
+                  <p className="text-slate-500 text-sm mt-1">เสือนอนกิน โปรเจกต์ใหญ่</p>
+                </div>
+                <div className="mb-6">
+                  <span className="text-4xl font-black text-slate-900">฿1,299</span>
+                  <span className="text-slate-500 font-medium"> / เดือน</span>
+                </div>
+                <ul className="space-y-4 mb-8 flex-grow">
+                  <li className="flex items-start text-sm text-slate-700">
+                    <svg className="w-5 h-5 text-emerald-500 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    ไม่จำกัดจำนวนห้องพัก
+                  </li>
+                  <li className="flex items-start text-sm text-slate-700">
+                    <svg className="w-5 h-5 text-emerald-500 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    บริการ Support พิเศษ 24/7
+                  </li>
+                </ul>
+                <Link href="/register">
+                  <Button variant="outline" className="w-full rounded-xl h-12 font-bold border-slate-300">ติดต่อแอดมินเพื่ออัปเกรด</Button>
+                </Link>
+              </div>
+
+            </div>
+            <div className="max-w-3xl mx-auto mt-12 text-center">
+              <p className="text-sm text-slate-500 font-medium">* หรือเลือกชำระแบบรายปี ลดทันที 2 เดือน (จ่ายเพียง 10 เดือน)</p>
             </div>
           </div>
         </section>
