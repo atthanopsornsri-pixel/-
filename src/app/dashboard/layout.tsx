@@ -42,8 +42,12 @@ export default async function DashboardLayout({
       <aside className="w-72 bg-[#F5F5F7] text-[#1D1D1F] hidden md:flex flex-col border-r border-slate-200/40 relative z-20">
         <div className="p-8 pb-4">
           <Link href="/" className="flex items-center gap-3 mb-2 group cursor-pointer hover:opacity-80 transition-opacity">
-            <div className="relative h-14 w-full flex items-center justify-start group-hover:scale-105 transition-transform">
-              <Image src="/images/logo.png" alt="JadHor OS Logo" width={220} height={56} className="object-contain h-14 w-auto" priority />
+            <div className="relative h-12 w-12 flex-shrink-0 group-hover:scale-105 transition-transform bg-white rounded-xl shadow-sm border border-slate-100 p-1">
+              <Image src="/images/logo.png" alt="JadHor OS Logo" fill className="object-contain" priority />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xl font-extrabold text-slate-800 tracking-tight leading-none">JadHor OS</span>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Property Manager</span>
             </div>
           </Link>
           <div className="inline-block mt-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-medium text-slate-500">

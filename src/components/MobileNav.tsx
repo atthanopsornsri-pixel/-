@@ -46,8 +46,12 @@ export default function MobileNav({ role }: MobileNavProps) {
       <div className={`fixed top-0 left-0 h-[100dvh] w-72 bg-[#F5F5F7] text-[#1D1D1F] z-[9999] transform transition-transform duration-300 ease-in-out flex flex-col shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 flex items-center justify-between border-b border-slate-200/40">
           <Link href="/" onClick={closeNav} className="flex items-center gap-3 group cursor-pointer hover:opacity-80 transition-opacity">
-            <div className="relative h-12 w-auto flex items-center justify-start">
-              <Image src="/images/logo.png" alt="JadHor OS Logo" width={180} height={48} className="object-contain h-12 w-auto" priority />
+            <div className="relative h-10 w-10 flex-shrink-0 bg-white rounded-xl shadow-sm border border-slate-100 p-1 group-hover:scale-105 transition-transform">
+              <Image src="/images/logo.png" alt="JadHor OS Logo" fill className="object-contain" priority />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-lg font-extrabold text-slate-800 tracking-tight leading-none">JadHor OS</span>
+              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Property Manager</span>
             </div>
           </Link>
           <button onClick={closeNav} className="p-2 rounded-full hover:bg-slate-200 text-slate-500 transition-colors">
