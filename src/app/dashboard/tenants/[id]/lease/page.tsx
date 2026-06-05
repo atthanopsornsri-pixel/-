@@ -68,6 +68,7 @@ export default function LeasePrintPage() {
     terms = terms.replace(/{{RENT_PRICE}}/g, tenant.room?.rentPrice?.toString() || "");
     terms = terms.replace(/{{DEPOSIT_AMOUNT}}/g, tenant.depositAmount?.toString() || "0");
     terms = terms.replace(/{{LEASE_START}}/g, tenant.leaseStart ? new Date(tenant.leaseStart).toLocaleDateString("th-TH", { dateStyle: 'long' }) : "________________");
+    terms = terms.replace(/{{START_DATE}}/g, tenant.leaseStart ? new Date(tenant.leaseStart).toLocaleDateString("th-TH", { dateStyle: 'long' }) : "________________");
     terms = terms.replace(/{{ID_CARD}}/g, tenant.idCardNumber || "________________");
   }
 

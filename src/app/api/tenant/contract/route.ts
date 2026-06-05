@@ -36,6 +36,7 @@ export async function GET(request: Request) {
       content = content.replace(/{{RENT_PRICE}}/g, tenant.room.rentPrice.toString());
       content = content.replace(/{{DEPOSIT_AMOUNT}}/g, tenant.depositAmount?.toString() || "0");
       content = content.replace(/{{LEASE_START}}/g, tenant.leaseStart ? new Intl.DateTimeFormat('th-TH', { dateStyle: 'long' }).format(new Date(tenant.leaseStart)) : "________________");
+      content = content.replace(/{{START_DATE}}/g, tenant.leaseStart ? new Intl.DateTimeFormat('th-TH', { dateStyle: 'long' }).format(new Date(tenant.leaseStart)) : "________________");
       content = content.replace(/{{ID_CARD}}/g, tenant.idCardNumber || "________________");
     }
 
