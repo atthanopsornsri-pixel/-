@@ -3,13 +3,67 @@ import { authOptions } from "@/lib/auth";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getDashboardMetrics } from "@/app/actions/dashboard";
+import { prisma } from "@/lib/prisma";
+import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
-  const role = session?.user?.role;
-  const isOwnerOrAdmin = role === "OWNER" || role === "ADMIN";
   
-  // Initialize metrics with default 0s
+  if (!session || !session.user) {
+    redirect("/login");
+  }
+
+  const role = session.user.role;
+
+  // ==========================================
+  // 🔴 โซนของ ADMIN (Platform Manager)
+  // ==========================================
+  if (role === "ADMIN") {
+    const totalOwners = await prisma.user.count({ where: { role: "OWNER" } });
+    const totalProperties = await prisma.property.count({ where: { isDeleted: false } });
+    
+    const revenueAgg = await prisma.subscriptionBill.aggregate({
+      where: { status: "PAID" },
+      _sum: { amount: true }
+    });
+    const totalRevenue = revenueAgg._sum.amount || 0;
+    
+    const pendingInvites = await prisma.registrationCode.count({ where: { isUsed: false } });
+
+    return (
+      <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">ภาพรวมระบบ (Super Admin)</h1>
+            <p className="text-sm md:text-base font-medium text-slate-500 mt-2">ยินดีต้อนรับกลับมา, ตรวจสอบสถานะการทำงานของแพลตฟอร์ม JadHor OS</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
+            <h3 className="text-sm font-bold tracking-wide text-blue-700">เจ้าของหอพักทั้งหมด</h3>
+            <p className="text-4xl font-black mt-2 text-blue-900">{totalOwners} <span className="text-sm font-normal text-blue-600/80">บัญชี</span></p>
+          </div>
+          <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
+            <h3 className="text-sm font-bold tracking-wide text-emerald-700">หอพักในระบบ</h3>
+            <p className="text-4xl font-black mt-2 text-emerald-900">{totalProperties} <span className="text-sm font-normal text-emerald-600/80">แห่ง</span></p>
+          </div>
+          <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
+            <h3 className="text-sm font-bold tracking-wide text-purple-700">รายได้แพลตฟอร์ม (SaaS)</h3>
+            <p className="text-4xl font-black mt-2 text-purple-900">฿{totalRevenue.toLocaleString()} <span className="text-sm font-normal text-purple-600/80">รวม</span></p>
+          </div>
+          <div className="bg-white p-6 rounded-[32px] text-slate-800 relative overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] shadow-[0_4px_20px_rgb(0,0,0,0.03)] hover:-translate-y-1 border border-slate-100">
+            <h3 className="text-sm font-bold tracking-wide text-orange-700">Invite Code รอใช้งาน</h3>
+            <p className="text-4xl font-black mt-2 text-orange-900">{pendingInvites} <span className="text-sm font-normal text-orange-600/80">โค้ด</span></p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // 🔵 โซนของ OWNER (Property Owner) และ TENANT
+  // ==========================================
   let metrics = {
     totalProperties: 0,
     totalRooms: 0,
@@ -19,7 +73,7 @@ export default async function DashboardPage() {
     totalRevenue: 0
   };
 
-  if (isOwnerOrAdmin) {
+  if (role === "OWNER") {
     const result = await getDashboardMetrics();
     if (result.success && result.data) {
       metrics = result.data;
@@ -44,7 +98,7 @@ export default async function DashboardPage() {
             ยินดีต้อนรับกลับมา, ขอให้วันนี้เป็นวันที่ดีในการบริหารจัดการ
           </p>
         </div>
-        {isOwnerOrAdmin && (
+        {role === "OWNER" && (
           <Link href="/dashboard/properties">
             <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm rounded-full px-6 font-medium transition-all hover:-translate-y-0.5">
               + เพิ่มหอพักใหม่
@@ -53,7 +107,7 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      {isOwnerOrAdmin ? (
+      {role === "OWNER" ? (
         <>
           {/* Summary Metric Cards with Light Pastel Colors and Hover Animations */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
