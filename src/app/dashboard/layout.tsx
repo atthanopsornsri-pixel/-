@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 import NotificationBell from "@/components/NotificationBell";
 import MobileNav from "@/components/MobileNav";
+import SignOutButton from "@/components/SignOutButton";
 import { Suspense } from "react";
 
 async function AsyncNotificationBell({ userId, role }: { userId: string, role: string }) {
@@ -228,11 +229,7 @@ export default async function DashboardLayout({
               </Suspense>
             )}
 
-            <form action="/api/auth/signout" method="POST">
-              <Button type="submit" variant="ghost" className="text-slate-500 hover:text-red-600 hover:bg-red-50 font-medium rounded-full px-3 md:px-6 transition-colors text-xs md:text-sm">
-                ออกจากระบบ
-              </Button>
-            </form>
+            <SignOutButton />
           </div>
         </header>
 
