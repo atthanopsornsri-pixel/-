@@ -97,12 +97,12 @@ export default function GenerateContractPage() {
       </div>
 
       {/* CSS พิเศษสำหรับซ่อนสิ่งที่ไม่จำเป็นตอนกดพิมพ์ */}
-      <style dangerouslySetInnerHTML={{__html: \`
+      <style dangerouslySetInnerHTML={{__html: `
         @media print {
           body { background-color: white !important; }
           @page { margin: 20mm; }
         }
-      \`}} />
+      `}} />
     </div>
   );
 }
