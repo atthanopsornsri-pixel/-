@@ -18,7 +18,9 @@ export default async function Home() {
       <header className="absolute top-0 w-full z-50">
         <div className="container mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 text-slate-800 font-semibold text-[19px] tracking-tight">
-            <Building2 className="w-5 h-5" />
+            <div className="relative w-8 h-8">
+              <Image src="/images/logo.png" alt="Apartment OS Logo" fill className="object-contain" />
+            </div>
             Apartment OS
           </div>
           <div className="flex items-center gap-4">
@@ -33,8 +35,8 @@ export default async function Home() {
         
         {/* Center Logo Icon */}
         <div className="mb-8 relative mt-16 md:mt-0">
-          <div className="w-32 h-32 md:w-40 md:h-40 bg-gradient-to-br from-blue-400 to-blue-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-500/30">
-             <Building2 className="w-20 h-20 md:w-24 md:h-24 text-white" />
+          <div className="relative w-32 h-32 md:w-48 md:h-48 drop-shadow-xl hover:scale-105 transition-transform duration-500">
+             <Image src="/images/logo.png" alt="Apartment OS Logo" fill className="object-contain" priority />
           </div>
         </div>
         
