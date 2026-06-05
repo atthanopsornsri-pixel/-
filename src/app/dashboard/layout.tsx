@@ -7,6 +7,21 @@ import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 import NotificationBell from "@/components/NotificationBell";
 import MobileNav from "@/components/MobileNav";
+import { Suspense } from "react";
+
+async function AsyncNotificationBell({ userId, role }: { userId: string, role: string }) {
+  let hasUnpaidBills = false;
+  if (role === "OWNER") {
+    const unpaidCount = await prisma.subscriptionBill.count({
+      where: { 
+        ownerId: userId,
+        status: "UNPAID"
+      }
+    });
+    hasUnpaidBills = unpaidCount > 0;
+  }
+  return <NotificationBell hasUnpaidBills={hasUnpaidBills} />;
+}
 
 export default async function DashboardLayout({
   children,
@@ -19,17 +34,7 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  // Check for unpaid SaaS bills to show notification badge for Owner
-  let hasUnpaidBills = false;
-  if (session.user.role === "OWNER") {
-    const unpaidCount = await prisma.subscriptionBill.count({
-      where: { 
-        ownerId: session.user.id,
-        status: "UNPAID"
-      }
-    });
-    hasUnpaidBills = unpaidCount > 0;
-  }
+  // Check for unpaid SaaS bills (Deferred to AsyncNotificationBell)
 
   return (
     <div className="min-h-screen bg-[#F5F5F7] flex font-sans text-[#1D1D1F]">
@@ -214,7 +219,9 @@ export default async function DashboardLayout({
           <div className="flex items-center gap-1 md:gap-2 shrink-0">
             {/* Notification Bell */}
             {session.user.role === "OWNER" && (
-              <NotificationBell hasUnpaidBills={hasUnpaidBills} />
+              <Suspense fallback={<div className="w-9 h-9 animate-pulse bg-slate-200 rounded-full mr-2"></div>}>
+                <AsyncNotificationBell userId={session.user.id} role={session.user.role} />
+              </Suspense>
             )}
 
             <form action="/api/auth/signout" method="POST">
