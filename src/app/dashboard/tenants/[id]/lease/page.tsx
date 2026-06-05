@@ -89,6 +89,40 @@ export default function LeasePrintPage() {
 
   terms = preamble + terms;
 
+  const handleViewContract = () => {
+    const url = tenant.contractPdfUrl;
+    if (!url) {
+      alert("ไม่พบไฟล์สัญญา หรืออัปโหลดไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
+      return;
+    }
+    
+    // ถ้าเป็น Base64 (Data URI) เบราว์เซอร์ยุคใหม่จะบล็อกไม่ให้เปิดใน Tab ใหม่ตรงๆ (ขึ้น about:blank)
+    // จึงต้องแปลงเป็น Blob URL ก่อนเปิด
+    if (url.startsWith("data:")) {
+      try {
+        const arr = url.split(",");
+        const mimeMatch = arr[0].match(/:(.*?);/);
+        if (!mimeMatch) return;
+        const mime = mimeMatch[1];
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        const blob = new Blob([u8arr], { type: mime });
+        const blobUrl = URL.createObjectURL(blob);
+        window.open(blobUrl, "_blank", "noopener,noreferrer");
+      } catch (error) {
+        console.error("Failed to parse base64 file", error);
+        alert("ไฟล์มีปัญหา ไม่สามารถเปิดได้");
+      }
+    } else {
+      // ถ้าเป็นลิงก์ Cloud Storage ทั่วไป
+      window.open(url, "_blank", "noopener,noreferrer");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-100 p-4 md:p-8 flex flex-col items-center print:bg-white print:p-0 relative">
       
@@ -97,7 +131,7 @@ export default function LeasePrintPage() {
         <Button variant="outline" onClick={() => router.back()} className="bg-white">กลับสู่หน้ารายชื่อผู้เช่า</Button>
         <div className="flex gap-2">
           {tenant.contractPdfUrl ? (
-            <Button variant="secondary" onClick={() => window.open(tenant.contractPdfUrl, '_blank')} className="bg-amber-100 text-amber-800 hover:bg-amber-200">
+            <Button variant="secondary" onClick={handleViewContract} className="bg-amber-100 text-amber-800 hover:bg-amber-200">
               ดูไฟล์สัญญาที่อัปโหลดไว้
             </Button>
           ) : (
