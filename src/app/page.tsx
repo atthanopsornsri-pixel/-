@@ -71,10 +71,25 @@ export default async function Home() {
 
         {/* Register link underneath like Apple ID creation */}
         {!session && (
-          <div className="mt-16 md:mt-20 text-[14px] text-slate-600">
+          <div className="mt-10 text-[14px] text-slate-600">
             ยังไม่มีบัญชีใช่หรือไม่? <Link href="/register" className="text-blue-600 hover:underline">สร้างบัญชี Apartment OS ทันที</Link>
           </div>
         )}
+
+        {/* Dashboard Mockup Showcase */}
+        <div className="mt-16 md:mt-24 w-full max-w-6xl mx-auto px-4 md:px-8">
+          <div className="relative rounded-2xl md:rounded-[2rem] overflow-hidden shadow-2xl border border-slate-200 bg-white/50 backdrop-blur-sm transform hover:scale-[1.02] hover:-translate-y-2 transition-all duration-700 ease-out group">
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/5 to-transparent z-10 pointer-events-none"></div>
+            <Image 
+              src="/images/dashboard-mockup.png" 
+              alt="Apartment OS Dashboard Preview" 
+              width={1400} 
+              height={900} 
+              className="w-full h-auto object-cover"
+              priority
+            />
+          </div>
+        </div>
 
         </section>
 
