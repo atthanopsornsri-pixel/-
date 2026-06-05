@@ -44,8 +44,8 @@ export function LoginForm() {
     <div className="w-full flex flex-col items-center">
       {/* Logo */}
       <div className="mb-8 relative flex items-center justify-center">
-        <div className="relative h-16 w-auto flex items-center justify-center">
-          <Image src="/images/logo.png" alt="ApartmentOS Logo" width={200} height={64} className="object-contain h-16 w-auto" priority />
+        <div className="relative h-20 w-auto flex items-center justify-center">
+          <Image src="/images/logo.png" alt="ApartmentOS Logo" width={280} height={80} className="object-contain h-20 w-auto mix-blend-multiply" priority />
         </div>
       </div>
 

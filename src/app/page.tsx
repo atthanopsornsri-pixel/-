@@ -23,8 +23,8 @@ export default async function Home() {
       <header className="bg-white fixed w-full top-0 z-50 border-b border-slate-200/50">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="relative h-10 flex items-center group-hover:scale-105 transition-transform duration-300">
-              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={200} height={40} className="object-contain h-10 w-auto" priority />
+            <div className="relative h-16 flex items-center group-hover:scale-105 transition-transform duration-300">
+              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={240} height={64} className="object-contain h-16 w-auto mix-blend-multiply" priority />
             </div>
           </div>
           <nav className="hidden md:flex gap-8 text-[15px] font-semibold text-slate-600">
@@ -376,8 +376,8 @@ export default async function Home() {
       <footer className="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
         <div className="container mx-auto px-4 max-w-6xl flex flex-col md:flex-row justify-between items-center">
           <div className="mb-6 md:mb-0 text-center md:text-left">
-            <div className="relative h-8 flex items-center">
-              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={160} height={32} className="object-contain h-8 w-auto brightness-0 invert" />
+            <div className="relative inline-flex items-center bg-white px-3 py-1.5 rounded-xl mb-2">
+              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={160} height={40} className="object-contain h-10 w-auto" />
             </div>
             <p className="mt-2 text-sm text-slate-500">แพลตฟอร์มบริหารจัดการหอพักยุคใหม่</p>
             <p className="mt-1 text-xs text-slate-600">© 2026 ApartmentOS. All rights reserved.</p>
