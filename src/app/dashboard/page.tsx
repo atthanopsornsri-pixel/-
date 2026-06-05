@@ -232,24 +232,40 @@ export default async function DashboardPage() {
       ) : (
         /* Tenant Dashboard */
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="bg-indigo-50 border border-indigo-100 p-8 rounded-3xl text-indigo-900">
-            <h2 className="text-xl font-bold mb-2">บิลค่าเช่าของฉัน</h2>
-            <p className="text-indigo-600 text-sm mb-6">ดูรายละเอียดค่าใช้จ่ายและชำระเงินผ่าน QR Code</p>
-            <Link href="/dashboard/my-bills">
-              <Button className="bg-white text-indigo-600 hover:bg-white border border-indigo-200 font-semibold rounded-full px-6 shadow-sm">
-                จ่ายบิล / ดูใบเสร็จ
-              </Button>
-            </Link>
+          <div className="bg-white p-8 rounded-[32px] shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 relative overflow-hidden group transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1">
+              <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-125 group-hover:-rotate-12 transition-transform duration-500 text-indigo-600">
+                <svg className="w-32 h-32 -mt-8 -mr-8" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4h16V6a2 2 0 00-2-2H4zm2 3a1 1 0 011-1h1a1 1 0 110 2H7a1 1 0 01-1-1zm8-1a1 1 0 100 2h1a1 1 0 100-2h-1zM2 12v3a2 2 0 002 2h12a2 2 0 002-2v-3H2zm2 2a1 1 0 100 2h1a1 1 0 100-2H4zm8 0a1 1 0 100 2h1a1 1 0 100-2h-1z" clipRule="evenodd" /></svg>
+              </div>
+              <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v4h16V6a2 2 0 00-2-2H4zm2 3a1 1 0 011-1h1a1 1 0 110 2H7a1 1 0 01-1-1zm8-1a1 1 0 100 2h1a1 1 0 100-2h-1zM2 12v3a2 2 0 002 2h12a2 2 0 002-2v-3H2zm2 2a1 1 0 100 2h1a1 1 0 100-2H4zm8 0a1 1 0 100 2h1a1 1 0 100-2h-1z" clipRule="evenodd" /></svg>
+              </div>
+              <h2 className="text-xl font-bold text-slate-800 mb-2 relative z-10">บิลค่าเช่าของฉัน</h2>
+              <p className="text-slate-500 text-sm mb-6 leading-relaxed relative z-10">ดูรายละเอียดค่าใช้จ่ายประจำเดือน และชำระเงินผ่าน QR Code ได้อย่างง่ายดาย</p>
+              <div className="relative z-10">
+                <Link href="/dashboard/my-bills">
+                  <Button className="bg-indigo-600 text-white hover:bg-indigo-700 font-semibold rounded-full px-6 shadow-sm transition-all hover:-translate-y-0.5">
+                    จ่ายบิล / ดูใบเสร็จ →
+                  </Button>
+                </Link>
+              </div>
           </div>
           
-          <div className="bg-orange-50 border border-orange-100 p-8 rounded-3xl text-orange-900">
-            <h2 className="text-xl font-bold mb-2">บริการแจ้งซ่อม</h2>
-            <p className="text-orange-600 text-sm mb-6">มีปัญหาภายในห้อง? แจ้งให้ช่างเข้าตรวจสอบได้ทันที</p>
-            <Link href="/dashboard/maintenance">
-              <Button className="bg-white text-orange-600 hover:bg-white border border-orange-200 font-semibold rounded-full px-6 shadow-sm">
-                แจ้งซ่อมด่วน
-              </Button>
-            </Link>
+          <div className="bg-white p-8 rounded-[32px] shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 relative overflow-hidden group transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1">
+              <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:scale-125 group-hover:rotate-12 transition-transform duration-500 text-orange-600">
+                <svg className="w-32 h-32 -mt-8 -mr-8" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>
+              </div>
+              <div className="w-12 h-12 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-orange-600 group-hover:text-white transition-colors duration-300">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>
+              </div>
+              <h2 className="text-xl font-bold text-slate-800 mb-2 relative z-10">บริการแจ้งซ่อม</h2>
+              <p className="text-slate-500 text-sm mb-6 leading-relaxed relative z-10">พบปัญหาการใช้งานภายในห้อง? แจ้งให้ช่างนิติบุคคลเข้าตรวจสอบและแก้ไขได้ทันที</p>
+              <div className="relative z-10">
+                <Link href="/dashboard/maintenance">
+                  <Button className="bg-orange-600 text-white hover:bg-orange-700 font-semibold rounded-full px-6 shadow-sm transition-all hover:-translate-y-0.5">
+                    แจ้งซ่อมด่วน →
+                  </Button>
+                </Link>
+              </div>
           </div>
         </div>
       )}
