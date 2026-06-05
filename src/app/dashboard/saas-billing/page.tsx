@@ -22,6 +22,7 @@ export default function OwnerBillingPage() {
   // Upgrade Modal
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [confirmPlan, setConfirmPlan] = useState<{ planTier: string, cycle: string, priceText: string } | null>(null);
 
   useEffect(() => {
     fetchData();
@@ -295,51 +296,82 @@ export default function OwnerBillingPage() {
               <h2 className="text-3xl font-extrabold text-slate-900">เลือกแพ็กเกจที่เหมาะกับคุณ</h2>
               <p className="text-slate-500 mt-2">ประหยัดทันที 2 เดือน เมื่อชำระแบบรายปี</p>
             </div>
-
-            <div className="grid md:grid-cols-3 gap-6">
-              {/* STARTER */}
-              <div className="border border-slate-200 rounded-2xl p-6 hover:border-blue-300 hover:shadow-md transition-all">
-                <h3 className="text-lg font-bold text-slate-800">Starter</h3>
-                <p className="text-sm text-slate-500">สูงสุด 30 ห้อง</p>
-                <div className="my-4">
-                  <span className="text-3xl font-black text-slate-800">฿199</span><span className="text-slate-500">/ด.</span>
+            {confirmPlan ? (
+              <div className="text-center py-8 bg-blue-50/50 rounded-2xl border border-blue-100 max-w-xl mx-auto">
+                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                 </div>
-                <div className="space-y-2 mb-6">
-                  <Button disabled={isUpgrading} onClick={() => handleUpgrade("STARTER", "MONTHLY")} variant="outline" className="w-full font-bold">รายเดือน (฿199)</Button>
-                  <Button disabled={isUpgrading} onClick={() => handleUpgrade("STARTER", "YEARLY")} variant="outline" className="w-full font-bold bg-slate-50 text-blue-600 border-blue-200 hover:bg-blue-50">รายปี (฿1,990)</Button>
-                </div>
-              </div>
-
-              {/* GROWTH */}
-              <div className="border-2 border-blue-500 rounded-2xl p-6 shadow-xl relative bg-blue-50/30">
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">แนะนำ</div>
-                <h3 className="text-lg font-bold text-slate-800">Growth</h3>
-                <p className="text-sm text-slate-500">สูงสุด 100 ห้อง</p>
-                <div className="my-4">
-                  <span className="text-3xl font-black text-slate-800">฿599</span><span className="text-slate-500">/ด.</span>
-                </div>
-                <div className="space-y-2 mb-6">
-                  <Button disabled={isUpgrading} onClick={() => handleUpgrade("GROWTH", "MONTHLY")} variant="outline" className="w-full font-bold border-blue-200">รายเดือน (฿599)</Button>
-                  <Button disabled={isUpgrading} onClick={() => handleUpgrade("GROWTH", "YEARLY")} className="w-full font-bold bg-blue-600 hover:bg-blue-700 text-white">รายปี (฿5,990)</Button>
+                <h3 className="text-2xl font-bold text-slate-800 mb-4">ยืนยันการเลือกแพ็กเกจ</h3>
+                <p className="text-slate-600 mb-6 text-lg">
+                  คุณต้องการสมัครแพ็กเกจ <span className="font-bold text-blue-600">{confirmPlan.planTier}</span> แบบ <span className="font-bold">{confirmPlan.cycle === 'MONTHLY' ? 'รายเดือน' : 'รายปี'}</span><br/>
+                  ยอดชำระ <span className="font-bold text-slate-900 text-xl">{confirmPlan.priceText}</span> ใช่หรือไม่?
+                </p>
+                <div className="flex flex-col sm:flex-row justify-center gap-3 px-4">
+                  <Button variant="outline" onClick={() => setConfirmPlan(null)} className="font-bold rounded-full h-12 px-6 w-full sm:w-auto">กลับไปเลือกใหม่</Button>
+                  <Button 
+                    onClick={() => {
+                      handleUpgrade(confirmPlan.planTier, confirmPlan.cycle);
+                      setConfirmPlan(null);
+                    }}
+                    disabled={isUpgrading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-full h-12 px-6 shadow-md w-full sm:w-auto"
+                  >
+                    {isUpgrading ? "กำลังดำเนินการ..." : "ยืนยันและรับบิลชำระเงิน"}
+                  </Button>
                 </div>
               </div>
-
-              {/* ENTERPRISE */}
-              <div className="border border-slate-200 rounded-2xl p-6 hover:border-blue-300 hover:shadow-md transition-all">
-                <h3 className="text-lg font-bold text-slate-800">Enterprise</h3>
-                <p className="text-sm text-slate-500">ไม่จำกัดห้อง</p>
-                <div className="my-4">
-                  <span className="text-3xl font-black text-slate-800">฿1,299</span><span className="text-slate-500">/ด.</span>
+            ) : (
+              <div className="grid md:grid-cols-3 gap-6">
+                {/* STARTER */}
+                <div className="border border-slate-200 rounded-2xl p-6 hover:border-blue-300 hover:shadow-md transition-all flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800">Starter</h3>
+                    <p className="text-sm text-slate-500">สูงสุด 30 ห้อง</p>
+                    <div className="my-4">
+                      <span className="text-3xl font-black text-slate-800">฿199</span><span className="text-slate-500">/ด.</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2 mt-4">
+                    <Button onClick={() => setConfirmPlan({ planTier: "STARTER", cycle: "MONTHLY", priceText: "฿199" })} variant="outline" className="w-full font-bold">รายเดือน (฿199)</Button>
+                    <Button onClick={() => setConfirmPlan({ planTier: "STARTER", cycle: "YEARLY", priceText: "฿1,990" })} variant="outline" className="w-full font-bold bg-slate-50 text-blue-600 border-blue-200 hover:bg-blue-50">รายปี (฿1,990)</Button>
+                  </div>
                 </div>
-                <div className="space-y-2 mb-6">
-                  <Button disabled={isUpgrading} onClick={() => handleUpgrade("ENTERPRISE", "MONTHLY")} variant="outline" className="w-full font-bold">รายเดือน (฿1,299)</Button>
-                  <Button disabled={isUpgrading} onClick={() => handleUpgrade("ENTERPRISE", "YEARLY")} variant="outline" className="w-full font-bold bg-slate-50 text-blue-600 border-blue-200 hover:bg-blue-50">รายปี (฿12,990)</Button>
+
+                {/* GROWTH */}
+                <div className="border-2 border-blue-500 rounded-2xl p-6 shadow-xl relative bg-blue-50/30 flex flex-col justify-between">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">แนะนำ</div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800">Growth</h3>
+                    <p className="text-sm text-slate-500">สูงสุด 100 ห้อง</p>
+                    <div className="my-4">
+                      <span className="text-3xl font-black text-slate-800">฿599</span><span className="text-slate-500">/ด.</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2 mt-4">
+                    <Button onClick={() => setConfirmPlan({ planTier: "GROWTH", cycle: "MONTHLY", priceText: "฿599" })} variant="outline" className="w-full font-bold border-blue-200 text-blue-700 hover:bg-blue-100">รายเดือน (฿599)</Button>
+                    <Button onClick={() => setConfirmPlan({ planTier: "GROWTH", cycle: "YEARLY", priceText: "฿5,990" })} className="w-full font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md">รายปี (฿5,990)</Button>
+                  </div>
+                </div>
+
+                {/* ENTERPRISE */}
+                <div className="border border-slate-200 rounded-2xl p-6 hover:border-blue-300 hover:shadow-md transition-all flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800">Enterprise</h3>
+                    <p className="text-sm text-slate-500">ไม่จำกัดห้อง</p>
+                    <div className="my-4">
+                      <span className="text-3xl font-black text-slate-800">฿1,299</span><span className="text-slate-500">/ด.</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2 mt-4">
+                    <Button onClick={() => setConfirmPlan({ planTier: "ENTERPRISE", cycle: "MONTHLY", priceText: "฿1,299" })} variant="outline" className="w-full font-bold">รายเดือน (฿1,299)</Button>
+                    <Button onClick={() => setConfirmPlan({ planTier: "ENTERPRISE", cycle: "YEARLY", priceText: "฿12,990" })} variant="outline" className="w-full font-bold bg-slate-50 text-blue-600 border-blue-200 hover:bg-blue-50">รายปี (฿12,990)</Button>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <div className="mt-8 text-center">
-              <Button variant="ghost" onClick={() => setIsUpgradeOpen(false)} className="text-slate-500 hover:text-slate-800">
+              <Button variant="ghost" onClick={() => { setIsUpgradeOpen(false); setConfirmPlan(null); }} className="text-slate-500 hover:text-slate-800">
                 ปิดหน้าต่าง
               </Button>
             </div>
