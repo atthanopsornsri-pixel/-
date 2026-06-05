@@ -95,6 +95,16 @@ model Room {
   maintenance MaintenanceRequest[]
   parcels     Parcel[]
   status      RoomStatus @default(AVAILABLE)
+  
+  // Amenities
+  hasAircon          Boolean    @default(false)
+  hasFan             Boolean    @default(false)
+  hasFurniture       Boolean    @default(false)
+
+  // Meters
+  waterMeterStart    Float?     @default(0) // เลขมิเตอร์น้ำตั้งต้นตอนย้ายเข้า
+  electricMeterStart Float?     @default(0) // เลขมิเตอร์ไฟตั้งต้นตอนย้ายเข้า
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   isDeleted   Boolean  @default(false)
