@@ -23,12 +23,9 @@ export default async function Home() {
       <header className="bg-white fixed w-full top-0 z-50 border-b border-slate-200/50">
         <div className="container mx-auto px-4 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3 group cursor-pointer">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 group-hover:scale-105 transition-transform duration-300">
-              <span className="text-white font-extrabold text-xl">A</span>
+            <div className="relative h-10 flex items-center group-hover:scale-105 transition-transform duration-300">
+              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={200} height={40} className="object-contain h-10 w-auto" priority />
             </div>
-            <span className="text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight">
-              Apartment<span className="text-blue-600">OS</span>
-            </span>
           </div>
           <nav className="hidden md:flex gap-8 text-[15px] font-semibold text-slate-600">
             <Link href="#features" className="hover:text-blue-600 transition-colors">ฟีเจอร์หลัก</Link>
@@ -379,7 +376,9 @@ export default async function Home() {
       <footer className="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
         <div className="container mx-auto px-4 max-w-6xl flex flex-col md:flex-row justify-between items-center">
           <div className="mb-6 md:mb-0 text-center md:text-left">
-            <span className="text-2xl font-bold text-white tracking-tight">Apartment<span className="text-blue-500">OS</span></span>
+            <div className="relative h-8 flex items-center">
+              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={160} height={32} className="object-contain h-8 w-auto brightness-0 invert" />
+            </div>
             <p className="mt-2 text-sm text-slate-500">แพลตฟอร์มบริหารจัดการหอพักยุคใหม่</p>
             <p className="mt-1 text-xs text-slate-600">© 2026 ApartmentOS. All rights reserved.</p>
           </div>

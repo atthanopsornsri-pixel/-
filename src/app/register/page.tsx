@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,12 +61,9 @@ export default function RegisterPage() {
 
         <div className="relative z-10 flex justify-end">
           <Link href="/" className="flex items-center gap-2 group w-fit cursor-pointer">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-              <span className="text-white font-extrabold text-xl">A</span>
+            <div className="relative h-10 w-auto flex items-center justify-start group-hover:scale-105 transition-transform">
+              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={180} height={40} className="object-contain h-10 w-auto" priority />
             </div>
-            <span className="text-2xl font-extrabold tracking-tight text-slate-900">
-              Apartment<span className="text-blue-600">OS</span>
-            </span>
           </Link>
         </div>
 
@@ -98,12 +96,9 @@ export default function RegisterPage() {
       <div className="flex-1 flex items-center justify-center p-8 md:p-12 relative overflow-y-auto max-h-screen">
         <div className="w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-700 py-10">
           <div className="md:hidden flex items-center justify-center gap-2 mb-10">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">A</span>
+            <div className="relative h-8 w-auto flex items-center justify-center">
+              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={140} height={32} className="object-contain h-8 w-auto" priority />
             </div>
-            <span className="text-xl font-bold text-slate-800">
-              Apartment<span className="text-blue-600">OS</span>
-            </span>
           </div>
 
           <div className="w-full">

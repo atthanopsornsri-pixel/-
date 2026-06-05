@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 import NotificationBell from "@/components/NotificationBell";
@@ -36,11 +37,8 @@ export default async function DashboardLayout({
       <aside className="w-72 bg-[#F5F5F7] text-[#1D1D1F] hidden md:flex flex-col border-r border-slate-200/40 relative z-20">
         <div className="p-8 pb-4">
           <Link href="/" className="flex items-center gap-3 mb-2 group cursor-pointer hover:opacity-80 transition-opacity">
-            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 shadow-sm border border-blue-200 group-hover:scale-105 transition-transform">
-              <span className="font-bold text-xl">A</span>
-            </div>
-            <div className="text-2xl font-extrabold tracking-tight text-slate-800">
-              Apartment<span className="text-blue-500">OS</span>
+            <div className="relative h-10 w-full flex items-center justify-start group-hover:scale-105 transition-transform">
+              <Image src="/images/logo.png" alt="ApartmentOS Logo" width={180} height={40} className="object-contain h-10 w-auto" priority />
             </div>
           </Link>
           <div className="inline-block mt-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-medium text-slate-500">

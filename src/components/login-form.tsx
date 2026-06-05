@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import Image from "next/image";
 
 export function LoginForm() {
   const router = useRouter();
@@ -43,8 +44,8 @@ export function LoginForm() {
     <div className="w-full flex flex-col items-center">
       {/* Logo */}
       <div className="mb-8 relative flex items-center justify-center">
-        <div className="w-16 h-16 bg-black rounded-[18px] flex items-center justify-center shadow-md">
-          <span className="text-white font-extrabold text-3xl">A</span>
+        <div className="relative h-16 w-auto flex items-center justify-center">
+          <Image src="/images/logo.png" alt="ApartmentOS Logo" width={200} height={64} className="object-contain h-16 w-auto" priority />
         </div>
       </div>
 
