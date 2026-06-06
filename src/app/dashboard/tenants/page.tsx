@@ -20,6 +20,16 @@ export default function TenantsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Custom prompt modals states
+  const [isResetPasswordModalOpen, setIsResetPasswordModalOpen] = useState(false);
+  const [resetPasswordTenantId, setResetPasswordTenantId] = useState<string | null>(null);
+  const [newPasswordValue, setNewPasswordValue] = useState("");
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
+
+  const [isEvictModalOpen, setIsEvictModalOpen] = useState(false);
+  const [evictTenantId, setEvictTenantId] = useState<string | null>(null);
+  const [isEvicting, setIsEvicting] = useState(false);
+  
   // Form State
   const [formData, setFormData] = useState({
     roomId: "",
@@ -161,35 +171,19 @@ export default function TenantsPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="outline" size="sm" className="rounded-xl border-amber-200 text-amber-600 hover:bg-amber-50 hover:text-amber-700 font-semibold" onClick={async () => {
-                          const newPassword = prompt("ระบุรหัสผ่านใหม่สำหรับลูกบ้านรายนี้:");
-                          if (newPassword) {
-                            if (newPassword.trim().length < 4) {
-                              toast.error("รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร");
-                              return;
-                            }
-                            const res = await fetch(`/api/owner/tenants/${tenant.id}`, {
-                              method: "PATCH",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({ password: newPassword.trim() }),
-                            });
-                            if (res.ok) {
-                              toast.success("รีเซ็ตรหัสผ่านลูกบ้านสำเร็จ!");
-                            } else {
-                              toast.error("เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน");
-                            }
-                          }
+                        <Button variant="outline" size="sm" className="rounded-xl border-amber-200 text-amber-600 hover:bg-amber-50 hover:text-amber-700 font-semibold" onClick={() => {
+                          setResetPasswordTenantId(tenant.id);
+                          setNewPasswordValue("");
+                          setIsResetPasswordModalOpen(true);
                         }}>
                           รีเซ็ตรหัสผ่าน
                         </Button>
                         <Button variant="outline" size="sm" className="rounded-xl border-slate-200 text-slate-600 hover:text-slate-900 font-semibold" onClick={() => window.open(`/dashboard/tenants/${tenant.id}/contract`, '_blank')}>
                           พิมพ์สัญญาเช่า
                         </Button>
-                        <Button variant="outline" size="sm" className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-semibold" onClick={async () => {
-                          if(confirm('คุณแน่ใจหรือไม่ที่จะให้ผู้เช่าคนนี้ย้ายออก? ระบบจะลบบัญชีและคืนสถานะห้องเป็น "ว่าง"')) {
-                            const res = await fetch(`/api/owner/tenants/${tenant.id}`, { method: 'DELETE' });
-                            if(res.ok) { fetchTenants(); fetchAvailableRooms(); } else { toast.error('เกิดข้อผิดพลาด'); }
-                          }
+                        <Button variant="outline" size="sm" className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-semibold" onClick={() => {
+                          setEvictTenantId(tenant.id);
+                          setIsEvictModalOpen(true);
                         }}>
                           ย้ายออก
                         </Button>
@@ -215,14 +209,14 @@ export default function TenantsPage() {
       </Card>
 
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-in fade-in">
-          <div className="bg-white rounded-[24px] p-6 w-full max-w-md shadow-lg animate-in zoom-in-95">
-            <div className="mb-4">
-              <h2 className="text-xl font-bold text-slate-800">เพิ่มลูกบ้านเข้าห้องพัก</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="mb-6">
+              <h2 className="text-2xl font-extrabold text-slate-800">เพิ่มลูกบ้านเข้าห้องพัก</h2>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-slate-700 font-medium">เลือกห้องพัก (เฉพาะห้องที่ว่าง)</Label>
+                <Label className="text-slate-700 font-semibold">เลือกห้องพัก (เฉพาะห้องที่ว่าง)</Label>
                 <select 
                   required 
                   className="w-full h-11 rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
@@ -243,7 +237,7 @@ export default function TenantsPage() {
               </div>
               
               <div className="space-y-2">
-                <Label className="text-slate-700 font-medium">ชื่อผู้เช่า (เว้นว่างได้)</Label>
+                <Label className="text-slate-700 font-semibold">ชื่อผู้เช่า (เว้นว่างได้)</Label>
                 <Input 
                   placeholder="เช่น สมชาย ใจดี" 
                   className="h-11 rounded-xl bg-slate-50 border-slate-200"
@@ -253,7 +247,7 @@ export default function TenantsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-slate-700 font-medium">Username (รหัสลูกบ้านสำหรับล็อกอิน)</Label>
+                <Label className="text-slate-700 font-semibold">Username (รหัสลูกบ้านสำหรับล็อกอิน)</Label>
                 <Input 
                   required 
                   placeholder="เช่น AP-001" 
@@ -265,7 +259,7 @@ export default function TenantsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-slate-700 font-medium">รหัสผ่านชั่วคราว</Label>
+                <Label className="text-slate-700 font-semibold">รหัสผ่านชั่วคราว</Label>
                 <Input 
                   required 
                   placeholder="ตั้งรหัสผ่านให้ลูกบ้าน" 
@@ -276,15 +270,140 @@ export default function TenantsPage() {
                 <p className="text-xs text-slate-500">ลูกบ้านสามารถเปลี่ยนรหัสนี้ได้ภายหลังเมื่อล็อกอินเข้าระบบ</p>
               </div>
 
-              <div className="mt-6 flex justify-end gap-2">
-                <Button type="button" variant="ghost" onClick={() => setIsModalOpen(false)} className="rounded-xl font-medium">
+              <div className="mt-8 flex justify-end gap-3">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsModalOpen(false)} 
+                  className="rounded-full border-slate-200 text-slate-600 font-semibold px-6 py-2.5 hover:bg-slate-50 transition-colors h-11"
+                >
                   ยกเลิก
                 </Button>
-                <Button type="submit" disabled={isSubmitting} className="rounded-xl font-medium bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+                <Button 
+                  type="submit" 
+                  disabled={isSubmitting} 
+                  className="rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 shadow-md h-11"
+                >
                   {isSubmitting ? "กำลังบันทึก..." : "ยืนยันการเพิ่มลูกบ้าน"}
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Reset Password Modal */}
+      {isResetPasswordModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[32px] p-8 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-2xl font-extrabold text-slate-800 mb-3">🔑 รีเซ็ตรหัสผ่าน</h3>
+            <p className="text-sm text-slate-500 mb-6">ระบุรหัสผ่านใหม่สำหรับลูกบ้านรายนี้:</p>
+            
+            <div className="space-y-4">
+              <Input
+                type="text"
+                placeholder="ป้อนรหัสผ่านใหม่ (อย่างน้อย 4 ตัว)"
+                value={newPasswordValue}
+                onChange={(e) => setNewPasswordValue(e.target.value)}
+                className="h-11 rounded-xl bg-slate-50 border-slate-200 font-mono focus:ring-2 focus:ring-blue-500/20"
+              />
+            </div>
+            
+            <div className="mt-8 flex gap-3 justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsResetPasswordModalOpen(false);
+                  setResetPasswordTenantId(null);
+                }}
+                disabled={isResettingPassword}
+                className="rounded-full border-slate-200 text-slate-600 font-semibold px-6 py-2.5 h-11 hover:bg-slate-50 transition-colors"
+              >
+                ยกเลิก
+              </Button>
+              <Button 
+                onClick={async () => {
+                  if (newPasswordValue.trim().length < 4) {
+                    toast.error("รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร");
+                    return;
+                  }
+                  setIsResettingPassword(true);
+                  try {
+                    const res = await fetch(`/api/owner/tenants/${resetPasswordTenantId}`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ password: newPasswordValue.trim() }),
+                    });
+                    if (res.ok) {
+                      toast.success("รีเซ็ตรหัสผ่านลูกบ้านสำเร็จ!");
+                      setIsResetPasswordModalOpen(false);
+                      setResetPasswordTenantId(null);
+                    } else {
+                      toast.error("เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน");
+                    }
+                  } catch (error) {
+                    toast.error("เกิดข้อผิดพลาด");
+                  } finally {
+                    setIsResettingPassword(false);
+                  }
+                }}
+                disabled={isResettingPassword}
+                className="rounded-full bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2.5 shadow-md h-11"
+              >
+                {isResettingPassword ? "กำลังบันทึก..." : "ตกลง"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Evict Modal */}
+      {isEvictModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[32px] p-8 w-full max-w-sm shadow-2xl animate-in zoom-in-95 duration-200">
+            <h3 className="text-2xl font-extrabold text-slate-800 mb-3">🚪 ยืนยันการย้ายออก</h3>
+            <p className="text-sm text-slate-500 mb-8 leading-relaxed">
+              คุณแน่ใจหรือไม่ที่จะให้ผู้เช่าคนนี้ย้ายออก? ระบบจะลบบัญชีและคืนสถานะห้องเป็น <span className="font-semibold text-emerald-600">"ว่าง"</span> ทันที
+            </p>
+            
+            <div className="flex gap-3 justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsEvictModalOpen(false);
+                  setEvictTenantId(null);
+                }}
+                disabled={isEvicting}
+                className="rounded-full border-slate-200 text-slate-600 font-semibold px-6 py-2.5 h-11 hover:bg-slate-50 transition-colors"
+              >
+                ยกเลิก
+              </Button>
+              <Button 
+                onClick={async () => {
+                  setIsEvicting(true);
+                  try {
+                    const res = await fetch(`/api/owner/tenants/${evictTenantId}`, { method: 'DELETE' });
+                    if (res.ok) {
+                      toast.success("บันทึกการย้ายออกสำเร็จ!");
+                      fetchTenants();
+                      fetchAvailableRooms();
+                      setIsEvictModalOpen(false);
+                      setEvictTenantId(null);
+                    } else {
+                      toast.error('เกิดข้อผิดพลาด');
+                    }
+                  } catch (error) {
+                    toast.error('เกิดข้อผิดพลาด');
+                  } finally {
+                    setIsEvicting(false);
+                  }
+                }}
+                disabled={isEvicting}
+                className="rounded-full bg-red-600 hover:bg-red-700 text-white font-semibold px-6 py-2.5 shadow-md h-11"
+              >
+                {isEvicting ? "กำลังบันทึก..." : "ยืนยันย้ายออก"}
+              </Button>
+            </div>
           </div>
         </div>
       )}
