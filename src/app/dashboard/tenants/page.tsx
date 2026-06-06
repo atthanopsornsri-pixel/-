@@ -10,6 +10,7 @@ import { useSearchParams } from "next/navigation";
 
 export default function TenantsPage() {
   const searchParams = useSearchParams();
+  const actionParam = searchParams.get("action");
   const roomIdParam = searchParams.get("roomId");
 
   const [tenants, setTenants] = useState<any[]>([]);
@@ -38,19 +39,21 @@ export default function TenantsPage() {
 
   // Pre-select room if roomId query param is present
   useEffect(() => {
-    if (roomIdParam && availableRooms.length > 0) {
-      const selectedRoom = availableRooms.find(r => r.id === roomIdParam);
+    if ((roomIdParam || actionParam === "create") && availableRooms.length > 0) {
+      const selectedRoom = roomIdParam ? availableRooms.find(r => r.id === roomIdParam) : availableRooms[0];
       if (selectedRoom) {
         const suggestedUsername = `${selectedRoom.property?.name?.substring(0,2).toUpperCase() || 'AP'}-${selectedRoom.number}`;
         setFormData(prev => ({
           ...prev,
-          roomId: roomIdParam,
+          roomId: selectedRoom.id,
           username: suggestedUsername
         }));
         setIsModalOpen(true);
+      } else if (actionParam === "create") {
+        setIsModalOpen(true);
       }
     }
-  }, [roomIdParam, availableRooms]);
+  }, [roomIdParam, actionParam, availableRooms]);
 
   async function fetchTenants() {
     const res = await fetch("/api/tenants", { cache: "no-store" });

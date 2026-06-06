@@ -1,5 +1,6 @@
 "use client";
 import { toast } from "sonner";
+import Link from "next/link";
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -360,12 +361,13 @@ export default function RoomsPage() {
                       แก้ไข
                     </Button>
                     {room.status === "AVAILABLE" && (
-                      <Button 
-                        onClick={() => router.push(`/dashboard/tenants?roomId=${room.id}`)}
-                        className="flex-1 rounded-full bg-[#1D1D1F] hover:bg-[#333336] text-white h-11 font-semibold shadow-sm"
-                      >
-                        รับผู้เช่า
-                      </Button>
+                      <Link href={`/dashboard/tenants?action=create&roomId=${room.id}&roomNumber=${room.number}`} className="flex-1">
+                        <Button 
+                          className="w-full rounded-full bg-[#1D1D1F] hover:bg-[#333336] text-white h-11 font-semibold shadow-sm"
+                        >
+                          🔑 รับผู้เช่า
+                        </Button>
+                      </Link>
                     )}
                   </div>
                 </div>
