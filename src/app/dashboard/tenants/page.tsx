@@ -52,11 +52,10 @@ export default function TenantsPage() {
     if ((roomIdParam || actionParam === "create") && availableRooms.length > 0) {
       const selectedRoom = roomIdParam ? availableRooms.find(r => r.id === roomIdParam) : availableRooms[0];
       if (selectedRoom) {
-        const suggestedUsername = `${selectedRoom.property?.name?.substring(0,2).toUpperCase() || 'AP'}-${selectedRoom.number}`;
         setFormData(prev => ({
           ...prev,
           roomId: selectedRoom.id,
-          username: suggestedUsername
+          username: "" // Start with empty phone number
         }));
         setIsModalOpen(true);
       } else if (actionParam === "create") {
@@ -222,9 +221,7 @@ export default function TenantsPage() {
                   className="w-full h-11 rounded-xl bg-slate-50 border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                   value={formData.roomId}
                   onChange={e => {
-                    const selectedRoom = availableRooms.find(r => r.id === e.target.value);
-                    const suggestedUsername = selectedRoom ? `${selectedRoom.property?.name?.substring(0,2).toUpperCase() || 'AP'}-${selectedRoom.number}` : "";
-                    setFormData({...formData, roomId: e.target.value, username: suggestedUsername});
+                    setFormData({...formData, roomId: e.target.value, username: ""});
                   }}
                 >
                   <option value="">-- กรุณาเลือกห้องพัก --</option>
@@ -247,15 +244,18 @@ export default function TenantsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-slate-700 font-semibold">Username (รหัสลูกบ้านสำหรับล็อกอิน)</Label>
+                <Label className="text-slate-700 font-semibold">เบอร์โทรศัพท์มือถือ (ใช้เป็น Username สำหรับล็อกอิน)</Label>
                 <Input 
                   required 
-                  placeholder="เช่น AP-001" 
+                  type="tel"
+                  pattern="^0[0-9]{9}$"
+                  title="กรุณากรอกเบอร์โทรศัพท์ 10 หลัก ขึ้นต้นด้วย 0 เช่น 0812345678"
+                  placeholder="เช่น 0812345678" 
                   className="h-11 rounded-xl bg-slate-50 border-slate-200 font-mono"
                   value={formData.username}
                   onChange={e => setFormData({...formData, username: e.target.value})}
                 />
-                <p className="text-xs text-slate-500">แนะนำให้ใช้ รหัสหอพัก+เลขห้อง เพื่อให้จำง่าย</p>
+                <p className="text-xs text-slate-500">แนะนำ: ใช้เบอร์โทรศัพท์ของลูกบ้านจริง เพื่อป้องกันชื่อล็อกอินซ้ำกับหอพักอื่น</p>
               </div>
 
               <div className="space-y-2">
