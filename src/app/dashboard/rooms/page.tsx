@@ -321,18 +321,26 @@ export default function RoomsPage() {
                       <p className="text-sm font-medium text-slate-500 mt-1">{room.property.name} • ชั้น {room.floor || "-"}</p>
                       
                       {/* Amenities Icons/Badges */}
-                      <div className="flex flex-wrap gap-1 mt-2">
+                      <div className="flex flex-wrap gap-1.5 mt-2">
                         {room.hasAircon && (
-                          <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs rounded-full">❄️ แอร์</span>
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                            ❄️ แอร์
+                          </span>
                         )}
                         {room.hasFan && (
-                          <span className="px-2 py-0.5 bg-orange-50 text-orange-600 text-xs rounded-full">🌀 พัดลม</span>
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
+                            🌀 พัดลม
+                          </span>
                         )}
                         {room.hasFurniture && (
-                          <span className="px-2 py-0.5 bg-purple-50 text-purple-600 text-xs rounded-full">🪑 เฟอร์ฯ</span>
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
+                            🪑 เฟอร์ฯ
+                          </span>
                         )}
                         {!room.hasAircon && !room.hasFan && !room.hasFurniture && (
-                          <span className="px-2 py-0.5 bg-slate-50 text-slate-400 text-xs rounded-full">ไม่มีสิ่งอำนวยความสะดวก</span>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-50 text-slate-400 italic">
+                            ไม่มีสิ่งอำนวยความสะดวกพิเศษ
+                          </span>
                         )}
                       </div>
                     </div>
