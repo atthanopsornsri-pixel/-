@@ -428,28 +428,47 @@ export default function RoomsPage() {
                 </div>
 
                 {/* 2. มิเตอร์ตั้งต้น */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-4 pt-2">
+                  {/* ส่วนของมิเตอร์น้ำ */}
                   <div className="space-y-2">
-                    <Label>เลขมิเตอร์น้ำตั้งต้น (หน่วย)</Label>
-                    <Input 
-                      type="number" 
-                      step="0.01"
-                      value={editWaterMeter}
-                      onChange={(e) => setEditWaterMeter(e.target.value)}
-                      placeholder="กรอกเลขหน่วยบนมิเตอร์น้ำ เช่น 00123" 
-                      className="rounded-xl h-11 bg-slate-50 border-slate-200 focus:bg-white" 
-                    />
+                    <label className="text-sm font-semibold text-slate-700 flex items-center gap-1">
+                      💧 เลขมิเตอร์น้ำตั้งต้น <span className="text-xs font-normal text-slate-400">(หน่วย)</span>
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        step="0.1"
+                        value={editWaterMeter}
+                        onChange={(e) => setEditWaterMeter(e.target.value)}
+                        className="w-full rounded-xl border-slate-200 bg-slate-50 pr-16 focus:ring-blue-500 focus:border-blue-500 h-11"
+                        placeholder="กรอกตัวเลขหน่วยปัจจุบันบนมิเตอร์ เช่น 0.0"
+                      />
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <span className="text-sm text-slate-400 font-medium">หน่วย</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-400">ค่าน้ำจะคำนวณจาก: (หน่วยเดือนนี้ - หน่วยตั้งต้น) × ราคาต่อหน่วย</p>
                   </div>
+
+                  {/* ส่วนของมิเตอร์ไฟ */}
                   <div className="space-y-2">
-                    <Label>เลขมิเตอร์ไฟตั้งต้น (หน่วย)</Label>
-                    <Input 
-                      type="number" 
-                      step="0.01"
-                      value={editElectricMeter}
-                      onChange={(e) => setEditElectricMeter(e.target.value)}
-                      placeholder="กรอกเลขหน่วยบนมิเตอร์ไฟ เช่น 04500" 
-                      className="rounded-xl h-11 bg-slate-50 border-slate-200 focus:bg-white" 
-                    />
+                    <label className="text-sm font-semibold text-slate-700 flex items-center gap-1">
+                      ⚡ เลขมิเตอร์ไฟตั้งต้น <span className="text-xs font-normal text-slate-400">(หน่วย)</span>
+                    </label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        step="1"
+                        value={editElectricMeter}
+                        onChange={(e) => setEditElectricMeter(e.target.value)}
+                        className="w-full rounded-xl border-slate-200 bg-slate-50 pr-16 focus:ring-blue-500 focus:border-blue-500 h-11"
+                        placeholder="กรอกตัวเลขหน่วยปัจจุบันบนมิเตอร์ เช่น 1250"
+                      />
+                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                        <span className="text-sm text-slate-400 font-medium">หน่วย</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-400">ค่าไฟจะคำนวณจาก: (หน่วยเดือนนี้ - หน่วยตั้งต้น) × ราคาต่อหน่วย</p>
                   </div>
                 </div>
                 
