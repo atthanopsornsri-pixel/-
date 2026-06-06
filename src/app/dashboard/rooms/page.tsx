@@ -322,16 +322,16 @@ export default function RoomsPage() {
                       {/* Amenities Icons/Badges */}
                       <div className="flex flex-wrap gap-1 mt-2">
                         {room.hasAircon && (
-                          <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-blue-100">แอร์</span>
+                          <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs rounded-full">❄️ แอร์</span>
                         )}
                         {room.hasFan && (
-                          <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-emerald-100">พัดลม</span>
+                          <span className="px-2 py-0.5 bg-orange-50 text-orange-600 text-xs rounded-full">🌀 พัดลม</span>
                         )}
                         {room.hasFurniture && (
-                          <span className="bg-amber-50 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-amber-100">เฟอร์นิเจอร์</span>
+                          <span className="px-2 py-0.5 bg-purple-50 text-purple-600 text-xs rounded-full">🪑 เฟอร์ฯ</span>
                         )}
                         {!room.hasAircon && !room.hasFan && !room.hasFurniture && (
-                          <span className="bg-slate-50 text-slate-400 text-[10px] px-2 py-0.5 rounded-md border border-slate-100">ไม่มีสิ่งอำนวยความสะดวก</span>
+                          <span className="px-2 py-0.5 bg-slate-50 text-slate-400 text-xs rounded-full">ไม่มีสิ่งอำนวยความสะดวก</span>
                         )}
                       </div>
                     </div>
@@ -426,7 +426,7 @@ export default function RoomsPage() {
                       step="0.01"
                       value={editWaterMeter}
                       onChange={(e) => setEditWaterMeter(e.target.value)}
-                      placeholder="เช่น 10.0" 
+                      placeholder="กรอกเลขหน่วยบนมิเตอร์น้ำ เช่น 00123" 
                       className="rounded-xl h-11 bg-slate-50 border-slate-200 focus:bg-white" 
                     />
                   </div>
@@ -437,7 +437,7 @@ export default function RoomsPage() {
                       step="0.01"
                       value={editElectricMeter}
                       onChange={(e) => setEditElectricMeter(e.target.value)}
-                      placeholder="เช่น 150.0" 
+                      placeholder="กรอกเลขหน่วยบนมิเตอร์ไฟ เช่น 04500" 
                       className="rounded-xl h-11 bg-slate-50 border-slate-200 focus:bg-white" 
                     />
                   </div>
