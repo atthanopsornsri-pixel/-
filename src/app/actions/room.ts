@@ -48,8 +48,9 @@ export async function updateRoomMVP(formData: FormData) {
     });
 
     revalidatePath('/dashboard/rooms');
+    return { success: true };
   } catch (error) {
     console.error("updateRoomMVP error:", error);
-    throw error;
+    return { success: false, error: "แก้ไขข้อมูลล้มเหลว" };
   }
 }
