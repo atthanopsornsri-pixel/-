@@ -115,6 +115,11 @@ export async function GET(req: Request) {
         status: true,
         inviteCode: true,
         imageMain: true,
+        hasAircon: true,
+        hasFan: true,
+        hasFurniture: true,
+        waterMeterStart: true,
+        electricMeterStart: true,
         // Omit imageBathroom, imageBalcony, imageFacility to save bandwidth
         propertyId: true,
         property: { select: { name: true } },

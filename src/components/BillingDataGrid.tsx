@@ -169,8 +169,8 @@ export function BillingDataGrid({ propertyId, month, year, bills }: BillingDataG
             <tr>
               <th className="px-4 py-3 border-b border-slate-200 font-bold">ห้อง</th>
               <th className="px-4 py-3 border-b border-slate-200 font-bold">ค่าเช่าตั้งต้น</th>
-              <th className="px-4 py-3 border-b border-slate-200 font-bold text-blue-600 bg-blue-50/50">เลขมิเตอร์น้ำ</th>
-              <th className="px-4 py-3 border-b border-slate-200 font-bold text-amber-600 bg-amber-50/50">เลขมิเตอร์ไฟ</th>
+              <th className="px-4 py-3 border-b border-slate-200 font-bold text-blue-600 bg-blue-50/50">หน่วยน้ำที่ใช้ (หน่วย)</th>
+              <th className="px-4 py-3 border-b border-slate-200 font-bold text-amber-600 bg-amber-50/50">หน่วยไฟที่ใช้ (หน่วย)</th>
               <th className="px-4 py-3 border-b border-slate-200 font-bold">ยอดสุทธิ (ณ ปัจจุบัน)</th>
               <th className="px-4 py-3 border-b border-slate-200 font-bold">สถานะ</th>
             </tr>

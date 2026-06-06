@@ -6,8 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useSearchParams } from "next/navigation";
 
 export default function TenantsPage() {
+  const searchParams = useSearchParams();
+  const roomIdParam = searchParams.get("roomId");
+
   const [tenants, setTenants] = useState<any[]>([]);
   const [availableRooms, setAvailableRooms] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -31,6 +35,22 @@ export default function TenantsPage() {
     };
     loadData();
   }, []);
+
+  // Pre-select room if roomId query param is present
+  useEffect(() => {
+    if (roomIdParam && availableRooms.length > 0) {
+      const selectedRoom = availableRooms.find(r => r.id === roomIdParam);
+      if (selectedRoom) {
+        const suggestedUsername = `${selectedRoom.property?.name?.substring(0,2).toUpperCase() || 'AP'}-${selectedRoom.number}`;
+        setFormData(prev => ({
+          ...prev,
+          roomId: roomIdParam,
+          username: suggestedUsername
+        }));
+        setIsModalOpen(true);
+      }
+    }
+  }, [roomIdParam, availableRooms]);
 
   async function fetchTenants() {
     const res = await fetch("/api/tenants");

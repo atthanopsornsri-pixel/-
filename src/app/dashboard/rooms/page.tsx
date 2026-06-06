@@ -5,12 +5,13 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 
 
 export default function RoomsPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const propertyIdParam = searchParams.get("propertyId");
 
   const [rooms, setRooms] = useState<any[]>([]);
@@ -317,6 +318,22 @@ export default function RoomsPage() {
                     <div>
                       <h3 className="font-extrabold text-2xl text-[#1D1D1F]">ห้อง {room.number}</h3>
                       <p className="text-sm font-medium text-slate-500 mt-1">{room.property.name} • ชั้น {room.floor || "-"}</p>
+                      
+                      {/* Amenities Icons/Badges */}
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {room.hasAircon && (
+                          <span className="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-blue-100">แอร์</span>
+                        )}
+                        {room.hasFan && (
+                          <span className="bg-emerald-50 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-emerald-100">พัดลม</span>
+                        )}
+                        {room.hasFurniture && (
+                          <span className="bg-amber-50 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-md border border-amber-100">เฟอร์นิเจอร์</span>
+                        )}
+                        {!room.hasAircon && !room.hasFan && !room.hasFurniture && (
+                          <span className="bg-slate-50 text-slate-400 text-[10px] px-2 py-0.5 rounded-md border border-slate-100">ไม่มีสิ่งอำนวยความสะดวก</span>
+                        )}
+                      </div>
                     </div>
                     <span className={`px-3 py-1.5 rounded-full text-xs font-bold tracking-wide ${
                       room.status === "AVAILABLE" ? "bg-[#E8F8F5] text-[#34C759] border border-[#34C759]/20" :
@@ -343,7 +360,10 @@ export default function RoomsPage() {
                       แก้ไข
                     </Button>
                     {room.status === "AVAILABLE" && (
-                      <Button className="flex-1 rounded-full bg-[#1D1D1F] hover:bg-[#333336] text-white h-11 font-semibold shadow-sm">
+                      <Button 
+                        onClick={() => router.push(`/dashboard/tenants?roomId=${room.id}`)}
+                        className="flex-1 rounded-full bg-[#1D1D1F] hover:bg-[#333336] text-white h-11 font-semibold shadow-sm"
+                      >
                         รับผู้เช่า
                       </Button>
                     )}
@@ -400,24 +420,24 @@ export default function RoomsPage() {
                 {/* 2. มิเตอร์ตั้งต้น */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>เลขมิเตอร์น้ำ (ตั้งต้น)</Label>
+                    <Label>เลขมิเตอร์น้ำตั้งต้น (หน่วย)</Label>
                     <Input 
                       type="number" 
                       step="0.01"
                       value={editWaterMeter}
                       onChange={(e) => setEditWaterMeter(e.target.value)}
-                      placeholder="เช่น 120.5" 
+                      placeholder="เช่น 10.0" 
                       className="rounded-xl h-11 bg-slate-50 border-slate-200 focus:bg-white" 
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>เลขมิเตอร์ไฟ (ตั้งต้น)</Label>
+                    <Label>เลขมิเตอร์ไฟตั้งต้น (หน่วย)</Label>
                     <Input 
                       type="number" 
                       step="0.01"
                       value={editElectricMeter}
                       onChange={(e) => setEditElectricMeter(e.target.value)}
-                      placeholder="เช่น 4500" 
+                      placeholder="เช่น 150.0" 
                       className="rounded-xl h-11 bg-slate-50 border-slate-200 focus:bg-white" 
                     />
                   </div>
