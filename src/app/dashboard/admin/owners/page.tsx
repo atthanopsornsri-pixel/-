@@ -8,7 +8,6 @@ import { Eye, EyeOff } from "lucide-react";
 export default function AdminOwnersPage() {
   const [owners, setOwners] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     fetchOwners();
@@ -23,13 +22,6 @@ export default function AdminOwnersPage() {
     setIsLoading(false);
   };
 
-  const togglePassword = (id: string) => {
-    setVisiblePasswords(prev => ({
-      ...prev,
-      [id]: !prev[id]
-    }));
-  };
-
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex justify-between items-center mb-6">
@@ -42,7 +34,6 @@ export default function AdminOwnersPage() {
             <tr>
               <th className="px-6 py-4 font-semibold">ชื่อบัญชี</th>
               <th className="px-6 py-4 font-semibold">อีเมล (Username)</th>
-              <th className="px-6 py-4 font-semibold">รหัสผ่าน</th>
               <th className="px-6 py-4 font-semibold text-center">จำนวนหอพัก</th>
               <th className="px-6 py-4 font-semibold">สิทธิ์ใช้งาน (Invite Code)</th>
               <th className="px-6 py-4 font-semibold">วันที่สมัคร</th>
@@ -53,20 +44,6 @@ export default function AdminOwnersPage() {
               <tr key={owner.id} className="hover:bg-slate-50/50">
                 <td className="px-6 py-4 font-semibold text-slate-800">{owner.name || "-"}</td>
                 <td className="px-6 py-4 text-slate-600">{owner.email}</td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <code className="bg-slate-100 px-2 py-1 rounded text-sm text-slate-700 min-w-[100px] text-center">
-                      {visiblePasswords[owner.id] ? (owner.unencryptedPassword || "N/A") : "••••••••"}
-                    </code>
-                    <button 
-                      onClick={() => togglePassword(owner.id)}
-                      className="text-slate-400 hover:text-indigo-600 transition-colors p-1"
-                      title="แสดง/ซ่อน รหัสผ่าน"
-                    >
-                      {visiblePasswords[owner.id] ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </td>
                 <td className="px-6 py-4 text-center font-bold text-indigo-600">
                   {owner._count.properties}
                 </td>
@@ -91,14 +68,14 @@ export default function AdminOwnersPage() {
             ))}
             {!isLoading && owners.length === 0 && (
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
                   ยังไม่มีเจ้าของหอพักในระบบ
                 </td>
               </tr>
             )}
             {isLoading && (
               <tr>
-                <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
                   กำลังโหลดข้อมูล...
                 </td>
               </tr>

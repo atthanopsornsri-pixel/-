@@ -148,17 +148,36 @@ export async function getSecurePrisma() {
     const userId = session.user.id;
     // We must use the base prisma here to fetch the tenant profile initially
     const tenantRecord = await softDeletePrisma.tenant.findUnique({
-      where: { userId }
+      where: { userId },
+      include: { room: true }
     });
     
-    if (!tenantRecord || !tenantRecord.roomId) {
+    if (!tenantRecord || !tenantRecord.roomId || !tenantRecord.room) {
       throw new Error("Forbidden: Tenant profile or room not found");
     }
     
     const roomId = tenantRecord.roomId;
+    const propertyId = tenantRecord.room.propertyId;
 
     return softDeletePrisma.$extends({
       query: {
+        property: {
+          async $allOperations({ operation, args, query }) {
+             const anyArgs = args as any;
+             if (!['findMany', 'findFirst', 'findUnique', 'count'].includes(operation)) {
+              throw new Error(`Forbidden: TENANT cannot execute ${operation} on property`);
+             }
+             if (['findMany', 'findFirst', 'count'].includes(operation)) {
+                anyArgs.where = { ...anyArgs.where, id: propertyId };
+             }
+             if (operation === 'findUnique' || operation === 'findUniqueOrThrow') {
+                 const result = await softDeletePrisma.property.findFirst({ ...anyArgs, where: { ...anyArgs.where, id: propertyId } });
+                 if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
+                 return result as any;
+             }
+             return query(args);
+          }
+        },
         bill: {
           async $allOperations({ operation, args, query }) {
             const anyArgs = args as any;

@@ -32,7 +32,6 @@ export async function PATCH(req: Request) {
     if (password) {
       const bcrypt = require("bcryptjs");
       dataToUpdate.password = await bcrypt.hash(password, 10);
-      dataToUpdate.unencryptedPassword = password;
     }
 
     const user = await prisma.user.update({

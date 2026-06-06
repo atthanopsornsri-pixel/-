@@ -23,9 +23,6 @@ export default function TenantsPage() {
     password: "",
   });
 
-  // For password visibility
-  const [visiblePasswords, setVisiblePasswords] = useState<{ [key: string]: boolean }>({});
-
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
@@ -49,13 +46,6 @@ export default function TenantsPage() {
       const data = await res.json();
       setAvailableRooms(data);
     }
-  };
-
-  const togglePasswordVisibility = (tenantId: string) => {
-    setVisiblePasswords(prev => ({
-      ...prev,
-      [tenantId]: !prev[tenantId]
-    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -110,12 +100,31 @@ export default function TenantsPage() {
                   <th className="px-6 py-4 font-semibold">ห้องพัก</th>
                   <th className="px-6 py-4 font-semibold">ชื่อลูกบ้าน</th>
                   <th className="px-6 py-4 font-semibold">Username (ล็อกอิน)</th>
-                  <th className="px-6 py-4 font-semibold">รหัสผ่าน</th>
                   <th className="px-6 py-4 font-semibold text-right">สัญญาเช่า</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {tenants.map(tenant => (
+                {isLoading ? (
+                  Array.from({ length: 4 }).map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="px-6 py-4">
+                        <div className="h-8 bg-slate-100 rounded-lg w-24"></div>
+                      </td>
+                      <td className="px-6 py-4 font-medium text-slate-800">
+                        <div className="h-5 bg-slate-100 rounded w-32"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-5 bg-slate-100 rounded w-28"></div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <div className="h-9 bg-slate-100 rounded-xl w-24"></div>
+                          <div className="h-9 bg-slate-100 rounded-xl w-16"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : tenants.map(tenant => (
                   <tr key={tenant.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="font-bold text-slate-900 bg-slate-100 px-3 py-1 rounded-lg inline-block">
@@ -127,30 +136,33 @@ export default function TenantsPage() {
                     <td className="px-6 py-4 text-blue-600 font-medium bg-blue-50/30 rounded">
                       {tenant.user.username || tenant.user.email}
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono bg-slate-100 px-2 py-1 rounded text-slate-700">
-                          {visiblePasswords[tenant.id] ? tenant.user.unencryptedPassword : "••••••••"}
-                        </span>
-                        <button 
-                          onClick={() => togglePasswordVisibility(tenant.id)}
-                          className="text-slate-400 hover:text-slate-600 transition-colors"
-                          title={visiblePasswords[tenant.id] ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
-                        >
-                          {visiblePasswords[tenant.id] ? (
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" /></svg>
-                          ) : (
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                          )}
-                        </button>
-                      </div>
-                    </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Button variant="outline" size="sm" className="rounded-xl border-slate-200 text-slate-600 hover:text-slate-900" onClick={() => window.open(`/dashboard/tenants/${tenant.id}/contract`, '_blank')}>
+                        <Button variant="outline" size="sm" className="rounded-xl border-amber-200 text-amber-600 hover:bg-amber-50 hover:text-amber-700 font-semibold" onClick={async () => {
+                          const newPassword = prompt("ระบุรหัสผ่านใหม่สำหรับลูกบ้านรายนี้:");
+                          if (newPassword) {
+                            if (newPassword.trim().length < 4) {
+                              toast.error("รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร");
+                              return;
+                            }
+                            const res = await fetch(`/api/owner/tenants/${tenant.id}`, {
+                              method: "PATCH",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ password: newPassword.trim() }),
+                            });
+                            if (res.ok) {
+                              toast.success("รีเซ็ตรหัสผ่านลูกบ้านสำเร็จ!");
+                            } else {
+                              toast.error("เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน");
+                            }
+                          }
+                        }}>
+                          รีเซ็ตรหัสผ่าน
+                        </Button>
+                        <Button variant="outline" size="sm" className="rounded-xl border-slate-200 text-slate-600 hover:text-slate-900 font-semibold" onClick={() => window.open(`/dashboard/tenants/${tenant.id}/contract`, '_blank')}>
                           พิมพ์สัญญาเช่า
                         </Button>
-                        <Button variant="outline" size="sm" className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700" onClick={async () => {
+                        <Button variant="outline" size="sm" className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-semibold" onClick={async () => {
                           if(confirm('คุณแน่ใจหรือไม่ที่จะให้ผู้เช่าคนนี้ย้ายออก? ระบบจะลบบัญชีและคืนสถานะห้องเป็น "ว่าง"')) {
                             const res = await fetch(`/api/owner/tenants/${tenant.id}`, { method: 'DELETE' });
                             if(res.ok) { fetchTenants(); fetchAvailableRooms(); } else { toast.error('เกิดข้อผิดพลาด'); }
@@ -162,9 +174,9 @@ export default function TenantsPage() {
                     </td>
                   </tr>
                 ))}
-                {tenants.length === 0 && (
+                {!isLoading && tenants.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center">
+                    <td colSpan={4} className="px-6 py-12 text-center">
                       <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-2xl flex items-center justify-center mx-auto mb-3">
                         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
                       </div>

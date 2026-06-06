@@ -145,6 +145,10 @@ export async function updateBulkMeters(
         throw new Error(`Bill ${update.billId} not found or unauthorized.`);
       }
 
+      if (update.waterUnit < 0 || update.electricUnit < 0) {
+        throw new Error(`หน่วยน้ำหรือไฟในห้อง ${bill.roomId} ห้ามติดลบ`);
+      }
+
       // Calculate new amounts
       const newWaterAmount = update.waterUnit * waterRate;
       const newElectricAmount = update.electricUnit * electricRate;

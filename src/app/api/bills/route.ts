@@ -23,6 +23,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
 
+    if (
+      Number(rentAmount) < 0 ||
+      Number(waterAmount) < 0 ||
+      Number(electricAmount) < 0 ||
+      (waterUnits !== undefined && waterUnits !== null && Number(waterUnits) < 0) ||
+      (electricUnits !== undefined && electricUnits !== null && Number(electricUnits) < 0) ||
+      Number(commonFee || 0) < 0 ||
+      Number(parkingFee || 0) < 0 ||
+      Number(internetFee || 0) < 0 ||
+      Number(otherFee || 0) < 0
+    ) {
+      return NextResponse.json({ message: "ข้อมูลการเงินหรือค่าหน่วยมิเตอร์ห้ามมีค่าติดลบ" }, { status: 400 });
+    }
+
     const secureDb = await getSecurePrisma();
 
     // Verify room belongs to this owner (secureDb does this automatically)
@@ -127,7 +141,7 @@ export async function GET(req: Request) {
     const bills = await secureDb.bill.findMany({
       where: whereClause,
       include: {
-        room: { select: { number: true, property: { select: { name: true } } } },
+        room: { select: { number: true, property: { select: { name: true, promptPayNo: true, promptPayName: true } } } },
       },
       orderBy: [
         { year: "desc" },

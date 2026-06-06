@@ -63,6 +63,8 @@ export async function GET(request: Request) {
         contractSignedAt: tenant.contractSignedAt,
         contractIpAddress: tenant.contractIpAddress,
         contractPdfUrl: tenant.contractPdfUrl,
+        landlordSignatureUrl: tenant.room.property.signatureUrl,
+        landlordName: tenant.room.property.promptPayName || tenant.room.property.name,
       },
       content,
     });

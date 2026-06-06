@@ -159,10 +159,38 @@ export default function TenantContractPage() {
   const { tenant, content } = contractData;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold text-slate-800">สัญญาเช่าห้องพักอาศัย</h1>
+    <div className="max-w-3xl mx-auto space-y-6 print-card">
+      <style>{`
+        @media print {
+          body, html, main, #__next {
+            background: white !important;
+            color: black !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 100% !important;
+          }
+          aside, header, button, .no-print, nav, [role="navigation"] {
+            display: none !important;
+          }
+          .print-card {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+          }
+          .contract-box {
+            border: none !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+          }
+        }
+      `}</style>
 
-      <div className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-200">
+      <h1 className="text-2xl font-bold text-slate-800 no-print">สัญญาเช่าห้องพักอาศัย</h1>
+
+      <div className="bg-white p-8 md:p-12 rounded-3xl shadow-sm border border-slate-200 contract-box">
         <div className="prose max-w-none mb-12 whitespace-pre-wrap font-sarabun text-xl leading-relaxed text-slate-800">
           {content ? (
             <div dangerouslySetInnerHTML={{ __html: content }} />
@@ -173,7 +201,7 @@ export default function TenantContractPage() {
 
         <div className="border-t border-slate-200 pt-8 mt-8">
           {tenant.contractPdfUrl ? (
-            <div className="text-center p-6 bg-blue-50 rounded-xl border border-blue-100">
+            <div className="text-center p-6 bg-blue-50 rounded-xl border border-blue-100 no-print">
               <h3 className="font-bold text-blue-800 mb-2">สัญญาฉบับจริงถูกจัดเก็บเรียบร้อยแล้ว</h3>
               <p className="text-sm text-slate-600 mb-4">หอพักได้ทำการอัปโหลดสัญญาที่คุณเซ็นไว้เข้าระบบแล้ว</p>
               <a href={tenant.contractPdfUrl} target="_blank" rel="noreferrer">
@@ -181,12 +209,45 @@ export default function TenantContractPage() {
               </a>
             </div>
           ) : tenant.signatureUrl ? (
-            <div className="flex flex-col items-center p-6 bg-slate-50 rounded-xl">
-              <h3 className="font-bold text-slate-800 mb-4">ลายเซ็นผู้เช่า</h3>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={tenant.signatureUrl} alt="Signature" className="h-32 border-b border-slate-400 mb-4" />
-              <p className="text-sm text-slate-500">เซ็นเมื่อ: {new Date(tenant.contractSignedAt).toLocaleString("th-TH")}</p>
-              <p className="text-xs text-slate-400">IP: {tenant.contractIpAddress}</p>
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-8 p-6 bg-slate-50 rounded-xl border border-slate-100">
+                {/* Landlord Side */}
+                <div className="flex flex-col items-center text-center border-r border-slate-200 pr-4">
+                  <h3 className="font-bold text-slate-800 mb-4">ผู้ให้เช่า (Landlord)</h3>
+                  {tenant.landlordSignatureUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={tenant.landlordSignatureUrl} alt="Landlord Signature" className="h-24 object-contain mb-4 mix-blend-multiply" />
+                  ) : (
+                    <div className="h-24 flex items-center justify-center text-slate-400 italic text-sm mb-4">
+                      (เซ็นอนุมัติผ่านระบบแล้ว)
+                    </div>
+                  )}
+                  <p className="font-bold text-slate-700 text-sm">{tenant.landlordName}</p>
+                  <p className="text-xs text-slate-400 mt-1">ผู้ให้เช่า / ผู้รับมอบอำนาจ</p>
+                </div>
+
+                {/* Tenant Side */}
+                <div className="flex flex-col items-center text-center">
+                  <h3 className="font-bold text-slate-800 mb-4">ผู้เช่า (Tenant)</h3>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={tenant.signatureUrl} alt="Tenant Signature" className="h-24 object-contain mb-4" />
+                  <p className="font-bold text-slate-700 text-sm">{tenant.name || "ผู้เช่าอาศัย"}</p>
+                  <p className="text-xs text-slate-400 mt-1">เซ็นเมื่อ: {new Date(tenant.contractSignedAt).toLocaleDateString("th-TH")}</p>
+                </div>
+              </div>
+
+              {/* Legal metadata footer */}
+              <div className="text-center text-xs text-slate-400 space-y-1 mt-4">
+                <p>ลงนามอิเล็กทรอนิกส์สำเร็จผ่านระบบ JadHor OS</p>
+                <p className="no-print">IP Address: {tenant.contractIpAddress} | เบราว์เซอร์: {tenant.contractUserAgent || "Unknown"}</p>
+              </div>
+
+              {/* Print Button */}
+              <div className="flex justify-center mt-6 no-print">
+                <Button onClick={() => window.print()} className="bg-slate-800 hover:bg-slate-900 text-white rounded-full px-8">
+                  🖨️ พิมพ์สัญญาเช่า (Print)
+                </Button>
+              </div>
             </div>
           ) : (
             <div>

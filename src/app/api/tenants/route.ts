@@ -19,7 +19,7 @@ export async function GET(req: Request) {
         },
       },
       include: {
-        user: { select: { name: true, email: true, username: true, unencryptedPassword: true } },
+        user: { select: { name: true, email: true, username: true } },
         room: { select: { id: true, number: true, rentPrice: true, property: { select: { name: true, leaseTemplate: true } } } },
       },
       orderBy: { createdAt: "desc" },

@@ -22,6 +22,24 @@ export async function POST(
       return new NextResponse("pdfUrl is required", { status: 400 });
     }
 
+    // Verify ownership of the tenant room's property
+    const tenant = await prisma.tenant.findUnique({
+      where: { id },
+      include: {
+        room: {
+          include: { property: true }
+        }
+      }
+    });
+
+    if (!tenant) {
+      return new NextResponse("Tenant not found", { status: 404 });
+    }
+
+    if (!tenant.room || tenant.room.property.ownerId !== session.user.id) {
+      return new NextResponse("Unauthorized: You do not own this property", { status: 403 });
+    }
+
     // Update the tenant's contractPdfUrl
     const updatedTenant = await prisma.tenant.update({
       where: { id },

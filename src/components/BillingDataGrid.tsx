@@ -92,6 +92,14 @@ export function BillingDataGrid({ propertyId, month, year, bills }: BillingDataG
         electricUnit: data.electricUnit,
       }));
 
+      // Validation check for negative values
+      const hasNegative = updatesArray.some(u => u.waterUnit < 0 || u.electricUnit < 0);
+      if (hasNegative) {
+        setFeedbackMsg({ type: 'error', text: 'หน่วยน้ำและไฟห้ามเป็นค่าติดลบ' });
+        setIsSaving(false);
+        return;
+      }
+
       const res = await updateBulkMeters(propertyId, updatesArray);
       
       if (res.success) {

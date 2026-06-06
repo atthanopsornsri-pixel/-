@@ -38,6 +38,31 @@ export default function SettingsPage() {
     setIsSaving(false);
   };
 
+  const [isTestingLine, setIsTestingLine] = useState(false);
+
+  const handleTestLine = async () => {
+    if (!lineToken) return;
+    setIsTestingLine(true);
+    try {
+      const res = await fetch("/api/line-test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: lineToken }),
+      });
+      if (res.ok) {
+        toast.success("ทดสอบการเชื่อมต่อสำเร็จ! ส่งข้อความไปยังไลน์ของคุณเรียบร้อย");
+      } else {
+        const errData = await res.json();
+        toast.error(errData.message || "การเชื่อมต่อล้มเหลว กรุณาตรวจสอบ Token อีกครั้ง");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+    } finally {
+      setIsTestingLine(false);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <h1 className="text-2xl font-bold text-slate-800">ตั้งค่าระบบ</h1>
@@ -51,12 +76,24 @@ export default function SettingsPage() {
         <form onSubmit={handleSave} className="space-y-4">
           <div className="space-y-2">
             <Label>LINE Notify Token</Label>
-            <Input 
-              type="password" 
-              value={lineToken} 
-              onChange={e => setLineToken(e.target.value)} 
-              placeholder="v8xxxxxxxxxxxxxxxxxxxxx" 
-            />
+            <div className="flex gap-3">
+              <Input 
+                type="password" 
+                value={lineToken} 
+                onChange={e => setLineToken(e.target.value)} 
+                placeholder="v8xxxxxxxxxxxxxxxxxxxxx" 
+                className="flex-1 rounded-xl bg-slate-50"
+              />
+              <Button 
+                type="button" 
+                onClick={handleTestLine} 
+                disabled={isTestingLine || !lineToken} 
+                variant="outline" 
+                className="rounded-xl border-slate-200 text-slate-600 shrink-0 h-10 hover:bg-slate-50"
+              >
+                {isTestingLine ? "กำลังทดสอบ..." : "ทดสอบส่งข้อความ"}
+              </Button>
+            </div>
             <p className="text-xs text-slate-400 mt-1">สามารถสร้าง Token ได้ที่ <a href="https://notify-bot.line.me/" target="_blank" className="text-blue-500 hover:underline">notify-bot.line.me</a></p>
           </div>
           

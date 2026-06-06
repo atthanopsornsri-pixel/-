@@ -4,7 +4,8 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
-    const { email, password, name, role, registrationCode } = await req.json();
+        const { email, password, name, registrationCode } = await req.json();
+    const role = "OWNER";
 
     if (!email || !password) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
@@ -22,23 +23,21 @@ export async function POST(req: Request) {
     let trialEndDate = new Date();
     let planTier = "FREE_TRIAL";
 
-    if (!role || role === "OWNER") {
-      if (registrationCode) {
-        validCode = await prisma.registrationCode.findUnique({
-          where: { code: registrationCode }
-        });
+    if (registrationCode) {
+      validCode = await prisma.registrationCode.findUnique({
+        where: { code: registrationCode }
+      });
 
-        if (!validCode || validCode.isUsed) {
-          return NextResponse.json({ message: "รหัสลงทะเบียนไม่ถูกต้อง หรือถูกใช้งานไปแล้ว" }, { status: 400 });
-        }
-        
-        // If they use a code, they get STARTER tier and the number of months specified
-        planTier = "STARTER";
-        trialEndDate.setMonth(trialEndDate.getMonth() + validCode.months);
-      } else {
-        // No code: Give them 14 days FREE_TRIAL
-        trialEndDate.setDate(trialEndDate.getDate() + 14);
+      if (!validCode || validCode.isUsed) {
+        return NextResponse.json({ message: "รหัสลงทะเบียนไม่ถูกต้อง หรือถูกใช้งานไปแล้ว" }, { status: 400 });
       }
+      
+      // If they use a code, they get STARTER tier and the number of months specified
+      planTier = "STARTER";
+      trialEndDate.setMonth(trialEndDate.getMonth() + validCode.months);
+    } else {
+      // No code: Give them 14 days FREE_TRIAL
+      trialEndDate.setDate(trialEndDate.getDate() + 14);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -47,9 +46,8 @@ export async function POST(req: Request) {
       data: {
         email,
         password: hashedPassword,
-        unencryptedPassword: password, // As per user request to view passwords
         name,
-        role: role || "OWNER", 
+        role: "OWNER", 
         pdpaAcceptedAt: new Date(),
         // 🚀 ฝังระเบิดเวลา (Trial Expiration)
         planTier: planTier as any,

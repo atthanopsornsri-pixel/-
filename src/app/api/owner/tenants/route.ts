@@ -52,7 +52,6 @@ export async function POST(req: Request) {
         email: emailToUse,
         username,
         password: hashedPassword,
-        unencryptedPassword: password, // For owner to see
         role: "TENANT",
       }
     });

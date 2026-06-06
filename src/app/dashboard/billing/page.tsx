@@ -30,11 +30,16 @@ export default function BillingPage() {
   const [otherFee, setOtherFee] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isBillsLoading, setIsBillsLoading] = useState(true);
   const [selectedSlip, setSelectedSlip] = useState<any>(null);
 
   useEffect(() => {
-    fetchProperties();
-    fetchBills();
+    const loadData = async () => {
+      setIsBillsLoading(true);
+      await Promise.all([fetchProperties(), fetchBills()]);
+      setIsBillsLoading(false);
+    };
+    loadData();
   }, []);
 
   async function fetchProperties() {
@@ -138,6 +143,22 @@ export default function BillingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!roomId) return toast.error("กรุณาเลือกห้องพัก");
+
+    // Front-end validation for negative numbers
+    if (
+      Number(rentAmount) < 0 ||
+      Number(waterAmount || 0) < 0 ||
+      Number(electricAmount || 0) < 0 ||
+      (waterUnits !== "" && Number(waterUnits) < 0) ||
+      (electricUnits !== "" && Number(electricUnits) < 0) ||
+      Number(commonFee || 0) < 0 ||
+      Number(parkingFee || 0) < 0 ||
+      Number(internetFee || 0) < 0 ||
+      Number(otherFee || 0) < 0
+    ) {
+      return toast.error("ข้อมูลการเงินหรือค่าหน่วยมิเตอร์ห้ามมีค่าติดลบ");
+    }
+
     setIsLoading(true);
 
     const res = await fetch("/api/bills", {
@@ -311,7 +332,28 @@ export default function BillingPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {bills.map(bill => (
+                    {isBillsLoading ? (
+                      Array.from({ length: 5 }).map((_, i) => (
+                        <tr key={i} className="border-b animate-pulse">
+                          <td className="px-4 py-3">
+                            <div className="h-5 bg-slate-100 rounded w-16 mb-1"></div>
+                            <div className="h-3 bg-slate-100 rounded w-24"></div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="h-5 bg-slate-100 rounded w-12"></div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="h-5 bg-slate-100 rounded w-20"></div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="h-6 bg-slate-100 rounded w-16"></div>
+                          </td>
+                          <td className="px-4 py-3 text-right">
+                            <div className="h-8 bg-slate-100 rounded w-16 ml-auto"></div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : bills.map(bill => (
                       <tr key={bill.id} className="border-b hover:bg-slate-50">
                         <td className="px-4 py-3 font-medium">
                           {bill.room.number}
@@ -341,7 +383,7 @@ export default function BillingPage() {
                         </td>
                       </tr>
                     ))}
-                    {bills.length === 0 && (
+                    {!isBillsLoading && bills.length === 0 && (
                       <tr>
                         <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
                           ยังไม่มีข้อมูลบิลในระบบ

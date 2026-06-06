@@ -270,9 +270,26 @@ export default function RoomsPage() {
         {/* Room List */}
         <div className="lg:col-span-2">
           {isLoading ? (
-            <div className="py-20 flex flex-col items-center justify-center">
-              <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
-              <p className="mt-4 text-slate-500">กำลังโหลดข้อมูลห้องพัก...</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="bg-white rounded-[32px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 flex flex-col animate-pulse">
+                  <div className="h-3 w-full bg-slate-200"></div>
+                  <div className="p-6 flex-1 flex flex-col space-y-4">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-2 w-2/3">
+                        <div className="h-6 bg-slate-200 rounded-md w-3/4"></div>
+                        <div className="h-4 bg-slate-200 rounded-md w-1/2"></div>
+                      </div>
+                      <div className="h-6 bg-slate-200 rounded-full w-16"></div>
+                    </div>
+                    <div className="h-6 bg-slate-200 rounded-md w-1/3 mt-2"></div>
+                    <div className="mt-6 flex gap-3">
+                      <div className="h-11 bg-slate-100 rounded-full flex-1"></div>
+                      <div className="h-11 bg-slate-200 rounded-full flex-1"></div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : rooms.length === 0 ? (
             <div className="bg-white rounded-[32px] p-12 text-center shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 flex flex-col items-center">

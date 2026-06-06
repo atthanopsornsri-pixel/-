@@ -105,6 +105,24 @@ export async function PATCH(req: Request) {
 
     const { id, status } = await req.json();
 
+    // Verify ownership of the parcel room's property
+    const existingParcel = await prisma.parcel.findUnique({
+      where: { id },
+      include: {
+        room: {
+          include: { property: true }
+        }
+      }
+    });
+
+    if (!existingParcel) {
+      return NextResponse.json({ message: "Parcel not found" }, { status: 404 });
+    }
+
+    if (existingParcel.room.property.ownerId !== session.user.id) {
+      return NextResponse.json({ message: "Unauthorized: You do not own this property" }, { status: 403 });
+    }
+
     const parcel = await prisma.parcel.update({
       where: { id },
       data: {

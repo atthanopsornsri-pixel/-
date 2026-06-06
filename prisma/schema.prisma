@@ -17,7 +17,6 @@ model User {
   username      String?   @unique // สำหรับลูกบ้านใช้ล็อกอินด้วยรหัสห้อง (เช่น AP-001)
   emailVerified DateTime?
   password      String?
-  unencryptedPassword String? // เก็บตามที่ผู้ใช้ร้องขอ เพื่อให้ Admin/Owner ดูรหัสผ่านได้
   name          String?
   image         String?
   lineToken     String?  // สำหรับผูก LINE Notify

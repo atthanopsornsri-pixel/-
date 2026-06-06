@@ -98,6 +98,24 @@ export async function PATCH(req: Request) {
 
     const { id, status } = await req.json();
 
+    // Verify ownership of the maintenance request room's property
+    const maintReq = await prisma.maintenanceRequest.findUnique({
+      where: { id },
+      include: {
+        room: {
+          include: { property: true }
+        }
+      }
+    });
+
+    if (!maintReq) {
+      return NextResponse.json({ message: "Maintenance request not found" }, { status: 404 });
+    }
+
+    if (maintReq.room.property.ownerId !== session.user.id) {
+      return NextResponse.json({ message: "Unauthorized: You do not own this property" }, { status: 403 });
+    }
+
     const request = await prisma.maintenanceRequest.update({
       where: { id },
       data: { status },

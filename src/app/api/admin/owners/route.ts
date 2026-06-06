@@ -24,9 +24,12 @@ export async function GET(req: Request) {
       }
     });
 
-    // We send unencryptedPassword to the frontend ONLY for Admin. 
-    // This is generally unsafe but requested specifically by the system owner.
-    return NextResponse.json(owners);
+    const sanitizedOwners = owners.map(owner => {
+      const { password, ...rest } = owner as any;
+      return rest;
+    });
+
+    return NextResponse.json(sanitizedOwners);
   } catch (error) {
     console.error("Error fetching owners:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });

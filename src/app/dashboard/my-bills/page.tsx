@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { QRCodeSVG } from "qrcode.react";
 import generatePayload from "promptpay-qr";
+import { submitPaymentSlip } from "@/app/actions/tenant-payment";
 
 export default function MyBillsPage() {
   const [bills, setBills] = useState<any[]>([]);
@@ -13,9 +14,6 @@ export default function MyBillsPage() {
   const [isPaying, setIsPaying] = useState(false);
   const [slipFile, setSlipFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-
-  // Replace this with the owner's actual PromptPay number in a real app
-  const promptPayNumber = "0999999999"; 
 
   useEffect(() => {
     fetchBills();
@@ -39,40 +37,20 @@ export default function MyBillsPage() {
     setIsUploading(true);
 
     try {
-      // 1. Upload the file
       const formData = new FormData();
+      formData.append("billId", selectedBill.id);
       formData.append("file", slipFile);
 
-      const uploadRes = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
+      const result = await submitPaymentSlip(null, formData);
 
-      let slipUrl = "";
-      if (uploadRes.ok) {
-        const uploadData = await uploadRes.json();
-        slipUrl = uploadData.url;
-      }
-
-      // 2. Simulate sending to SlipOk API and recording the payment
-      const res = await fetch("/api/payments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          billId: selectedBill.id,
-          amount: selectedBill.totalAmount,
-          slipUrl,
-        }),
-      });
-
-      if (res.ok) {
-        toast.success("ตรวจสอบสลิปอัตโนมัติสำเร็จ! ชำระเงินเรียบร้อยแล้ว");
+      if (result.success) {
+        toast.success(result.message || "อัปโหลดสลิปสำเร็จ! กรุณารอเจ้าของตึกตรวจสอบ");
         setIsPaying(false);
         setSlipFile(null);
         setSelectedBill(null);
         fetchBills();
       } else {
-        toast.error("ตรวจสอบสลิปไม่ผ่าน กรุณาลองใหม่อีกครั้ง");
+        toast.error(result.error || "เกิดข้อผิดพลาดในการตรวจสอบสลิป");
       }
     } catch (err) {
       console.error(err);
@@ -81,6 +59,10 @@ export default function MyBillsPage() {
       setIsUploading(false);
     }
   };
+
+  // Get active PromptPay details dynamically
+  const activePromptPayNumber = selectedBill?.room?.property?.promptPayNo || "0999999999";
+  const activePromptPayName = selectedBill?.room?.property?.promptPayName || "";
 
   return (
     <div>
@@ -98,14 +80,19 @@ export default function MyBillsPage() {
             </div>
             
             <div className="bg-slate-50 p-6 rounded-xl flex flex-col items-center justify-center border border-slate-200">
-              <p className="text-sm text-slate-600 mb-4 text-center">สแกน QR Code ด้านล่างเพื่อชำระเงินผ่านแอปธนาคาร</p>
+              <p className="text-sm text-slate-600 mb-4 text-center">
+                สแกน QR Code ด้านล่างเพื่อชำระเงินผ่านแอปธนาคาร<br />
+                {activePromptPayName && (
+                  <span className="font-bold text-slate-700">ชื่อบัญชี: {activePromptPayName}</span>
+                )}
+              </p>
               <div className="bg-white p-4 rounded-xl shadow-sm inline-block">
-                <QRCodeSVG value={generatePayload(promptPayNumber, { amount: selectedBill.totalAmount })} size={200} />
+                <QRCodeSVG value={generatePayload(activePromptPayNumber, { amount: selectedBill.totalAmount })} size={200} />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">อัปโหลดสลิปเพื่อยืนยัน (ตรวจด้วย AI อัตโนมัติ)</label>
+              <label className="text-sm font-medium text-slate-700">อัปโหลดสลิปเพื่อยืนยัน (ตรวจสอบโดยเจ้าของตึก)</label>
               <input 
                 type="file" 
                 accept="image/*" 
@@ -117,7 +104,7 @@ export default function MyBillsPage() {
           <CardFooter className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setIsPaying(false)}>ยกเลิก</Button>
             <Button onClick={submitSlip} disabled={!slipFile || isUploading}>
-              {isUploading ? "กำลังตรวจสอบสลิป..." : "ยืนยันการชำระเงิน"}
+              {isUploading ? "กำลังบันทึกและส่งสลิป..." : "ยืนยันการชำระเงิน"}
             </Button>
           </CardFooter>
         </Card>
