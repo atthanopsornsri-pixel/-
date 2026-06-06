@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { revalidatePath } from "next/cache";
+
+export const dynamic = "force-dynamic";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -40,6 +43,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         hasFurniture
       },
     });
+
+    revalidatePath("/dashboard/rooms");
 
     return NextResponse.json(updatedRoom);
   } catch (error) {

@@ -53,7 +53,7 @@ export default function TenantsPage() {
   }, [roomIdParam, availableRooms]);
 
   async function fetchTenants() {
-    const res = await fetch("/api/tenants");
+    const res = await fetch("/api/tenants", { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       setTenants(data);
@@ -61,7 +61,7 @@ export default function TenantsPage() {
   };
 
   async function fetchAvailableRooms() {
-    const res = await fetch("/api/rooms?status=AVAILABLE");
+    const res = await fetch("/api/rooms?status=AVAILABLE", { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       setAvailableRooms(data);

@@ -54,7 +54,7 @@ export default function RoomsPage() {
   }, [propertyIdParam]);
 
   async function fetchProperties() {
-    const res = await fetch("/api/properties");
+    const res = await fetch("/api/properties", { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       setProperties(data);
@@ -69,7 +69,7 @@ export default function RoomsPage() {
     const targetPropId = propId || propertyId;
     if (targetPropId) url += `?propertyId=${targetPropId}`;
 
-    const res = await fetch(url);
+    const res = await fetch(url, { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       setRooms(data);
