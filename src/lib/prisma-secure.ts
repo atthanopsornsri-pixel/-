@@ -13,11 +13,14 @@ const softDeletePrisma = prisma.$extends({
         }
 
         const anyArgs = args as any;
-        anyArgs.where = anyArgs.where || {};
-
-        // Hide soft-deleted records from reads
-        if (['findMany', 'findFirst', 'count', 'findUnique', 'findUniqueOrThrow'].includes(operation)) {
-          anyArgs.where.isDeleted = false;
+        const operationsWithWhere = ['findMany', 'findFirst', 'count', 'findUnique', 'findUniqueOrThrow', 'update', 'updateMany', 'delete', 'deleteMany'];
+        
+        if (operationsWithWhere.includes(operation)) {
+          anyArgs.where = anyArgs.where || {};
+          // Hide soft-deleted records from reads
+          if (['findMany', 'findFirst', 'count', 'findUnique', 'findUniqueOrThrow'].includes(operation)) {
+            anyArgs.where.isDeleted = false;
+          }
         }
 
         // Mutate Hard Delete into Soft Delete
