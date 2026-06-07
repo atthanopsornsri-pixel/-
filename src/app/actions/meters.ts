@@ -3,9 +3,9 @@
 import { getSecurePrisma } from "@/lib/prisma-secure";
 
 /**
- * Calculates the previous meter reading for a room dynamically by summing all
- * billing units prior to the target billing month/year, starting from the room's
- * initial meter values.
+ * Calculates the previous meter reading for a room dynamically by fetching
+ * the single most recent bill with a recorded reading before the target month/year.
+ * This is an O(1) indexed query, avoiding scaling bottlenecks.
  */
 async function getPreviousMeterReading(
   roomId: string,
@@ -14,42 +14,50 @@ async function getPreviousMeterReading(
   targetYear: number
 ): Promise<number> {
   const secureDb = await getSecurePrisma();
-  
-  // Fetch initial starting meter value configured on the room
-  const room = await secureDb.room.findUnique({
-    where: { id: roomId },
-    select: { waterMeterStart: true, electricMeterStart: true }
-  });
-  
-  const startVal = type === "WATER" ? (room?.waterMeterStart || 0) : (room?.electricMeterStart || 0);
-  
-  // Sum units from all previous bills of this room
-  const previousBills = await secureDb.bill.findMany({
+
+  const readingField = type === "WATER" ? "waterReading" : "electricReading";
+
+  // Find the single most recent bill prior to the target month/year with a recorded reading
+  const lastBill = await secureDb.bill.findFirst({
     where: {
       roomId,
       isDeleted: false,
+      [readingField]: { not: null },
       OR: [
         { year: { lt: targetYear } },
         { year: targetYear, month: { lt: targetMonth } }
       ]
     },
+    orderBy: [
+      { year: "desc" },
+      { month: "desc" }
+    ],
     select: {
-      waterUnits: true,
-      electricUnits: true
+      waterReading: true,
+      electricReading: true
     }
   });
-  
-  const sumUnits = previousBills.reduce((sum, b) => {
-    const units = type === "WATER" ? (b.waterUnits || 0) : (b.electricUnits || 0);
-    return sum + units;
-  }, 0);
-  
-  return startVal + sumUnits;
+
+  if (lastBill) {
+    const lastReading = type === "WATER" ? lastBill.waterReading : lastBill.electricReading;
+    if (lastReading !== null && lastReading !== undefined) {
+      return lastReading;
+    }
+  }
+
+  // Fallback to initial starting meter value configured on the room
+  const room = await secureDb.room.findUnique({
+    where: { id: roomId },
+    select: { waterMeterStart: true, electricMeterStart: true }
+  });
+
+  return type === "WATER" ? (room?.waterMeterStart || 0) : (room?.electricMeterStart || 0);
 }
 
 /**
  * Loads occupied rooms in a property, calculating the previous meter reading
- * and retrieving the current reading input if a draft bill already exists.
+ * and retrieving the current reading input if a bill already exists.
+ * Sets hasBill to false if no bill exists, preventing ghost bills.
  */
 export async function getRoomsForMeterEntry(
   propertyId: string,
@@ -100,10 +108,13 @@ export async function getRoomsForMeterEntry(
         });
 
         let currentReadingInput = "";
+        let hasBill = false;
+
         if (bill) {
-          const units = type === "ELECTRIC" ? bill.electricUnits : bill.waterUnits;
-          if (units !== null && units !== undefined) {
-            currentReadingInput = (previousReading + units).toString();
+          hasBill = true;
+          const reading = type === "ELECTRIC" ? bill.electricReading : bill.waterReading;
+          if (reading !== null && reading !== undefined) {
+            currentReadingInput = reading.toString();
           }
         }
 
@@ -111,7 +122,8 @@ export async function getRoomsForMeterEntry(
           roomId: room.id,
           roomNumber: room.number,
           previousReading,
-          currentReadingInput
+          currentReadingInput,
+          hasBill
         };
       })
     );
@@ -128,8 +140,8 @@ export async function getRoomsForMeterEntry(
 }
 
 /**
- * Saves entered readings. Dynamically generates bills if they do not exist,
- * or updates existing bills. Implements double-checking against negative utility units.
+ * Saves entered readings. Updates only existing bills. Throws error if a bill does not
+ * exist to prevent ghost bills. Saves both calculated units and absolute readings.
  */
 export async function saveBulkMeters(
   propertyId: string,
@@ -145,7 +157,7 @@ export async function saveBulkMeters(
   try {
     const secureDb = await getSecurePrisma();
 
-    // 1. Fetch Property details (rates and default fees)
+    // 1. Fetch Property details (rates)
     const property = await secureDb.property.findUnique({
       where: { id: propertyId }
     });
@@ -155,28 +167,10 @@ export async function saveBulkMeters(
     }
 
     const rate = type === "ELECTRIC" ? (property.electricRate || 0) : (property.waterRate || 0);
-    const commonFee = property.defaultCommonFee || 0;
-    const parkingFee = property.defaultParkingFee || 0;
-    const internetFee = property.defaultInternetFee || 0;
 
-    // 2. Perform updates/inserts
+    // 2. Perform updates
     const promises = updates.map(async (update) => {
       const { roomId, currentReading } = update;
-
-      const previousReading = await getPreviousMeterReading(roomId, type, month, year);
-      
-      if (currentReading < previousReading) {
-        const roomInfo = await secureDb.room.findUnique({
-          where: { id: roomId },
-          select: { number: true }
-        });
-        throw new Error(
-          `ห้อง ${roomInfo?.number || roomId}: เลขมิเตอร์ปัจจุบัน (${currentReading}) ห้ามมีค่าน้อยกว่าเดือนก่อนหน้า (${previousReading})`
-        );
-      }
-
-      const unitsUsed = currentReading - previousReading;
-      const amount = unitsUsed * rate;
 
       // Check if bill exists
       const existingBill = await secureDb.bill.findUnique({
@@ -186,99 +180,70 @@ export async function saveBulkMeters(
             month,
             year
           }
+        },
+        include: {
+          room: true
         }
       });
 
-      if (existingBill) {
-        const rentAmount = existingBill.rentAmount;
-        
-        let newWaterUnits = existingBill.waterUnits;
-        let newWaterAmount = existingBill.waterAmount;
-        let newElectricUnits = existingBill.electricUnits;
-        let newElectricAmount = existingBill.electricAmount;
-
-        if (type === "WATER") {
-          newWaterUnits = unitsUsed;
-          newWaterAmount = amount;
-        } else {
-          newElectricUnits = unitsUsed;
-          newElectricAmount = amount;
-        }
-
-        const newTotalAmount =
-          rentAmount +
-          newWaterAmount +
-          newElectricAmount +
-          existingBill.commonFee +
-          existingBill.parkingFee +
-          existingBill.internetFee +
-          existingBill.otherFee +
-          existingBill.balanceForward;
-
-        return secureDb.bill.update({
-          where: { id: existingBill.id },
-          data: {
-            waterUnits: newWaterUnits,
-            waterAmount: newWaterAmount,
-            electricUnits: newElectricUnits,
-            electricAmount: newElectricAmount,
-            totalAmount: newTotalAmount
-          }
-        });
-      } else {
-        // Fetch room rentPrice
-        const room = await secureDb.room.findUnique({
-          where: { id: roomId }
-        });
-        if (!room) {
-          throw new Error(`ไม่พบห้องพักรหัส ${roomId}`);
-        }
-
-        const rentAmount = room.rentPrice || 0;
-        let waterUnits = null;
-        let waterAmount = 0;
-        let electricUnits = null;
-        let electricAmount = 0;
-
-        if (type === "WATER") {
-          waterUnits = unitsUsed;
-          waterAmount = amount;
-        } else {
-          electricUnits = unitsUsed;
-          electricAmount = amount;
-        }
-
-        const totalAmount =
-          rentAmount +
-          waterAmount +
-          electricAmount +
-          commonFee +
-          parkingFee +
-          internetFee;
-
-        // Default due date: 5th of the next month
-        const dueDate = new Date(year, month, 5);
-
-        return secureDb.bill.create({
-          data: {
-            roomId,
-            month,
-            year,
-            rentAmount,
-            waterUnits,
-            waterAmount,
-            electricUnits,
-            electricAmount,
-            commonFee,
-            parkingFee,
-            internetFee,
-            otherFee: 0,
-            totalAmount,
-            status: "UNPAID",
-            dueDate
-          }
-        });
+      if (!existingBill) {
+        throw new Error(
+          `ไม่พบรอบบิลสำหรับห้อง ${roomId} ในเดือนนี้ กรุณาเปิดรอบบิลก่อนบันทึกมิเตอร์`
+        );
       }
+
+      const previousReading = await getPreviousMeterReading(roomId, type, month, year);
+      
+      if (currentReading < previousReading) {
+        throw new Error(
+          `ห้อง ${existingBill.room.number}: เลขมิเตอร์ปัจจุบัน (${currentReading}) ห้ามมีค่าน้อยกว่าเดือนก่อนหน้า (${previousReading})`
+        );
+      }
+
+      const unitsUsed = currentReading - previousReading;
+      const amount = unitsUsed * rate;
+
+      const rentAmount = existingBill.rentAmount;
+      
+      let newWaterUnits = existingBill.waterUnits;
+      let newWaterAmount = existingBill.waterAmount;
+      let newWaterReading = existingBill.waterReading;
+      let newElectricUnits = existingBill.electricUnits;
+      let newElectricAmount = existingBill.electricAmount;
+      let newElectricReading = existingBill.electricReading;
+
+      if (type === "WATER") {
+        newWaterUnits = unitsUsed;
+        newWaterAmount = amount;
+        newWaterReading = currentReading;
+      } else {
+        newElectricUnits = unitsUsed;
+        newElectricAmount = amount;
+        newElectricReading = currentReading;
+      }
+
+      const newTotalAmount =
+        rentAmount +
+        (newWaterAmount || 0) +
+        (newElectricAmount || 0) +
+        existingBill.commonFee +
+        existingBill.parkingFee +
+        existingBill.internetFee +
+        existingBill.otherFee +
+        existingBill.balanceForward;
+
+      return secureDb.bill.update({
+        where: { id: existingBill.id },
+        data: {
+          waterUnits: newWaterUnits,
+          waterAmount: newWaterAmount,
+          waterReading: newWaterReading,
+          electricUnits: newElectricUnits,
+          electricAmount: newElectricAmount,
+          electricReading: newElectricReading,
+          totalAmount: newTotalAmount
+        }
+      });
     });
 
     // Run updates in Promise.all

@@ -154,8 +154,10 @@ model Bill {
   rentAmount     Float
   waterAmount    Float
   waterUnits     Float?
+  waterReading   Float?
   electricAmount Float
   electricUnits  Float?
+  electricReading Float?
   commonFee      Float     @default(0)
   parkingFee     Float     @default(0)
   internetFee    Float     @default(0)

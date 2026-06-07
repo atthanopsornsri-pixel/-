@@ -10,6 +10,7 @@ interface RoomMeterRow {
   roomNumber: string;
   previousReading: number;
   currentReadingInput: string;
+  hasBill: boolean;
 }
 
 export default function MeterEntryPage() {
@@ -86,9 +87,10 @@ export default function MeterEntryPage() {
       return;
     }
 
-    const filledRows = meterRows.filter((row) => row.currentReadingInput !== "");
+    // Only allow updating rooms that have base bills
+    const filledRows = meterRows.filter((row) => row.currentReadingInput.trim() !== "" && row.hasBill);
     if (filledRows.length === 0) {
-      toast.error("กรุณากรอกเลขมิเตอร์อย่างน้อย 1 ห้อง");
+      toast.error("กรุณากรอกเลขมิเตอร์ห้องที่เปิดบิลแล้วอย่างน้อย 1 ห้อง");
       return;
     }
 
@@ -131,6 +133,9 @@ export default function MeterEntryPage() {
     "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
   ];
 
+  const roomsWithoutBills = meterRows.filter((r) => !r.hasBill);
+  const hasMissingBills = roomsWithoutBills.length > 0;
+
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       {/* Header Section */}
@@ -171,6 +176,20 @@ export default function MeterEntryPage() {
           </button>
         </div>
       </div>
+
+      {/* Warning Card for Missing Base Bills */}
+      {hasMissingBills && (
+        <div className="bg-amber-50 border border-amber-200/55 rounded-3xl p-5 flex items-start gap-4 text-amber-800 animate-in fade-in slide-in-from-top-4 duration-300">
+          <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+          <div>
+            <h4 className="font-bold text-sm">ตรวจพบห้องพักบางห้องยังไม่ได้เปิดรอบบิลตั้งต้นในรอบเดือนนี้</h4>
+            <p className="text-xs text-amber-700/90 mt-1.5 leading-relaxed">
+              มีจำนวน {roomsWithoutBills.length} ห้องที่ยังไม่มีบิลตั้งต้นในระบบดึงข้อมูลมาจดมิเตอร์ ระบบได้ทำการบล็อกช่องกรอกข้อมูลไว้เพื่อความถูกต้องของข้อมูลตามหลักบัญชีหอพักและป้องกันปัญหาระบบออกใบแจ้งหนี้ผี (Ghost Invoices) <br />
+              <span className="inline-block mt-1">กรุณาไปที่เมนู <a href="/dashboard/billing" className="font-bold underline hover:text-amber-950">ออกบิล & ค่าน้ำไฟ</a> เพื่อทำรายการ <strong>&quot;สร้างบิลตั้งต้น&quot;</strong> สำหรับหอพักและรอบเดือนนี้ก่อนดำเนินการจดบันทึก</span>
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Settings Grid Filter */}
       <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] p-6">
@@ -272,7 +291,7 @@ export default function MeterEntryPage() {
               <tbody className="divide-y divide-slate-50">
                 {meterRows.map((row) => {
                   const currentVal = parseFloat(row.currentReadingInput) || 0;
-                  const hasInput = row.currentReadingInput.trim() !== "";
+                  const hasInput = row.currentReadingInput.trim() !== "" && row.hasBill;
                   const unitsUsed = hasInput ? currentVal - row.previousReading : 0;
                   const isInvalid = hasInput && unitsUsed < 0;
 
@@ -290,30 +309,36 @@ export default function MeterEntryPage() {
 
                       {/* Meter Input Field */}
                       <td className="px-8 py-4">
-                        <div className="relative max-w-[220px]">
-                          <input
-                            type="number"
-                            step="any"
-                            placeholder="กรอกเลขมิเตอร์..."
-                            value={row.currentReadingInput}
-                            onChange={(e) => handleInputChange(row.roomId, e.target.value)}
-                            className={`w-full font-mono text-base px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                              isInvalid
-                                ? "border-rose-300 bg-rose-50/50 text-rose-900 focus:ring-rose-500/20"
-                                : "border-slate-200 focus:border-blue-500 focus:ring-blue-500/10 hover:border-slate-350"
-                            }`}
-                          />
-                          {isInvalid && (
-                            <span className="absolute left-1 -bottom-5 text-[10px] text-rose-500 font-bold flex items-center gap-1 animate-in fade-in duration-200">
-                              <AlertCircle className="w-3 h-3" /> ห้ามกรอกน้อยกว่าเดือนก่อนหน้า
-                            </span>
-                          )}
-                        </div>
+                        {row.hasBill ? (
+                          <div className="relative max-w-[220px]">
+                            <input
+                              type="number"
+                              step="any"
+                              placeholder="กรอกเลขมิเตอร์..."
+                              value={row.currentReadingInput}
+                              onChange={(e) => handleInputChange(row.roomId, e.target.value)}
+                              className={`w-full font-mono text-base px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
+                                isInvalid
+                                  ? "border-rose-300 bg-rose-50/50 text-rose-900 focus:ring-rose-500/20"
+                                  : "border-slate-200 focus:border-blue-500 focus:ring-blue-500/10 hover:border-slate-350"
+                              }`}
+                            />
+                            {isInvalid && (
+                              <span className="absolute left-1 -bottom-5 text-[10px] text-rose-500 font-bold flex items-center gap-1 animate-in fade-in duration-200">
+                                <AlertCircle className="w-3.5 h-3.5" /> ห้ามกรอกน้อยกว่าเดือนก่อนหน้า
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200/50 shadow-sm">
+                            <AlertCircle className="w-3.5 h-3.5 text-amber-500" /> ยังไม่สร้างรอบบิลตั้งต้น
+                          </span>
+                        )}
                       </td>
 
                       {/* Units Used Column */}
                       <td className="px-8 py-4 text-center">
-                        {hasInput && !isInvalid ? (
+                        {row.hasBill && hasInput && !isInvalid ? (
                           <span
                             className={`inline-flex items-center font-mono font-black px-3 py-1 rounded-full text-xs border ${
                               meterType === "ELECTRIC"
@@ -330,7 +355,7 @@ export default function MeterEntryPage() {
 
                       {/* Cost Column */}
                       <td className="px-8 py-4 text-right pr-8 font-mono font-extrabold text-lg text-slate-800">
-                        {hasInput && !isInvalid ? (
+                        {row.hasBill && hasInput && !isInvalid ? (
                           <span className={meterType === "ELECTRIC" ? "text-blue-600" : "text-emerald-600"}>
                             ฿{(unitsUsed * ratePerUnit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
