@@ -1,22 +1,26 @@
 "use client";
-import { toast } from "sonner";
 
-import { useState, useEffect } from "react";
+import { toast } from "sonner";
+import { useState, useEffect, Suspense } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function TenantsPage() {
+function TenantsDashboardContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const actionParam = searchParams.get("action");
   const roomIdParam = searchParams.get("roomId");
 
   const [tenants, setTenants] = useState<any[]>([]);
   const [availableRooms, setAvailableRooms] = useState<any[]>([]);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [rooms, setRooms] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
+  const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -38,12 +42,18 @@ export default function TenantsPage() {
     password: "",
   });
 
+  const loadData = async () => {
+    setIsLoading(true);
+    await Promise.all([
+      fetchTenants(),
+      fetchAvailableRooms(),
+      fetchProperties(),
+      fetchRooms()
+    ]);
+    setIsLoading(false);
+  };
+
   useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      await Promise.all([fetchTenants(), fetchAvailableRooms()]);
-      setIsLoading(false);
-    };
     loadData();
   }, []);
 
@@ -55,7 +65,7 @@ export default function TenantsPage() {
         setFormData(prev => ({
           ...prev,
           roomId: selectedRoom.id,
-          username: "" // Start with empty phone number
+          username: ""
         }));
         setIsModalOpen(true);
       } else if (actionParam === "create") {
@@ -70,7 +80,7 @@ export default function TenantsPage() {
       const data = await res.json();
       setTenants(data);
     }
-  };
+  }
 
   async function fetchAvailableRooms() {
     const res = await fetch("/api/rooms?status=AVAILABLE", { cache: "no-store" });
@@ -78,7 +88,23 @@ export default function TenantsPage() {
       const data = await res.json();
       setAvailableRooms(data);
     }
-  };
+  }
+
+  async function fetchProperties() {
+    const res = await fetch("/api/properties", { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      setProperties(data);
+    }
+  }
+
+  async function fetchRooms() {
+    const res = await fetch("/api/rooms", { cache: "no-store" });
+    if (res.ok) {
+      const data = await res.json();
+      setRooms(data);
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,8 +119,7 @@ export default function TenantsPage() {
       if (res.ok) {
         setIsModalOpen(false);
         setFormData({ roomId: "", name: "", username: "", password: "" });
-        fetchTenants();
-        fetchAvailableRooms();
+        await loadData();
       } else {
         const errorData = await res.json();
         toast.error(errorData.message || "เกิดข้อผิดพลาดในการสร้างบัญชี");
@@ -106,107 +131,222 @@ export default function TenantsPage() {
     }
   };
 
+  // Group rooms and tenants by property (building)
+  const buildingsData = properties.map((property: any) => {
+    const propertyRooms = rooms.filter((r: any) => r.propertyId === property.id);
+    const propertyTenants = tenants.filter((t: any) => t.room?.propertyId === property.id || t.room?.property?.id === property.id);
+
+    const totalRooms = propertyRooms.length;
+    const vacantRooms = propertyRooms.filter((r: any) => r.status === "AVAILABLE").length;
+    const occupiedRooms = propertyRooms.filter((r: any) => r.status === "OCCUPIED").length;
+
+    return {
+      id: property.id,
+      name: property.name,
+      location: property.address,
+      totalRooms,
+      activeTenantsCount: propertyTenants.length,
+      vacantRoomsCount: vacantRooms,
+      tenants: propertyTenants,
+    };
+  });
+
+  const activeBuilding = buildingsData.find((b: any) => b.id === selectedBuildingId);
+
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out max-w-6xl mx-auto space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      
+      {/* Header and Breadcrumb */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-slate-100 pb-4">
         <div>
+          <div className="flex items-center gap-2 text-sm text-slate-500 mb-1">
+            <span>การจัดการ</span>
+            <span>/</span>
+            <span className="font-medium text-slate-700">รายชื่อผู้เช่า</span>
+            {selectedBuildingId && activeBuilding && (
+              <>
+                <span>/</span>
+                <span className="font-semibold text-slate-900">{activeBuilding.name}</span>
+              </>
+            )}
+          </div>
           <h1 className="text-2xl font-bold text-slate-800">จัดการรายชื่อผู้เช่า (ลูกบ้าน)</h1>
-          <p className="text-slate-500 text-sm mt-1">
-            สร้างและจัดการบัญชีให้ลูกบ้านของคุณ เพื่อให้พวกเขาเข้าระบบและดูบิลได้
+          <p className="text-slate-500 text-sm mt-0.5">
+            {selectedBuildingId && activeBuilding 
+              ? `รายชื่อลูกบ้านในอาคาร: ${activeBuilding.name}` 
+              : "สรุปข้อมูลการเข้าพักและจำนวนลูกบ้านแยกตามอาคาร/หอพัก"}
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-sm">
-          + เพิ่มลูกบ้านใหม่
-        </Button>
+        
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+          {selectedBuildingId && (
+            <Button 
+              variant="outline" 
+              onClick={() => setSelectedBuildingId(null)} 
+              className="rounded-xl border-slate-200 hover:bg-slate-50"
+            >
+              ⬅️ ดูตึกทั้งหมด
+            </Button>
+          )}
+          <Button onClick={() => setIsModalOpen(true)} className="bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-sm">
+            + เพิ่มลูกบ้านใหม่
+          </Button>
+        </div>
       </div>
 
-      <Card className="rounded-[24px] border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden">
-        <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
-          <CardTitle className="text-lg font-bold text-slate-800">รายชื่อผู้เช่าทั้งหมด</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-slate-500 uppercase bg-slate-50/80 border-b border-slate-100">
-                <tr>
-                  <th className="px-6 py-4 font-semibold">ห้องพัก</th>
-                  <th className="px-6 py-4 font-semibold">ชื่อลูกบ้าน</th>
-                  <th className="px-6 py-4 font-semibold">Username (ล็อกอิน)</th>
-                  <th className="px-6 py-4 font-semibold text-right">สัญญาเช่า</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {isLoading ? (
-                  Array.from({ length: 4 }).map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td className="px-6 py-4">
-                        <div className="h-8 bg-slate-100 rounded-lg w-24"></div>
-                      </td>
-                      <td className="px-6 py-4 font-medium text-slate-800">
-                        <div className="h-5 bg-slate-100 rounded w-32"></div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="h-5 bg-slate-100 rounded w-28"></div>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <div className="h-9 bg-slate-100 rounded-xl w-24"></div>
-                          <div className="h-9 bg-slate-100 rounded-xl w-16"></div>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : tenants.map(tenant => (
-                  <tr key={tenant.id} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="px-6 py-4">
-                      <div className="font-bold text-slate-900 bg-slate-100 px-3 py-1 rounded-lg inline-block">
-                        {tenant.room?.property?.name ? `${tenant.room.property.name} - ` : ''}
-                        {tenant.room?.number || "-"}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 font-medium text-slate-800">{tenant.user.name || "-"}</td>
-                    <td className="px-6 py-4 text-blue-600 font-medium bg-blue-50/30 rounded">
-                      {tenant.user.username || tenant.user.email}
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button variant="outline" size="sm" className="rounded-xl border-amber-200 text-amber-600 hover:bg-amber-50 hover:text-amber-700 font-semibold" onClick={() => {
-                          setResetPasswordTenantId(tenant.id);
-                          setNewPasswordValue("");
-                          setIsResetPasswordModalOpen(true);
-                        }}>
-                          รีเซ็ตรหัสผ่าน
-                        </Button>
-                        <Button variant="outline" size="sm" className="rounded-xl border-slate-200 text-slate-600 hover:text-slate-900 font-semibold" onClick={() => window.open(`/dashboard/tenants/${tenant.id}/contract`, '_blank')}>
-                          พิมพ์สัญญาเช่า
-                        </Button>
-                        <Button variant="outline" size="sm" className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-semibold" onClick={() => {
-                          setEvictTenantId(tenant.id);
-                          setIsEvictModalOpen(true);
-                        }}>
-                          ย้ายออก
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {!isLoading && tenants.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center">
-                      <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                      </div>
-                      <p className="text-slate-500 font-medium">ยังไม่มีข้อมูลผู้เช่า</p>
-                      <p className="text-slate-400 text-sm mt-1">กดปุ่ม + เพิ่มลูกบ้านใหม่ เพื่อสร้างบัญชีให้ผู้เช่า</p>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+      {isLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <Card key={i} className="animate-pulse rounded-3xl border-slate-100 p-6 space-y-4">
+              <div className="h-6 bg-slate-100 rounded w-1/2"></div>
+              <div className="h-4 bg-slate-100 rounded w-1/3"></div>
+              <div className="h-20 bg-slate-50 rounded-2xl"></div>
+            </Card>
+          ))}
+        </div>
+      ) : properties.length === 0 ? (
+        <Card className="rounded-[32px] border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] p-12 text-center">
+          <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
           </div>
-        </CardContent>
-      </Card>
+          <p className="text-slate-600 font-bold text-lg">ยังไม่มีหอพักในระบบ</p>
+          <p className="text-slate-400 text-sm mt-1 mb-6">คุณจำเป็นต้องเพิ่มข้อมูลหอพักและห้องพักก่อนเริ่มจัดการผู้เช่า</p>
+          <Button onClick={() => router.push("/dashboard/properties")} className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl">
+            เพิ่มหอพักใหม่
+          </Button>
+        </Card>
+      ) : !selectedBuildingId ? (
+        
+        /* ─── Mode 1: Building Overview Grid ─── */
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {buildingsData.map((building: any) => (
+            <div
+              key={building.id}
+              onClick={() => setSelectedBuildingId(building.id)}
+              className="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.02)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.06)] hover:border-blue-400/60 cursor-pointer transition-all duration-300 group flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex justify-between items-start mb-2">
+                  <h2 className="text-lg font-bold text-slate-800 group-hover:text-blue-600 transition-colors">
+                    {building.name}
+                  </h2>
+                  <span className="text-[11px] px-2.5 py-1 bg-slate-100 text-slate-500 rounded-full font-bold truncate max-w-[150px]">
+                    📍 {building.location || "ไม่มีข้อมูลที่ตั้ง"}
+                  </span>
+                </div>
+                
+                {/* Stats panel */}
+                <div className="grid grid-cols-3 gap-4 my-6 bg-slate-50 p-4 rounded-2xl text-center border border-slate-100">
+                  <div>
+                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">ห้องทั้งหมด</p>
+                    <p className="text-xl font-extrabold text-slate-800 mt-1">{building.totalRooms}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">มีผู้เช่า</p>
+                    <p className="text-xl font-extrabold text-emerald-600 mt-1">{building.activeTenantsCount}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">ห้องว่าง</p>
+                    <p className="text-xl font-extrabold text-orange-500 mt-1">{building.vacantRoomsCount}</p>
+                  </div>
+                </div>
+              </div>
 
+              <div className="text-right text-xs font-bold text-blue-500 group-hover:translate-x-1 transition-transform flex items-center justify-end gap-1">
+                ดูรายชื่อผู้เช่าในตึกนี้ ➔
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        
+        /* ─── Mode 2: Detailed Building Tenant Table ─── */
+        <Card className="rounded-[24px] border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden bg-white">
+          <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-lg font-bold text-slate-800">{activeBuilding?.name}</CardTitle>
+              <CardDescription className="text-xs text-slate-400 mt-0.5">📍 {activeBuilding?.location}</CardDescription>
+            </div>
+            <span className="bg-blue-50 border border-blue-100 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-xl">
+              ลูกบ้านทั้งหมด {activeBuilding?.tenants.length} คน
+            </span>
+          </CardHeader>
+          <CardContent className="p-0">
+            {activeBuilding && activeBuilding.tenants.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead className="text-xs text-slate-500 uppercase bg-slate-50/80 border-b border-slate-100">
+                    <tr>
+                      <th className="px-6 py-4 font-semibold">ห้องพัก</th>
+                      <th className="px-6 py-4 font-semibold">ชื่อลูกบ้าน</th>
+                      <th className="px-6 py-4 font-semibold">Username (ล็อกอิน)</th>
+                      <th className="px-6 py-4 font-semibold text-right">สัญญาเช่า / การจัดการ</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {activeBuilding.tenants.map((tenant: any) => (
+                      <tr key={tenant.id} className="hover:bg-slate-50/50 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="font-mono font-bold text-slate-900 bg-slate-100 px-3 py-1 rounded-lg inline-block">
+                            ห้อง {tenant.room?.number || "-"}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 font-bold text-slate-800">{tenant.user.name || "-"}</td>
+                        <td className="px-6 py-4">
+                          <span className="text-xs bg-blue-50 text-blue-700 border border-blue-100 px-2.5 py-1 rounded-lg font-mono">
+                            {tenant.user.username || tenant.user.email}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="rounded-xl border-amber-200 text-amber-600 hover:bg-amber-50 hover:text-amber-700 font-semibold text-xs" 
+                              onClick={() => {
+                                setResetPasswordTenantId(tenant.id);
+                                setNewPasswordValue("");
+                                setIsResetPasswordModalOpen(true);
+                              }}
+                            >
+                              รีเซ็ตรหัสผ่าน
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="rounded-xl border-slate-200 text-slate-600 hover:text-slate-900 font-semibold text-xs" 
+                              onClick={() => window.open(`/dashboard/tenants/${tenant.id}/contract`, '_blank')}
+                            >
+                              พิมพ์สัญญาเช่า
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-semibold text-xs" 
+                              onClick={() => {
+                                setEvictTenantId(tenant.id);
+                                setIsEvictModalOpen(true);
+                              }}
+                            >
+                              ย้ายออก
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="p-12 text-center text-slate-400">
+                📭 ยังไม่มีลูกบ้านลงทะเบียนเข้าพักในตึกนี้
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Add Tenant Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-[32px] p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
@@ -385,8 +525,7 @@ export default function TenantsPage() {
                     const res = await fetch(`/api/owner/tenants/${evictTenantId}`, { method: 'DELETE' });
                     if (res.ok) {
                       toast.success("บันทึกการย้ายออกสำเร็จ!");
-                      fetchTenants();
-                      fetchAvailableRooms();
+                      await loadData();
                       setIsEvictModalOpen(false);
                       setEvictTenantId(null);
                     } else {
@@ -408,5 +547,22 @@ export default function TenantsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function TenantsPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-6xl mx-auto space-y-6 animate-pulse">
+        <div className="h-8 bg-slate-100 rounded w-1/4"></div>
+        <div className="h-4 bg-slate-100 rounded w-1/3 mt-2"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <div className="h-48 bg-slate-100 rounded-3xl"></div>
+          <div className="h-48 bg-slate-100 rounded-3xl"></div>
+        </div>
+      </div>
+    }>
+      <TenantsDashboardContent />
+    </Suspense>
   );
 }
