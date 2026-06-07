@@ -3,6 +3,8 @@
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { PLAN_PRICES, SMS_PRICES, JADHOR_PROMPTPAY } from "@/lib/pricing";
+import { QRCodeSVG } from "qrcode.react";
+import generatePayload from "promptpay-qr";
 
 // =============================================
 // Types
@@ -335,13 +337,9 @@ export default function SubscriptionPage() {
         </h2>
         <div className="bg-white rounded-[24px] border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] p-6 md:p-8">
           <div className="flex flex-col md:flex-row items-center gap-6">
-            <div className="w-48 h-48 bg-slate-50 rounded-2xl flex items-center justify-center border border-slate-200">
-              {/* PromptPay QR Placeholder — ใช้ text แทน QR จริง */}
-              <div className="text-center">
-                <div className="text-4xl mb-2">📲</div>
-                <p className="text-xs text-slate-500 font-medium">PromptPay QR</p>
-                <p className="text-sm font-bold text-slate-700 mt-1">{JADHOR_PROMPTPAY.number}</p>
-              </div>
+            <div className="w-48 h-48 bg-white p-3 rounded-2xl flex flex-col items-center justify-center border border-slate-200 shadow-[0_4px_15px_rgba(0,0,0,0.03)]">
+              <div className="bg-blue-600 text-white text-[10px] font-extrabold px-3 py-0.5 rounded-full mb-2 tracking-wider">PROMPTPAY</div>
+              <QRCodeSVG value={generatePayload(JADHOR_PROMPTPAY.number, {})} size={120} />
             </div>
             <div className="flex-1 text-center md:text-left">
               <h3 className="text-lg font-bold text-slate-800">โอนเงินผ่าน PromptPay</h3>
@@ -469,7 +467,26 @@ export default function SubscriptionPage() {
 
                     {/* Slip upload for UNPAID invoices */}
                     {(inv.status === "UNPAID" || inv.status === "OVERDUE") && (
-                      <div className="mt-4 pt-4 border-t border-slate-200">
+                      <div className="mt-4 pt-4 border-t border-slate-200 space-y-4">
+                        <div className="flex flex-col sm:flex-row items-center gap-6 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                          <div className="bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex flex-col items-center justify-center flex-shrink-0">
+                            <div className="bg-blue-600 text-white text-[8px] font-extrabold px-2 py-0.5 rounded-full mb-1 tracking-wider">PROMPTPAY</div>
+                            <QRCodeSVG value={generatePayload(JADHOR_PROMPTPAY.number, { amount: inv.totalAmount })} size={110} />
+                          </div>
+                          <div className="text-center sm:text-left space-y-1">
+                            <p className="text-sm font-bold text-slate-800">สแกนจ่ายตรงยอดด้วยแอปธนาคาร</p>
+                            <p className="text-xs text-slate-500">
+                              ระบบสร้าง QR Code พร้อมระบุยอดโอนเงินอัตโนมัติเพื่อความสะดวกและป้องกันความผิดพลาด
+                            </p>
+                            <div className="text-xs text-slate-600 mt-2 font-medium">
+                              เบอร์พร้อมเพย์: <span className="font-bold text-slate-800">{JADHOR_PROMPTPAY.number}</span> | ชื่อบัญชี: <span className="font-bold text-slate-800">{JADHOR_PROMPTPAY.name}</span>
+                            </div>
+                            <div className="text-lg font-black text-blue-600 mt-1">
+                              ยอดโอน: ฿{inv.totalAmount.toLocaleString()}
+                            </div>
+                          </div>
+                        </div>
+
                         <label className="flex items-center gap-3 cursor-pointer group">
                           <div className="flex-shrink-0 px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-full hover:bg-blue-700 transition-all group-hover:shadow-lg active:scale-[0.98]">
                             📎 แนบสลิปโอนเงิน
