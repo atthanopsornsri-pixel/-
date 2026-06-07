@@ -79,7 +79,7 @@ export default function MobileNav({ role }: MobileNavProps) {
               <Link href="/dashboard/tenants" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-amber-50 hover:text-amber-700 transition-all font-medium">
                 รายชื่อผู้เช่า
               </Link>
-              <Link href="/dashboard/saas-billing" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-rose-50 hover:text-rose-700 transition-all font-medium">
+              <Link href="/dashboard/subscription" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-rose-50 hover:text-rose-700 transition-all font-medium">
                 แพ็กเกจการใช้งาน
               </Link>
               

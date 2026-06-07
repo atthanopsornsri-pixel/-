@@ -22,11 +22,11 @@ export default async function DashboardPage() {
     const totalOwners = await prisma.user.count({ where: { role: "OWNER" } });
     const totalProperties = await prisma.property.count({ where: { isDeleted: false } });
     
-    const revenueAgg = await prisma.subscriptionBill.aggregate({
+    const revenueAgg = await prisma.invoice.aggregate({
       where: { status: "PAID" },
-      _sum: { amount: true }
+      _sum: { totalAmount: true }
     });
-    const totalRevenue = revenueAgg._sum.amount || 0;
+    const totalRevenue = revenueAgg._sum.totalAmount || 0;
     
     const pendingInvites = await prisma.registrationCode.count({ where: { isUsed: false } });
 

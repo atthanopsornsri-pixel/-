@@ -15,7 +15,7 @@ import { Suspense } from "react";
 async function AsyncNotificationBell({ userId, role }: { userId: string, role: string }) {
   let hasUnpaidBills = false;
   if (role === "OWNER") {
-    const unpaidCount = await prisma.subscriptionBill.count({
+    const unpaidCount = await prisma.invoice.count({
       where: { 
         ownerId: userId,
         status: "UNPAID"
@@ -59,8 +59,8 @@ export default async function DashboardLayout({
       daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
 
       // Redirect if expired AND NOT on the billing page already to prevent loop
-      if (isExpired && pathname !== "/dashboard/saas-billing") {
-        redirect("/dashboard/saas-billing?expired=true");
+      if (isExpired && pathname !== "/dashboard/subscription") {
+        redirect("/dashboard/subscription?expired=true");
       }
     }
   }
@@ -127,7 +127,7 @@ export default async function DashboardLayout({
         {isFreeTrial && daysLeft > 0 && (
           <div className="bg-amber-50 px-4 py-2.5 text-center text-sm font-medium text-amber-800 border-b border-amber-200 shadow-sm z-40 relative flex flex-col sm:flex-row items-center justify-center gap-2">
             <span>คุณกำลังอยู่ในช่วงทดลองใช้ฟรี (เหลือเวลาอีก <strong className="text-amber-900">{daysLeft} วัน</strong>)</span>
-            <Link href="/dashboard/saas-billing" className="inline-flex items-center gap-1 font-bold bg-amber-100 hover:bg-amber-200 text-amber-900 px-3 py-1 rounded-full transition-colors text-xs">
+            <Link href="/dashboard/subscription" className="inline-flex items-center gap-1 font-bold bg-amber-100 hover:bg-amber-200 text-amber-900 px-3 py-1 rounded-full transition-colors text-xs">
               ดูแพ็กเกจอัปเกรด <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </Link>
           </div>

@@ -33,7 +33,8 @@ model User {
   tenantProfile Tenant?    // สำหรับ Tenant
   accounts      Account[]
   sessions      Session[]
-  subscriptionBills SubscriptionBill[] // สำหรับ Owner
+  invoices          Invoice[]          // ใบแจ้งหนี้ค่าบริการ SaaS (สำหรับ Owner)
+  smsAddon          SmsAddon?          // แพ็กเกจเสริม SMS (สำหรับ Owner)
   registrationCodes RegistrationCode[] // โค้ดที่ User คนนี้สร้าง หรือใช้งาน
 }
 
@@ -287,19 +288,66 @@ model SystemSettings {
   updatedAt       DateTime @updatedAt
 }
 
-model SubscriptionBill {
-  id          String   @id @default(cuid())
-  ownerId     String
-  owner       User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  month       Int
-  year        Int
-  amount      Float
-  status      BillStatus @default(UNPAID)
-  slipUrl     String?
-  planTier    PlanTier @default(STARTER)
-  cycle       String   @default("MONTHLY") // "MONTHLY" หรือ "YEARLY"
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+/// ใบแจ้งหนี้รายเดือนสำหรับเรียกเก็บค่าบริการ JadHor OS จากเจ้าของหอพัก
+model Invoice {
+  id            String        @id @default(cuid())
+  invoiceNumber String        @unique  // เลขที่ใบแจ้งหนี้ เช่น INV-202606-0001
+  ownerId       String
+  owner         User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  month         Int           // เดือนที่เรียกเก็บ
+  year          Int           // ปีที่เรียกเก็บ
+  items         InvoiceItem[] // รายการย่อยทั้งหมดในบิลใบนี้
+  totalAmount   Float         // ยอดรวมสุทธิ (คำนวณจาก items)
+  status        BillStatus    @default(UNPAID)
+  slipUrl       String?       // URL สลิปโอนเงินที่เจ้าของหอแนบมา
+  paidAt        DateTime?     // วันเวลาที่ Admin อนุมัติ
+  dueDate       DateTime?     // วันครบกำหนดชำระ
+  note          String?       // หมายเหตุจาก Admin
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@unique([ownerId, month, year])
+}
+
+/// รายการย่อยในใบแจ้งหนี้ (1 Invoice → หลาย InvoiceItem)
+model InvoiceItem {
+  id          String          @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice         @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  type        InvoiceItemType // ประเภทรายการ
+  description String          // คำอธิบายภาษาไทย
+  quantity    Int             @default(1)
+  unitPrice   Float           // ราคาต่อหน่วย
+  amount      Float           // ยอดรวม (quantity × unitPrice)
+  createdAt   DateTime        @default(now())
+}
+
+enum InvoiceItemType {
+  PLATFORM_FEE    // ค่าบริการระบบหลัก
+  SMS_ADDON       // แพ็กเกจเสริม SMS
+  DISCOUNT        // ส่วนลด
+  OTHER           // อื่นๆ
+}
+
+/// แพ็กเกจเสริม SMS ที่เจ้าของหอพักสมัครใช้งาน
+model SmsAddon {
+  id          String      @id @default(cuid())
+  ownerId     String      @unique  // 1 Owner → 1 SmsAddon record
+  owner       User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tier        SmsTier     @default(SIZE_S)
+  quota       Int         // โควตาข้อความต่อเดือน (50/120/250)
+  used        Int         @default(0) // จำนวนข้อความที่ใช้ไปแล้วในเดือนนี้
+  resetMonth  Int         // เดือนที่จะ reset used เป็น 0
+  resetYear   Int         // ปีที่จะ reset used เป็น 0
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+enum SmsTier {
+  SIZE_S    // 50 ข้อความ/เดือน — 99 บาท
+  SIZE_M    // 120 ข้อความ/เดือน — 199 บาท
+  SIZE_L    // 250 ข้อความ/เดือน — 349 บาท
 }
 
 model RegistrationCode {
