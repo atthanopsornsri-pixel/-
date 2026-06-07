@@ -148,7 +148,16 @@ export async function GET(req: Request) {
     const bills = await secureDb.bill.findMany({
       where: whereClause,
       include: {
-        room: { select: { number: true, property: { select: { name: true, promptPayNo: true, promptPayName: true } } } },
+        room: {
+          select: {
+            number: true,
+            property: { select: { name: true, promptPayNo: true, promptPayName: true } },
+            tenants: {
+              where: { isDeleted: false },
+              select: { lineUserId: true }
+            }
+          }
+        },
       },
       orderBy: [
         { year: "desc" },
