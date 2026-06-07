@@ -56,6 +56,12 @@ export default function SidebarNav({ role }: SidebarNavProps) {
           
           <div className="pt-6 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">การเงิน & แจ้งซ่อม</div>
           
+          <Link href="/dashboard/meters" className={`flex items-center px-4 py-3 rounded-xl transition-all group font-medium ${pathname.startsWith("/dashboard/meters") ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-blue-50 hover:text-blue-700"}`}>
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname.startsWith("/dashboard/meters") ? "bg-blue-100 text-blue-600" : "bg-blue-50 text-blue-500 group-hover:bg-blue-100"}`}>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" /></svg>
+            </div>
+            จดมิเตอร์แบบเร็ว
+          </Link>
           <Link href="/dashboard/billing" className={`flex items-center px-4 py-3 rounded-xl transition-all group font-medium ${pathname.startsWith("/dashboard/billing") ? "bg-rose-50 text-rose-700" : "text-slate-600 hover:bg-rose-50 hover:text-rose-700"}`}>
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname.startsWith("/dashboard/billing") ? "bg-rose-100 text-rose-600" : "bg-rose-50 text-rose-500 group-hover:bg-rose-100"}`}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2zM10 8.5a.5.5 0 11-1 0 .5.5 0 011 0zm5 5a.5.5 0 11-1 0 .5.5 0 011 0z" /></svg>

@@ -84,6 +84,9 @@ export default function MobileNav({ role }: MobileNavProps) {
               </Link>
               
               <div className="pt-6 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">การเงิน & แจ้งซ่อม</div>
+              <Link href="/dashboard/meters" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all font-medium">
+                จดมิเตอร์แบบเร็ว
+              </Link>
               <Link href="/dashboard/billing" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-rose-50 hover:text-rose-700 transition-all font-medium">
                 ออกบิล & ค่าน้ำไฟ
               </Link>
