@@ -29,11 +29,13 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        const emailInput = credentials.email.trim().toLowerCase();
+
         const user = await prisma.user.findFirst({
           where: {
             OR: [
-              { email: credentials.email },
-              { username: credentials.email }
+              { email: emailInput },
+              { username: emailInput }
             ]
           },
         });

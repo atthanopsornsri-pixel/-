@@ -4,12 +4,14 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
-        const { email, password, name, registrationCode } = await req.json();
+        const body = await req.json();
+    const { email: rawEmail, password, name, registrationCode } = body;
     const role = "OWNER";
 
-    if (!email || !email.trim()) {
+    if (!rawEmail || !rawEmail.trim()) {
       return NextResponse.json({ message: "กรุณากรอกช่องอีเมล" }, { status: 400 });
     }
+    const email = rawEmail.trim().toLowerCase();
     if (!password || password.length < 6) {
       return NextResponse.json({ message: "กรุณากรอกช่องรหัสผ่าน (อย่างน้อย 6 ตัวอักษร)" }, { status: 400 });
     }

@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, password, name, inviteCode, userId, lineUserId } = body;
+    const { email: rawEmail, password, name, inviteCode, userId, lineUserId } = body;
 
     if (!inviteCode || !inviteCode.trim()) {
       return NextResponse.json({ message: "กรุณากรอกช่องรหัสห้องพัก (Invite Code)" }, { status: 400 });
@@ -13,9 +13,10 @@ export async function POST(req: Request) {
     if (!name || !name.trim()) {
       return NextResponse.json({ message: "กรุณากรอกช่องชื่อ-นามสกุลผู้เช่า" }, { status: 400 });
     }
-    if (!email || !email.trim()) {
+    if (!rawEmail || !rawEmail.trim()) {
       return NextResponse.json({ message: "กรุณากรอกช่องอีเมล" }, { status: 400 });
     }
+    const email = rawEmail.trim().toLowerCase();
     if (!password || password.length < 6) {
       return NextResponse.json({ message: "กรุณากรอกช่องรหัสผ่าน (อย่างน้อย 6 ตัวอักษร)" }, { status: 400 });
     }
