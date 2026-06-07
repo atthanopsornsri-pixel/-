@@ -1,12 +1,12 @@
 "use client";
 import { toast } from "sonner";
 import Link from "next/link";
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSearchParams, useRouter } from "next/navigation";
+import { Wind, RotateCw, LayoutGrid, UserPlus } from "lucide-react";
 
 
 
@@ -323,18 +323,18 @@ export default function RoomsPage() {
                       {/* Amenities Icons/Badges */}
                       <div className="flex flex-wrap gap-1.5 mt-2">
                         {room.hasAircon && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                            ❄️ แอร์
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                            <Wind className="w-3.5 h-3.5" /> แอร์
                           </span>
                         )}
                         {room.hasFan && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
-                            🌀 พัดลม
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-100">
+                            <RotateCw className="w-3.5 h-3.5" /> พัดลม
                           </span>
                         )}
                         {room.hasFurniture && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-50 text-purple-700 border border-purple-100">
-                            🪑 เฟอร์ฯ
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-100">
+                            <LayoutGrid className="w-3.5 h-3.5" /> เฟอร์ฯ
                           </span>
                         )}
                         {!room.hasAircon && !room.hasFan && !room.hasFurniture && (
@@ -371,9 +371,9 @@ export default function RoomsPage() {
                     {room.status === "AVAILABLE" && (
                       <Link href={`/dashboard/tenants?action=create&roomId=${room.id}&roomNumber=${room.number}`} className="flex-1">
                         <Button 
-                          className="w-full rounded-full bg-[#1D1D1F] hover:bg-[#333336] text-white h-11 font-semibold shadow-sm"
+                          className="w-full rounded-full bg-[#1D1D1F] hover:bg-[#333336] text-white h-11 font-semibold shadow-sm flex items-center justify-center gap-2"
                         >
-                          🔑 รับผู้เช่า
+                          <UserPlus className="w-4 h-4" /> รับผู้เช่า
                         </Button>
                       </Link>
                     )}
