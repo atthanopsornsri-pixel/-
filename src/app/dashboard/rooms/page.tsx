@@ -43,6 +43,7 @@ export default function RoomsPage() {
   const [editHasFurniture, setEditHasFurniture] = useState(false);
   
   const [isEditing, setIsEditing] = useState(false);
+  const [copiedRoomId, setCopiedRoomId] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -173,6 +174,19 @@ export default function RoomsPage() {
       console.error(error);
     } finally {
       setIsEditing(false);
+    }
+  };
+
+  const handleCopyInvite = async (roomId: string, code: string) => {
+    try {
+      const inviteLink = `${window.location.origin}/register/tenant?code=${code}`;
+      await navigator.clipboard.writeText(inviteLink);
+      setCopiedRoomId(roomId);
+      toast.success("คัดลอกลิงก์เชิญลูกบ้านสำเร็จแล้ว!");
+      setTimeout(() => setCopiedRoomId(null), 2000);
+    } catch (err) {
+      console.error("ไม่สามารถคัดลอกลิงก์ได้:", err);
+      toast.error("เกิดข้อผิดพลาดในการคัดลอกลิงก์");
     }
   };
 
@@ -354,9 +368,23 @@ export default function RoomsPage() {
 
 
                   {room.inviteCode && (
-                    <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 mb-4 flex justify-between items-center group-hover:bg-blue-50/50 transition-colors">
+                    <div 
+                      onClick={() => handleCopyInvite(room.id, room.inviteCode)}
+                      className={`p-3 rounded-2xl border mb-4 flex justify-between items-center transition-all duration-200 cursor-pointer select-none ${
+                        copiedRoomId === room.id
+                          ? "bg-green-50 border-green-300 text-green-700 shadow-sm scale-[0.98]"
+                          : "bg-slate-50 border-slate-100 hover:bg-blue-50/50 hover:border-blue-200 group-hover:bg-blue-50/50"
+                      }`}
+                      title="คลิกเพื่อคัดลอกลิงก์เชิญลูกบ้าน"
+                    >
                       <span className="text-xs font-medium text-slate-500">รหัสเชิญผู้เช่า (Invite Code)</span>
-                      <span className="font-mono text-sm font-bold text-[#007AFF] bg-white px-2 py-1 rounded-lg border border-slate-200 shadow-sm">{room.inviteCode}</span>
+                      <span className={`font-mono text-sm font-bold bg-white px-2 py-1 rounded-lg border shadow-sm transition-all ${
+                        copiedRoomId === room.id
+                          ? "border-green-400 text-green-700 font-bold"
+                          : "border-slate-200 text-[#007AFF]"
+                      }`}>
+                        {copiedRoomId === room.id ? "📋 คัดลอกลิงก์แล้ว!" : room.inviteCode}
+                      </span>
                     </div>
                   )}
                   

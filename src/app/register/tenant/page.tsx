@@ -1,21 +1,29 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function TenantRegisterPage() {
+function TenantRegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const code = searchParams.get("code") || searchParams.get("inviteCode") || "";
+    if (code) {
+      setInviteCode(code.toUpperCase());
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,5 +152,17 @@ export default function TenantRegisterPage() {
         </form>
       </Card>
     </div>
+  );
+}
+
+export default function TenantRegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <div className="text-slate-500 font-medium animate-pulse">กำลังโหลดข้อมูล...</div>
+      </div>
+    }>
+      <TenantRegisterForm />
+    </Suspense>
   );
 }
