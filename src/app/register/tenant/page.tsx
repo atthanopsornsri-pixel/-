@@ -7,10 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 function TenantRegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { data: session, status, update } = useSession();
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,6 +27,17 @@ function TenantRegisterForm() {
       setInviteCode(code.toUpperCase());
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    if (session?.user) {
+      if (session.user.name && !name) {
+        setName(session.user.name);
+      }
+      if (session.user.email && !email) {
+        setEmail(session.user.email);
+      }
+    }
+  }, [session, name, email]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,6 +76,8 @@ function TenantRegisterForm() {
           email,
           password,
           inviteCode,
+          userId: session?.user?.id,
+          lineUserId: session?.user?.lineUserId,
         }),
       });
 
@@ -70,7 +86,10 @@ function TenantRegisterForm() {
         throw new Error(data.message || "เกิดข้อผิดพลาดในการลงทะเบียน");
       }
 
-      router.push("/login?registered=true");
+      // Refresh the session so the new tenant status is active
+      await update();
+
+      router.push("/dashboard");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -78,45 +97,116 @@ function TenantRegisterForm() {
     }
   };
 
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <div className="text-slate-500 font-medium animate-pulse text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          กำลังโหลดข้อมูลเซสชัน...
+        </div>
+      </div>
+    );
+  }
+
+  if (status === "unauthenticated" || !session) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+        <Card className="w-full max-w-md mx-auto shadow-xl border-slate-200 rounded-3xl p-6 bg-white">
+          <CardHeader className="space-y-3 text-center pb-6">
+            <div className="w-16 h-16 bg-[#00C300]/10 text-[#00C300] rounded-2xl flex items-center justify-center mx-auto mb-2">
+              <svg className="w-9 h-9" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M21.543 10.457c0-4.32-4.225-7.838-9.424-7.838-5.197 0-9.423 3.518-9.423 7.838 0 3.864 3.398 7.151 8.019 7.747.314.041.761.127.87.397.098.242.063.616.03.856l-.134.808c-.042.253-.195.962.846.525s5.586-3.29 7.683-5.694c1.025-1.18 1.533-2.392 1.533-3.639M8.36 12.38H5.975v-3.774h2.384v1.01H7.07v.39h1.289v.987H7.07v.397h1.29v.99zm2.463 0H9.554V8.606h1.269v3.774zm4.185 0h-1.3l-1.572-2.14v2.14h-1.269V8.606h1.29l1.551 2.131V8.606h1.269v3.774zm3.085-2.784h-1.29V8.606h-1.269v3.774h2.559v-.99h-1.29v-.397h1.29v-.987h-1.29v-.39h1.29v-.99z" />
+              </svg>
+            </div>
+            <CardTitle className="text-[24px] font-bold text-slate-800 tracking-tight">ลงทะเบียนสำหรับลูกบ้าน</CardTitle>
+            <CardDescription className="text-slate-500 text-[14px] leading-relaxed">
+              เพื่อผูกข้อมูลรับแจ้งเตือนบิล ใบเสร็จรับเงิน และแจ้งซ่อมผ่าน LINE กรุณาเชื่อมต่อบัญชี LINE ของคุณก่อนเริ่มกรอกข้อมูลสมัครสมาชิก
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button 
+              className="w-full h-14 bg-[#00C300] hover:bg-[#00B000] text-white font-bold rounded-2xl text-base shadow-lg shadow-[#00C300]/25 transition-all flex items-center justify-center gap-3"
+              onClick={() => signIn("line", { callbackUrl: window.location.href })}
+            >
+              <span>ล็อกอินผ่านบัญชี LINE</span>
+            </Button>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4 pt-4 border-t border-slate-100">
+            <div className="text-sm text-center text-slate-500">
+              มีบัญชีลูกบ้านอยู่แล้ว?{" "}
+              <Link href="/login" className="text-blue-600 hover:underline font-semibold">
+                เข้าสู่ระบบที่นี่
+              </Link>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-      <Card className="w-full max-w-md mx-auto shadow-lg border-slate-200">
-        <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-2xl font-bold">สร้างบัญชีสำหรับลูกบ้าน</CardTitle>
-          <CardDescription>
-            โปรดกรอกรหัสอ้างอิงจากเจ้าของหอพักเพื่อเชื่อมต่อกับห้องของคุณ
+      <Card className="w-full max-w-md mx-auto shadow-xl border-slate-200 rounded-3xl bg-white">
+        <CardHeader className="space-y-1 text-center pb-4">
+          <CardTitle className="text-2xl font-extrabold text-slate-800 tracking-tight">สร้างบัญชีลูกบ้าน</CardTitle>
+          <CardDescription className="text-[14px] text-slate-500">
+            กรอกรหัสห้องเช่าและข้อมูลเพิ่มเติมเพื่อสมัครเข้าสู่ระบบ
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
+            
+            {/* LINE Profile Linked Alert */}
+            <div className="p-4 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-3 text-emerald-800">
+              {session.user.image ? (
+                <img 
+                  src={session.user.image} 
+                  alt={session.user.name || "LINE Profile"} 
+                  className="w-10 h-10 rounded-full border border-emerald-250"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold">
+                  {session.user.name?.charAt(0) || "L"}
+                </div>
+              )}
+              <div className="text-sm overflow-hidden">
+                <p className="font-semibold text-emerald-900">เชื่อมต่อ LINE เรียบร้อยแล้ว</p>
+                <p className="text-emerald-600 text-xs truncate max-w-[200px]">{session.user.name}</p>
+              </div>
+            </div>
+
             {error && (
-              <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-md">
+              <div className="p-3 text-sm text-red-500 bg-red-50 border border-red-200 rounded-xl">
                 {error}
               </div>
             )}
+            
             <div className="space-y-2">
-              <Label htmlFor="inviteCode">รหัสห้องพัก (Invite Code) *</Label>
+              <Label htmlFor="inviteCode" className="font-bold text-slate-700">รหัสห้องพัก (Invite Code) *</Label>
               <Input
                 id="inviteCode"
                 placeholder="เช่น A1B2C3"
                 value={inviteCode}
                 onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
                 required
-                className="uppercase font-mono tracking-wider"
+                className="uppercase font-mono tracking-wider h-12 rounded-xl"
               />
             </div>
+            
             <div className="space-y-2">
-              <Label htmlFor="name">ชื่อ-นามสกุลผู้เช่า *</Label>
+              <Label htmlFor="name" className="font-bold text-slate-700">ชื่อ-นามสกุลผู้เช่า *</Label>
               <Input
                 id="name"
                 placeholder="สมชาย ใจดี"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
+                className="h-12 rounded-xl"
               />
             </div>
+            
             <div className="space-y-2">
-              <Label htmlFor="email">อีเมล *</Label>
+              <Label htmlFor="email" className="font-bold text-slate-700">อีเมล *</Label>
               <Input
                 id="email"
                 type="email"
@@ -124,29 +214,41 @@ function TenantRegisterForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="h-12 rounded-xl"
               />
             </div>
+            
             <div className="space-y-2">
-              <Label htmlFor="password">รหัสผ่าน *</Label>
+              <Label htmlFor="password" className="font-bold text-slate-700">กำหนดรหัสผ่านเข้าสู่ระบบ *</Label>
               <Input
                 id="password"
                 type="password"
+                placeholder="รหัสผ่านอย่างน้อย 6 ตัวอักษร"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={6}
+                className="h-12 rounded-xl"
               />
             </div>
           </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <Button className="w-full bg-blue-600 hover:bg-blue-700" type="submit" disabled={loading}>
-              {loading ? "กำลังลงทะเบียน..." : "ลงทะเบียนลูกบ้าน"}
+          <CardFooter className="flex flex-col space-y-4 pt-4 border-t border-slate-100">
+            <Button 
+              className="w-full h-12 bg-black hover:bg-slate-800 text-white font-bold rounded-xl transition-all" 
+              type="submit" 
+              disabled={loading}
+            >
+              {loading ? "กำลังลงทะเบียน..." : "ลงทะเบียนและผูกบัญชี"}
             </Button>
             <div className="text-sm text-center text-slate-500">
-              มีบัญชีอยู่แล้ว?{" "}
-              <Link href="/login" className="text-blue-600 hover:underline">
-                เข้าสู่ระบบ
-              </Link>
+              ต้องการเปลี่ยนบัญชี LINE?{" "}
+              <button 
+                type="button" 
+                onClick={() => signOut({ callbackUrl: window.location.href })}
+                className="text-red-500 hover:underline font-semibold"
+              >
+                ออกจากระบบ LINE
+              </button>
             </div>
           </CardFooter>
         </form>
@@ -159,7 +261,10 @@ export default function TenantRegisterPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-        <div className="text-slate-500 font-medium animate-pulse">กำลังโหลดข้อมูล...</div>
+        <div className="text-slate-500 font-medium animate-pulse text-center">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          กำลังโหลดข้อมูล...
+        </div>
       </div>
     }>
       <TenantRegisterForm />

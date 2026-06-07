@@ -4,7 +4,8 @@ import bcrypt from "bcryptjs";
 
 export async function POST(req: Request) {
   try {
-    const { email, password, name, inviteCode } = await req.json();
+    const body = await req.json();
+    const { email, password, name, inviteCode, userId, lineUserId } = body;
 
     if (!inviteCode || !inviteCode.trim()) {
       return NextResponse.json({ message: "กรุณากรอกช่องรหัสห้องพัก (Invite Code)" }, { status: 400 });
@@ -32,27 +33,56 @@ export async function POST(req: Request) {
       where: { email },
     });
 
-    if (existingUser) {
+    if (existingUser && existingUser.id !== userId) {
       return NextResponse.json({ message: "อีเมลนี้มีผู้ใช้งานแล้ว" }, { status: 400 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create User and link as Tenant to the Room
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-        role: "TENANT",
-        tenantProfile: {
-          create: {
-            roomId: room.id,
-            // Lease details can be added by owner later
+    let user;
+    if (userId) {
+      // Check if user already has a tenant profile
+      const userCheck = await prisma.user.findUnique({
+        where: { id: userId },
+        include: { tenantProfile: true }
+      });
+      if (userCheck?.tenantProfile) {
+        return NextResponse.json({ message: "บัญชี LINE นี้ได้ลงทะเบียนเป็นลูกบ้านเรียบร้อยแล้ว" }, { status: 400 });
+      }
+
+      // Update existing LINE OAuth user record
+      user = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          email,
+          password: hashedPassword,
+          name,
+          role: "TENANT",
+          lineUserId: lineUserId || undefined,
+          tenantProfile: {
+            create: {
+              roomId: room.id,
+              lineUserId: lineUserId || undefined,
+            }
           }
         }
-      },
-    });
+      });
+    } else {
+      // Create new User and link as Tenant
+      user = await prisma.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          name,
+          role: "TENANT",
+          tenantProfile: {
+            create: {
+              roomId: room.id,
+            }
+          }
+        },
+      });
+    }
 
     // Optionally update room status to OCCUPIED if it was AVAILABLE
     if (room.status === "AVAILABLE") {
