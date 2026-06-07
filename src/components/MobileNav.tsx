@@ -80,7 +80,7 @@ export default function MobileNav({ role }: MobileNavProps) {
                 รายชื่อผู้เช่า
               </Link>
               <Link href="/dashboard/saas-billing" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-rose-50 hover:text-rose-700 transition-all font-medium">
-                ค่าบริการระบบ (SaaS)
+                แพ็กเกจการใช้งาน
               </Link>
               
               <div className="pt-6 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">การเงิน & แจ้งซ่อม</div>
