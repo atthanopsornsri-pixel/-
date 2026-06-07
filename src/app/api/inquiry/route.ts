@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { sendLineOAMessage } from "@/lib/line";
 
 export async function POST(req: Request) {
   try {
@@ -20,13 +21,12 @@ export async function POST(req: Request) {
       include: { owner: true }
     });
 
-    if (property?.owner?.lineToken) {
-      import('@/lib/line').then(({ sendLineNotify }) => {
-        sendLineNotify(
-          property.owner.lineToken!,
-          `🔔 ลูกค้าใหม่สนใจจองห้องพัก!\nตึก: ${property.name}\nชื่อ: ${name}\nเบอร์: ${phone}\nข้อความ: ${message}`
-        );
-      });
+    if (property?.owner?.lineChannelAccessToken && property?.owner?.lineUserId) {
+      await sendLineOAMessage(
+        property.owner.lineUserId,
+        `🔔 ลูกค้าใหม่สนใจจองห้องพัก!\nตึก: ${property.name}\nชื่อ: ${name}\nเบอร์: ${phone}\nข้อความ: ${message}`,
+        property.owner.lineChannelAccessToken
+      );
     } else {
       console.log(`Inquiry for ${property?.name}: ${name} - ${phone} - ${message}`);
     }

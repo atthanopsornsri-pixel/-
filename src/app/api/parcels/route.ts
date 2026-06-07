@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendLineOAMessage } from "@/lib/line";
 
 export async function POST(req: Request) {
   try {
@@ -16,10 +17,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Room ID is required" }, { status: 400 });
     }
 
-    // Verify room belongs to owner
+    // Verify room belongs to owner and fetch owner's LINE token
     const room = await prisma.room.findUnique({
       where: { id: roomId },
-      include: { property: true },
+      include: {
+        property: {
+          include: {
+            owner: true
+          }
+        }
+      },
     });
 
     if (!room || room.property.ownerId !== session.user.id) {
@@ -37,19 +44,18 @@ export async function POST(req: Request) {
       }
     });
 
-    // Notify Tenant if they have Line Token setup
+    // Notify Tenant if they have lineUserId setup
     const tenant = await prisma.tenant.findFirst({
       where: { roomId },
-      include: { user: { select: { lineToken: true } } }
+      select: { lineUserId: true }
     });
 
-    if (tenant?.user?.lineToken) {
-      import('@/lib/line').then(({ sendLineNotify }) => {
-        sendLineNotify(
-          tenant.user.lineToken!,
-          `📦 มีพัสดุมาส่งถึงคุณ!\nชื่อผู้รับ: ${recipientName || "-"}\nห้อง: ${parcel.room.number}\nเลขพัสดุ: ${trackingNumber || "-"}`
-        );
-      });
+    if (room?.property?.owner?.lineChannelAccessToken && tenant?.lineUserId) {
+      await sendLineOAMessage(
+        tenant.lineUserId,
+        `📦 มีพัสดุมาส่งถึงคุณ!\nชื่อผู้รับ: ${recipientName || "-"}\nห้อง: ${parcel.room.number}\nเลขพัสดุ: ${trackingNumber || "-"}`,
+        room.property.owner.lineChannelAccessToken
+      );
     }
 
     return NextResponse.json(parcel, { status: 201 });

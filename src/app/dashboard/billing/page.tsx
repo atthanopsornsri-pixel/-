@@ -32,6 +32,28 @@ export default function BillingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isBillsLoading, setIsBillsLoading] = useState(true);
   const [selectedSlip, setSelectedSlip] = useState<any>(null);
+  const [isSendingLineMap, setIsSendingLineMap] = useState<Record<string, boolean>>({});
+
+  const handleSendLineNotify = async (billId: string) => {
+    setIsSendingLineMap(prev => ({ ...prev, [billId]: true }));
+    try {
+      const res = await fetch(`/api/bills/${billId}/notify`, {
+        method: "POST"
+      });
+      
+      if (res.ok) {
+        toast.success("ส่งบิลแจ้งเตือนเข้าไลน์ลูกบ้านสำเร็จ! 🚀");
+      } else {
+        const err = await res.json();
+        toast.error(err.message || "ส่งข้อความล้มเหลว ตรวจสอบการผูก LINE");
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อระบบ");
+    } finally {
+      setIsSendingLineMap(prev => ({ ...prev, [billId]: false }));
+    }
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -379,6 +401,15 @@ export default function BillingPage() {
                           <Button variant="outline" size="sm" onClick={() => window.open(`/dashboard/billing/${bill.id}/print`, '_blank')}>
                             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                             พิมพ์
+                          </Button>
+                          <Button 
+                            variant="default" 
+                            size="sm" 
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white gap-1 transition-colors rounded-xl"
+                            onClick={() => handleSendLineNotify(bill.id)}
+                            disabled={isSendingLineMap[bill.id]}
+                          >
+                            {isSendingLineMap[bill.id] ? "กำลังส่ง..." : "💬 ส่ง LINE"}
                           </Button>
                         </td>
                       </tr>

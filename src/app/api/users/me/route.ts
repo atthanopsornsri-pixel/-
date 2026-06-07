@@ -11,7 +11,7 @@ export async function GET(req: Request) {
 
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { name: true, email: true, lineToken: true }
+      select: { name: true, email: true, lineChannelAccessToken: true, lineUserId: true, lineBindingCode: true }
     });
 
     return NextResponse.json(user);
@@ -25,10 +25,17 @@ export async function PATCH(req: Request) {
     const session = await getServerSession(authOptions);
     if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
-    const { lineToken, password } = await req.json();
+    const { lineChannelAccessToken, lineUserId, password, generateBindingCode } = await req.json();
 
     const dataToUpdate: any = {};
-    if (lineToken !== undefined) dataToUpdate.lineToken = lineToken;
+    if (lineChannelAccessToken !== undefined) dataToUpdate.lineChannelAccessToken = lineChannelAccessToken;
+    if (lineUserId !== undefined) dataToUpdate.lineUserId = lineUserId;
+    
+    if (generateBindingCode) {
+      const code = `JAD-${Math.floor(1000 + Math.random() * 9000)}`;
+      dataToUpdate.lineBindingCode = code;
+    }
+
     if (password) {
       const bcrypt = require("bcryptjs");
       dataToUpdate.password = await bcrypt.hash(password, 10);
@@ -39,7 +46,7 @@ export async function PATCH(req: Request) {
       data: dataToUpdate
     });
 
-    return NextResponse.json({ message: "Success" });
+    return NextResponse.json({ message: "Success", lineBindingCode: user.lineBindingCode });
   } catch (error) {
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }

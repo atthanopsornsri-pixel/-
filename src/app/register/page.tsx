@@ -21,6 +21,22 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name.trim()) {
+      setError("กรุณากรอกช่องชื่อ-นามสกุล (ผู้ดูแล)");
+      return;
+    }
+    if (!email.trim()) {
+      setError("กรุณากรอกช่องอีเมล");
+      return;
+    }
+    if (!password) {
+      setError("กรุณากรอกช่องรหัสผ่าน");
+      return;
+    }
+    if (password.length < 6) {
+      setError("กรุณากรอกรหัสผ่านอย่างน้อย 6 ตัวอักษร");
+      return;
+    }
     if (!acceptPdpa) {
       setError("กรุณายอมรับเงื่อนไขการให้บริการและนโยบายความเป็นส่วนตัว");
       return;

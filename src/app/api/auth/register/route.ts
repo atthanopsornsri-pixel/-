@@ -7,8 +7,14 @@ export async function POST(req: Request) {
         const { email, password, name, registrationCode } = await req.json();
     const role = "OWNER";
 
-    if (!email || !password) {
-      return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
+    if (!email || !email.trim()) {
+      return NextResponse.json({ message: "กรุณากรอกช่องอีเมล" }, { status: 400 });
+    }
+    if (!password || password.length < 6) {
+      return NextResponse.json({ message: "กรุณากรอกช่องรหัสผ่าน (อย่างน้อย 6 ตัวอักษร)" }, { status: 400 });
+    }
+    if (!name || !name.trim()) {
+      return NextResponse.json({ message: "กรุณากรอกช่องชื่อ-นามสกุล (ผู้ดูแล)" }, { status: 400 });
     }
 
     const existingUser = await prisma.user.findUnique({
@@ -16,7 +22,7 @@ export async function POST(req: Request) {
     });
 
     if (existingUser) {
-      return NextResponse.json({ message: "User already exists" }, { status: 400 });
+      return NextResponse.json({ message: "อีเมลนี้ถูกใช้งานในระบบแล้ว กรุณาใช้อีเมลอื่น หรือเข้าสู่ระบบ" }, { status: 400 });
     }
 
     let validCode = null;
@@ -69,8 +75,23 @@ export async function POST(req: Request) {
       { message: "User created successfully", user: { id: user.id, email: user.email } },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Registration error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+    
+    let friendlyMessage = "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง";
+    if (error.code === "P2002") {
+      const target = error.meta?.target || [];
+      if (target.includes("email")) {
+        friendlyMessage = "อีเมลนี้ถูกใช้งานแล้วในระบบ กรุณาใช้ชื่ออีเมลอื่น";
+      } else if (target.includes("username")) {
+        friendlyMessage = "ชื่อผู้ใช้งานนี้ถูกใช้งานแล้ว";
+      } else {
+        friendlyMessage = `ตรวจพบข้อมูลซ้ำซ้อนในระบบ (${target.join(", ")})`;
+      }
+    } else if (error.message?.includes("Can't reach database")) {
+      friendlyMessage = "ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณาลองใหม่อีกครั้งภายหลัง";
+    }
+    
+    return NextResponse.json({ message: friendlyMessage, error: error.message }, { status: 500 });
   }
 }

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getSecurePrisma } from "@/lib/prisma-secure";
 import { Prisma } from "@prisma/client";
+import { sendLineOAMessage } from "@/lib/line";
 
 export async function POST(req: Request) {
   try {
@@ -39,9 +40,16 @@ export async function POST(req: Request) {
 
     const secureDb = await getSecurePrisma();
 
-    // Verify room belongs to this owner (secureDb does this automatically)
+    // Verify room belongs to this owner and fetch owner details for LINE config
     const room = await secureDb.room.findUnique({
       where: { id: roomId },
+      include: {
+        property: {
+          include: {
+            owner: true
+          }
+        }
+      }
     });
 
     if (!room) {
@@ -89,19 +97,18 @@ export async function POST(req: Request) {
       }
     });
 
-    // Notify Tenant if they have Line Token setup
+    // Notify Tenant if they have lineUserId setup
     const tenant = await secureDb.tenant.findFirst({
       where: { roomId },
-      include: { user: { select: { lineToken: true } } }
+      select: { lineUserId: true }
     });
 
-    if (tenant?.user?.lineToken) {
-      import('@/lib/line').then(({ sendLineNotify }) => {
-        sendLineNotify(
-          tenant.user.lineToken!,
-          `🧾 บิลค่าเช่าใหม่มาแล้ว!\nห้อง: ${bill.room.number}\nประจำเดือน: ${month}/${year}\nยอดชำระ: ฿${totalAmount.toLocaleString()}\nกำหนดชำระ: ${new Date(dueDate).toLocaleDateString('th-TH')}`
-        );
-      });
+    if (room?.property?.owner?.lineChannelAccessToken && tenant?.lineUserId) {
+      await sendLineOAMessage(
+        tenant.lineUserId,
+        `🧾 บิลค่าเช่าใหม่มาแล้ว!\nห้อง: ${bill.room.number}\nประจำเดือน: ${month}/${year}\nยอดชำระ: ฿${totalAmount.toLocaleString()}\nกำหนดชำระ: ${new Date(dueDate).toLocaleDateString('th-TH')}`,
+        room.property.owner.lineChannelAccessToken
+      );
     }
 
     return NextResponse.json(bill, { status: 201 });

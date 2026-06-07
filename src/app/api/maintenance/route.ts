@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendLineOAMessage } from "@/lib/line";
 
 export async function POST(req: Request) {
   try {
@@ -16,9 +17,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
 
-    // Get tenant's room
+    // Get tenant's room and owner info for LINE notification
     const tenant = await prisma.tenant.findUnique({
       where: { userId: session.user.id },
+      include: {
+        room: {
+          include: {
+            property: {
+              include: {
+                owner: true
+              }
+            }
+          }
+        }
+      }
     });
 
     if (!tenant || !tenant.roomId) {
@@ -33,6 +45,15 @@ export async function POST(req: Request) {
         imageUrl,
       },
     });
+
+    // Notify landlord about new maintenance request
+    if (tenant.room?.property?.owner?.lineChannelAccessToken && tenant.room?.property?.owner?.lineUserId) {
+      await sendLineOAMessage(
+        tenant.room.property.owner.lineUserId,
+        `🛠️ แจ้งซ่อมใหม่จากห้อง ${tenant.room.number}!\nเรื่อง: ${title}\nรายละเอียด: ${description}`,
+        tenant.room.property.owner.lineChannelAccessToken
+      );
+    }
 
     return NextResponse.json(request, { status: 201 });
   } catch (error) {
@@ -103,7 +124,13 @@ export async function PATCH(req: Request) {
       where: { id },
       include: {
         room: {
-          include: { property: true }
+          include: {
+            property: {
+              include: {
+                owner: true
+              }
+            }
+          }
         }
       }
     });
@@ -124,20 +151,19 @@ export async function PATCH(req: Request) {
       }
     });
 
-    // Notify Tenant if they have Line Token setup
+    // Notify Tenant if they have lineUserId setup
     const tenant = await prisma.tenant.findFirst({
       where: { roomId: request.roomId },
-      include: { user: { select: { lineToken: true } } }
+      select: { lineUserId: true }
     });
 
-    if (tenant?.user?.lineToken) {
+    if (maintReq.room.property.owner.lineChannelAccessToken && tenant?.lineUserId) {
       const statusText = status === "IN_PROGRESS" ? "กำลังดำเนินการแก้ไข 👨‍🔧" : "แก้ไขเสร็จสิ้นเรียบร้อยแล้ว ✅";
-      import('@/lib/line').then(({ sendLineNotify }) => {
-        sendLineNotify(
-          tenant.user.lineToken!,
-          `🛠️ อัปเดตสถานะแจ้งซ่อม!\nห้อง: ${request.room.number}\nเรื่อง: ${request.title}\nสถานะ: ${statusText}`
-        );
-      });
+      await sendLineOAMessage(
+        tenant.lineUserId,
+        `🛠️ อัปเดตสถานะแจ้งซ่อม!\nห้อง: ${request.room.number}\nเรื่อง: ${request.title}\nสถานะ: ${statusText}`,
+        maintReq.room.property.owner.lineChannelAccessToken
+      );
     }
 
     return NextResponse.json(request);

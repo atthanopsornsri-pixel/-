@@ -37,137 +37,194 @@ export default function BillPrintPage() {
   const displayCompanyName = prop.companyName || prop.name;
 
   return (
-    <div className="min-h-screen bg-slate-100 flex justify-center font-sarabun print:bg-white print:p-0 p-4 md:p-8 text-slate-800">
+    <div className="min-h-screen bg-slate-100 flex justify-center font-sans print:bg-white print:p-0 p-4 md:p-8">
       {/* 
-        A4 1/3 Size is approx 210mm x 99mm. 
-        Using fixed exact sizing with overflow-hidden ensures it fits perfectly.
+        A4 Size is 210mm x 297mm. 
+        Using fixed exact sizing with overflow-hidden ensures it fits on exactly 1 page.
       */}
-      <div className="w-[210mm] h-[99mm] bg-white shadow-xl print:shadow-none mx-auto relative overflow-hidden flex flex-col p-4">
+      <div className="w-[210mm] h-[297mm] bg-white shadow-xl print:shadow-none mx-auto relative overflow-hidden flex flex-col p-8 md:p-12 print:p-8">
         
         {/* Print Action Bar - Hidden during print */}
-        <div className="absolute top-2 right-2 flex gap-2 print:hidden z-10">
-          <Button variant="outline" size="sm" onClick={() => router.back()} className="font-sans">กลับ</Button>
-          <Button size="sm" onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white font-sans">
-            พิมพ์ / PDF
+        <div className="absolute top-4 right-4 flex gap-2 print:hidden z-10">
+          <Button variant="outline" onClick={() => router.back()}>กลับ</Button>
+          <Button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white">
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+            พิมพ์ / บันทึกเป็น PDF
           </Button>
         </div>
 
         {/* Header Section */}
-        <div className="flex justify-between items-start border-b-2 border-slate-800 pb-1 mb-1">
+        <div className="flex justify-between items-start mb-6 pt-4">
           <div className="max-w-[60%]">
-            <h1 className="text-2xl font-bold uppercase leading-none mb-1">{displayCompanyName}</h1>
-            <p className="text-[13px] leading-tight">{prop.address || "ที่อยู่หอพัก"}</p>
-            <p className="text-[13px] leading-tight mt-0.5">เลขประจำตัวผู้เสียภาษี: {prop.taxId || "ไม่ได้ระบุ"}</p>
+            <h1 className="text-2xl font-bold text-slate-800 uppercase tracking-wide">{displayCompanyName}</h1>
+            <p className="text-sm text-slate-600 mt-1 whitespace-pre-wrap leading-relaxed">{prop.address || "ที่อยู่หอพัก (ตั้งค่าในหน้าจัดการหอพัก)"}</p>
+            <p className="text-sm text-slate-600 mt-1">เลขประจำตัวผู้เสียภาษี: <span className="font-medium text-slate-800">{prop.taxId || "ไม่ได้ระบุ"}</span></p>
           </div>
           <div className="text-right">
-            <h2 className="text-2xl font-bold uppercase leading-none">ใบแจ้งหนี้ / INVOICE</h2>
-            <div className="text-[13px] mt-1">
-              เลขที่ (No): <span className="font-bold">{docNo}</span><br/>
-              วันที่ (Date): {new Date(bill.createdAt).toLocaleDateString("th-TH")}<br/>
-              กำหนดชำระ (Due): <span className="font-bold text-red-600">{new Date(bill.dueDate).toLocaleDateString("th-TH")}</span>
+            <div className="inline-block border border-slate-800 text-slate-800 font-bold px-3 py-1 mb-2 text-sm tracking-widest">ต้นฉบับ (ORIGINAL)</div>
+            <h2 className="text-2xl font-bold text-slate-800 uppercase">ใบแจ้งหนี้</h2>
+            <h3 className="text-sm font-semibold text-slate-600">INVOICE / RECEIPT</h3>
+          </div>
+        </div>
+
+        {/* Divider */}
+        <div className="w-full h-0.5 bg-slate-800 mb-6"></div>
+
+        {/* Document Info Grid */}
+        <div className="grid grid-cols-2 gap-8 mb-8 text-sm">
+          <div>
+            <h4 className="font-bold text-slate-700 mb-2 border-b border-slate-200 pb-1">ข้อมูลลูกค้า (Customer Info)</h4>
+            <div className="grid grid-cols-[100px_1fr] gap-1 mt-2">
+              <span className="text-slate-500">ชื่อลูกค้า:</span>
+              <span className="text-slate-800 font-bold">ห้องพักเลขที่ {bill.room.number}</span>
+              
+              <span className="text-slate-500">ที่อยู่:</span>
+              <span className="text-slate-800">{prop.name} ห้อง {bill.room.number}</span>
+            </div>
+          </div>
+          <div>
+            <h4 className="font-bold text-slate-700 mb-2 border-b border-slate-200 pb-1">รายละเอียดเอกสาร (Document Info)</h4>
+            <div className="grid grid-cols-[120px_1fr] gap-1 mt-2">
+              <span className="text-slate-500">เลขที่เอกสาร:</span>
+              <span className="text-slate-800 font-bold">{docNo}</span>
+              
+              <span className="text-slate-500">วันที่ออกเอกสาร:</span>
+              <span className="text-slate-800">{new Date(bill.createdAt).toLocaleDateString("th-TH")}</span>
+              
+              <span className="text-slate-500">กำหนดชำระเงิน:</span>
+              <span className="text-red-600 font-bold">{new Date(bill.dueDate).toLocaleDateString("th-TH")}</span>
             </div>
           </div>
         </div>
 
-        {/* Customer Info */}
-        <div className="flex justify-between items-center text-[15px] mb-1 px-1 bg-slate-50 py-0.5 border border-slate-200">
-          <div><b>ห้องพัก (Room):</b> <span className="text-lg font-bold ml-1">{bill.room.number}</span></div>
-          <div><b>ชื่อลูกค้า (Name):</b> ลูกบ้านห้อง {bill.room.number}</div>
-        </div>
+        {/* Items Table */}
+        <div className="flex-1">
+          <table className="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr className="bg-slate-100 text-slate-700">
+                <th className="py-2 px-3 font-bold border border-slate-300 w-12 text-center">ลำดับ</th>
+                <th className="py-2 px-3 font-bold border border-slate-300">รายการ (Description)</th>
+                <th className="py-2 px-3 font-bold border border-slate-300 text-center w-24">หน่วย</th>
+                <th className="py-2 px-3 font-bold border border-slate-300 text-right w-32">จำนวนเงิน (บาท)</th>
+              </tr>
+            </thead>
+            <tbody className="text-slate-800">
+              <tr>
+                <td className="py-3 px-3 border border-slate-300 text-center">1</td>
+                <td className="py-3 px-3 border border-slate-300">ค่าเช่าห้องพักประจำเดือน {bill.month}/{bill.year}</td>
+                <td className="py-3 px-3 border border-slate-300 text-center">-</td>
+                <td className="py-3 px-3 border border-slate-300 text-right">{bill.rentAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+              </tr>
+              <tr>
+                <td className="py-3 px-3 border border-slate-300 text-center">2</td>
+                <td className="py-3 px-3 border border-slate-300">ค่าน้ำประปา</td>
+                <td className="py-3 px-3 border border-slate-300 text-center">{bill.waterUnits || "-"}</td>
+                <td className="py-3 px-3 border border-slate-300 text-right">{bill.waterAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+              </tr>
+              <tr>
+                <td className="py-3 px-3 border border-slate-300 text-center">3</td>
+                <td className="py-3 px-3 border border-slate-300">ค่าไฟฟ้า</td>
+                <td className="py-3 px-3 border border-slate-300 text-center">{bill.electricUnits || "-"}</td>
+                <td className="py-3 px-3 border border-slate-300 text-right">{bill.electricAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+              </tr>
+              {bill.commonFee > 0 && (
+                <tr>
+                  <td className="py-3 px-3 border border-slate-300 text-center">4</td>
+                  <td className="py-3 px-3 border border-slate-300">ค่าส่วนกลาง</td>
+                  <td className="py-3 px-3 border border-slate-300 text-center">-</td>
+                  <td className="py-3 px-3 border border-slate-300 text-right">{bill.commonFee.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                </tr>
+              )}
+              {bill.parkingFee > 0 && (
+                <tr>
+                  <td className="py-3 px-3 border border-slate-300 text-center">5</td>
+                  <td className="py-3 px-3 border border-slate-300">ค่าที่จอดรถ</td>
+                  <td className="py-3 px-3 border border-slate-300 text-center">-</td>
+                  <td className="py-3 px-3 border border-slate-300 text-right">{bill.parkingFee.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
 
-        {/* Main Content Area: Left (Table) + Right (QR) */}
-        <div className="flex-1 flex gap-3 h-full overflow-hidden">
-          {/* Left: Items Table */}
-          <div className="w-[65%] flex flex-col h-full">
-            <table className="w-full text-left border-collapse text-[14px]">
-              <thead>
-                <tr className="border-b-2 border-slate-300">
-                  <th className="py-0.5">รายการ (Description)</th>
-                  <th className="py-0.5 text-center w-12">หน่วย</th>
-                  <th className="py-0.5 text-right w-24">จำนวนเงิน (บาท)</th>
-                </tr>
-              </thead>
-              <tbody className="align-top">
-                <tr>
-                  <td className="py-0.5 leading-tight">ค่าเช่าห้องพักประจำเดือน {bill.month}/{bill.year}</td>
-                  <td className="py-0.5 text-center leading-tight">-</td>
-                  <td className="py-0.5 text-right leading-tight">{bill.rentAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                </tr>
-                <tr>
-                  <td className="py-0.5 leading-tight">ค่าน้ำประปา</td>
-                  <td className="py-0.5 text-center leading-tight">{bill.waterUnits || "-"}</td>
-                  <td className="py-0.5 text-right leading-tight">{bill.waterAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                </tr>
-                <tr>
-                  <td className="py-0.5 leading-tight">ค่าไฟฟ้า</td>
-                  <td className="py-0.5 text-center leading-tight">{bill.electricUnits || "-"}</td>
-                  <td className="py-0.5 text-right leading-tight">{bill.electricAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                </tr>
-                {bill.commonFee > 0 && (
-                  <tr>
-                    <td className="py-0.5 leading-tight">ค่าส่วนกลาง</td>
-                    <td className="py-0.5 text-center leading-tight">-</td>
-                    <td className="py-0.5 text-right leading-tight">{bill.commonFee.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                  </tr>
+          {/* Totals & Payment Info */}
+          <div className="flex justify-between items-start mt-4">
+            {/* Payment & Upload Info */}
+            <div className="w-[60%] flex gap-4">
+              {/* QR 1: PromptPay */}
+              <div className="flex-1 bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col items-center text-center">
+                <p className="text-[10px] font-bold text-[#003399] mb-2">1. สแกนจ่ายผ่าน Thai QR</p>
+                {qrPayload ? (
+                  <>
+                    <div className="bg-white p-1.5 rounded-lg border border-slate-200 shadow-sm mb-2">
+                      <QRCodeSVG value={qrPayload} size={64} level="M" />
+                    </div>
+                    <p className="text-[9px] text-slate-600 truncate w-full px-1">{prop.promptPayName || prop.promptPayNo}</p>
+                  </>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center text-[9px] text-slate-400">ยังไม่ตั้งค่าพร้อมเพย์</div>
                 )}
-                {bill.parkingFee > 0 && (
-                  <tr>
-                    <td className="py-0.5 leading-tight">ค่าที่จอดรถ</td>
-                    <td className="py-0.5 text-center leading-tight">-</td>
-                    <td className="py-0.5 text-right leading-tight">{bill.parkingFee.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-            
-            <div className="mt-auto border-t border-slate-800 pt-0.5 flex justify-between items-center font-bold text-[17px] text-slate-900 bg-slate-100 px-1">
-               <span>รวมเป็นเงินสุทธิ (Net Total)</span>
-               <span>฿{bill.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+              </div>
+
+              {/* QR 2: Upload Slip URL */}
+              <div className="flex-1 bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col items-center text-center">
+                <p className="text-[10px] font-bold text-slate-700 mb-2">2. สแกนเพื่อส่งสลิปโอนเงิน</p>
+                <div className="bg-white p-1.5 rounded-lg border border-slate-200 shadow-sm mb-2">
+                  <QRCodeSVG 
+                    value={typeof window !== "undefined" ? `${window.location.origin}/pay/${bill.id}` : `https://jadhoros.com/pay/${bill.id}`} 
+                    size={64} 
+                    level="L" 
+                  />
+                </div>
+                <p className="text-[9px] text-slate-600">สแกนด้วยกล้องมือถือ</p>
+              </div>
             </div>
-            
-            {/* Note & Signature left */}
-            <div className="flex justify-between items-end mt-1">
-               <div className="text-[11px] text-slate-500 italic leading-tight max-w-[60%]">
-                 * กรุณาชำระเงินภายในวันที่กำหนด เพื่อหลีกเลี่ยงค่าปรับล่าช้า<br/>
-                 * เอกสารนี้จะสมบูรณ์เมื่อได้รับเงินครบถ้วนแล้ว
-               </div>
-               <div className="text-center w-[35%]">
-                 <div className="border-b border-slate-400 w-full mb-0.5 h-6 relative flex items-end justify-center">
-                   {prop.signatureUrl && (
-                     // eslint-disable-next-line @next/next/no-img-element
-                     <img src={prop.signatureUrl} alt="Signature" className="h-8 object-contain mix-blend-multiply absolute bottom-0" />
-                   )}
-                 </div>
-                 <p className="text-[10px] text-slate-600">ผู้ออกเอกสาร</p>
-               </div>
+
+            {/* Totals */}
+            <div className="w-[35%]">
+              <div className="flex justify-between py-1 px-3">
+                <span className="text-slate-600 text-sm">รวมเป็นเงิน</span>
+                <span className="font-bold text-slate-800 text-sm">฿{bill.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+              </div>
+              <div className="flex justify-between py-2 px-3 bg-[#E8F2FF] border border-[#007AFF]/20 rounded-lg mt-2">
+                <span className="font-bold text-[#007AFF]">ยอดสุทธิ</span>
+                <span className="font-bold text-lg text-[#007AFF]">฿{bill.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Right: QR Codes */}
-          <div className="w-[35%] flex gap-1.5 border-l-2 border-dashed border-slate-300 pl-3">
-            <div className="flex-1 bg-white border border-slate-300 rounded p-1 flex flex-col items-center text-center">
-              <p className="text-[11px] font-bold mb-1 text-[#003399] leading-tight">1. สแกนจ่าย Thai QR</p>
-              {qrPayload ? (
-                <>
-                  <QRCodeSVG value={qrPayload} size={50} level="M" />
-                  <p className="text-[10px] font-bold mt-1 leading-tight text-slate-800 w-[60px] truncate">{prop.promptPayName || prop.promptPayNo}</p>
-                </>
-              ) : (
-                <div className="text-[10px] text-slate-400 h-[50px] flex items-center text-center">ยังไม่ตั้งค่า</div>
+        {/* Note / Terms */}
+        <div className="text-xs text-slate-500 mb-8 mt-4">
+          <p className="font-bold text-slate-700 mb-1">หมายเหตุ (Remarks):</p>
+          <ul className="list-disc list-inside">
+            <li>กรุณาชำระเงินภายในวันที่กำหนด มิฉะนั้นอาจมีค่าปรับล่าช้าตามที่ระบุในสัญญา</li>
+            <li>เอกสารฉบับนี้จะสมบูรณ์ต่อเมื่อบริษัท/หอพักได้รับเงินครบถ้วนและเช็คผ่านธนาคารเรียบร้อยแล้ว</li>
+          </ul>
+        </div>
+
+        {/* Signatures */}
+        <div className="grid grid-cols-2 gap-12 text-center mt-auto pt-6 border-t border-slate-200">
+          <div>
+            <div className="border-b border-slate-400 w-40 mx-auto mb-2 h-10 relative flex items-end justify-center">
+              {prop.signatureUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={prop.signatureUrl} alt="Signature" className="h-12 object-contain mix-blend-multiply absolute bottom-0" />
               )}
             </div>
-            <div className="flex-1 bg-white border border-slate-300 rounded p-1 flex flex-col items-center text-center">
-              <p className="text-[11px] font-bold mb-1 leading-tight">2. สแกนส่งสลิป</p>
-              <QRCodeSVG 
-                value={typeof window !== "undefined" ? `${window.location.origin}/pay/${bill.id}` : `https://JadHor OS.com/pay/${bill.id}`} 
-                size={50} 
-                level="L" 
-              />
-              <p className="text-[9px] mt-1 leading-tight text-slate-600">ระบบอัตโนมัติ</p>
-            </div>
+            <p className="text-slate-800 text-sm font-bold">ผู้ออกเอกสาร / ผู้รับเงิน</p>
+            <p className="text-xs text-slate-500 mt-1">วันที่ (Date) ____/____/____</p>
+          </div>
+          <div>
+            <div className="border-b border-slate-400 w-40 mx-auto mb-2 h-10"></div>
+            <p className="text-slate-800 text-sm font-bold">ผู้รับเอกสาร / ผู้จ่ายเงิน</p>
+            <p className="text-xs text-slate-500 mt-1">วันที่ (Date) ____/____/____</p>
           </div>
         </div>
 
+        {/* Footer */}
+        <div className="text-center text-slate-400 text-[10px] mt-8 pt-4">
+          สร้างโดย JadHor OS - เอกสารอิเล็กทรอนิกส์ (Electronic Document)
+        </div>
       </div>
 
       <style jsx global>{`

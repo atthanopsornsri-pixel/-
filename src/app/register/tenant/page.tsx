@@ -19,6 +19,27 @@ export default function TenantRegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!inviteCode.trim()) {
+      setError("กรุณากรอกช่องรหัสห้องพัก (Invite Code)");
+      return;
+    }
+    if (!name.trim()) {
+      setError("กรุณากรอกช่องชื่อ-นามสกุลผู้เช่า");
+      return;
+    }
+    if (!email.trim()) {
+      setError("กรุณากรอกช่องอีเมล");
+      return;
+    }
+    if (!password) {
+      setError("กรุณากรอกช่องรหัสผ่าน");
+      return;
+    }
+    if (password.length < 6) {
+      setError("กรุณากรอกรหัสผ่านอย่างน้อย 6 ตัวอักษร");
+      return;
+    }
+
     setLoading(true);
     setError("");
 

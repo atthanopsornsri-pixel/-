@@ -134,7 +134,7 @@ export default function MobileNav({ role }: MobileNavProps) {
 
           <div className="pt-6 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">ระบบ</div>
           <Link href="/dashboard/settings" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-100 transition-all font-medium">
-            ตั้งค่า / LINE Notify
+            ตั้งค่า / LINE OA
           </Link>
           
           <div className="pt-6 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">เว็บไซต์</div>

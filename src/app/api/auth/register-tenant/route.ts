@@ -6,8 +6,17 @@ export async function POST(req: Request) {
   try {
     const { email, password, name, inviteCode } = await req.json();
 
-    if (!email || !password || !inviteCode) {
-      return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
+    if (!inviteCode || !inviteCode.trim()) {
+      return NextResponse.json({ message: "กรุณากรอกช่องรหัสห้องพัก (Invite Code)" }, { status: 400 });
+    }
+    if (!name || !name.trim()) {
+      return NextResponse.json({ message: "กรุณากรอกช่องชื่อ-นามสกุลผู้เช่า" }, { status: 400 });
+    }
+    if (!email || !email.trim()) {
+      return NextResponse.json({ message: "กรุณากรอกช่องอีเมล" }, { status: 400 });
+    }
+    if (!password || password.length < 6) {
+      return NextResponse.json({ message: "กรุณากรอกช่องรหัสผ่าน (อย่างน้อย 6 ตัวอักษร)" }, { status: 400 });
     }
 
     // Verify Invite Code
@@ -57,8 +66,19 @@ export async function POST(req: Request) {
       { message: "Tenant created successfully", user: { id: user.id, email: user.email } },
       { status: 201 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Registration error:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+    let friendlyMessage = "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง";
+    if (error.code === "P2002") {
+      const target = error.meta?.target || [];
+      if (target.includes("email")) {
+        friendlyMessage = "อีเมลนี้ถูกใช้งานแล้วในระบบ กรุณาใช้ชื่ออีเมลอื่น";
+      } else {
+        friendlyMessage = `ตรวจพบข้อมูลซ้ำซ้อนในระบบ (${target.join(", ")})`;
+      }
+    } else if (error.message?.includes("Can't reach database")) {
+      friendlyMessage = "ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณาลองใหม่อีกครั้งภายหลัง";
+    }
+    return NextResponse.json({ message: friendlyMessage, error: error.message }, { status: 500 });
   }
 }

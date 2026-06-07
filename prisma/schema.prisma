@@ -19,7 +19,9 @@ model User {
   password      String?
   name          String?
   image         String?
-  lineToken     String?  // สำหรับผูก LINE Notify
+  lineChannelAccessToken String? // สำหรับเก็บ Channel Access Token ของ LINE OA บอต
+  lineUserId             String? // สำหรับเก็บ LINE User ID ส่วนบุคคลของผู้ใช้งานเพื่อรับแจ้งเตือน
+  lineBindingCode        String? // สำหรับรหัสผูกบัญชีชั่วคราว (เช่น JAD-1234)
   role          Role      @default(TENANT)
   pdpaAcceptedAt DateTime? // เก็บวันที่กดยอมรับ PDPA
   planTier      PlanTier  @default(FREE_TRIAL)
