@@ -6,6 +6,33 @@ import { Button } from "@/components/ui/button";
 
 import { QRCodeSVG } from "qrcode.react";
 import generatePayload from "promptpay-qr";
+import localFont from "next/font/local";
+
+const sarabun = localFont({
+  src: [
+    {
+      path: "../../../../../../public/fonts/sarabun/THSarabun.ttf",
+      weight: "400",
+      style: "normal",
+    },
+    {
+      path: "../../../../../../public/fonts/sarabun/THSarabun Italic.ttf",
+      weight: "400",
+      style: "italic",
+    },
+    {
+      path: "../../../../../../public/fonts/sarabun/THSarabun Bold.ttf",
+      weight: "700",
+      style: "normal",
+    },
+    {
+      path: "../../../../../../public/fonts/sarabun/THSarabun BoldItalic.ttf",
+      weight: "700",
+      style: "italic",
+    },
+  ],
+  variable: "--font-sarabun",
+});
 
 export default function BillPrintPage() {
   const params = useParams();
@@ -30,14 +57,14 @@ export default function BillPrintPage() {
     fetchBill();
   }, [params.id]);
 
-  if (!bill) return <div className="p-8 text-center font-sans">กำลังโหลดข้อมูล...</div>;
+  if (!bill) return <div className={`p-8 text-center ${sarabun.className}`}>กำลังโหลดข้อมูล...</div>;
 
   const prop = bill.room.property;
   const docNo = `INV-${bill.year}${bill.month.toString().padStart(2, '0')}-${bill.id.substring(0, 4).toUpperCase()}`;
   const displayCompanyName = prop.companyName || prop.name;
 
   return (
-    <div className="min-h-screen bg-slate-100 flex justify-center font-sans print:bg-white print:p-0 p-4 md:p-8">
+    <div className={`min-h-screen bg-slate-100 flex justify-center print:bg-white print:p-0 p-4 md:p-8 ${sarabun.className}`}>
       {/* 
         A4 Size is 210mm x 297mm. 
         Using fixed exact sizing with overflow-hidden ensures it fits on exactly 1 page.
