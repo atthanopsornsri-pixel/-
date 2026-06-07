@@ -414,12 +414,16 @@ export default function BillingPage() {
                             </Button>
                           ) : (
                             <Button 
-                              variant="default" 
+                              variant="outline" 
                               size="sm" 
-                              className="bg-blue-600 hover:bg-blue-500 text-white gap-1 transition-colors rounded-xl"
-                              onClick={() => toast.success("แจ้งเตือนบิลไปยังเว็บลูกบ้านเรียบร้อยแล้ว (ลูกบ้านสามารถล็อกอินเข้าดูได้ทันที)")}
+                              className="border-blue-200 text-blue-600 hover:bg-blue-50 gap-1 transition-colors rounded-xl"
+                              onClick={() => {
+                                const payLink = `${window.location.origin}/pay/${bill.id}`;
+                                navigator.clipboard.writeText(payLink);
+                                toast.success("คัดลอกลิงก์สำหรับชำระเงินเรียบร้อยแล้ว! 📋 (คุณสามารถนำไปวางส่งให้ลูกบ้านในช่องทางอื่นได้ทันที)");
+                              }}
                             >
-                              🔔 แจ้งบนเว็บ
+                              📋 คัดลอกลิงก์บิล
                             </Button>
                           )}
                         </td>
