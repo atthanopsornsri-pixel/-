@@ -31,7 +31,7 @@ export default function NotificationBell({ hasUnpaidBills }: { hasUnpaidBills: b
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="fixed md:absolute top-20 md:top-auto left-4 md:left-auto right-4 md:right-0 mt-2 md:mt-2 w-auto md:w-72 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 p-2 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
           <h3 className="px-4 py-2 text-sm font-bold text-slate-800 border-b border-slate-100 mb-2 flex justify-between items-center">
             การแจ้งเตือน
             {hasUnpaidBills && <span className="bg-red-100 text-red-600 text-[10px] px-2 py-0.5 rounded-full font-bold">1 ใหม่</span>}

@@ -69,7 +69,7 @@ export default function BillPrintPage() {
         A4 Size is 210mm x 297mm. 
         Using fixed exact sizing with overflow-hidden ensures it fits on exactly 1 page.
       */}
-      <div className="w-[210mm] h-[296mm] bg-white shadow-xl print:shadow-none mx-auto relative overflow-hidden flex flex-col p-8 md:p-12 print:p-6">
+      <div className="w-[210mm] h-[296mm] print:h-[280mm] bg-white shadow-xl print:shadow-none mx-auto relative overflow-hidden flex flex-col p-8 md:p-12 print:p-6">
         
         {/* Print Action Bar - Hidden during print */}
         <div className="absolute top-4 right-4 flex gap-2 print:hidden z-10">
