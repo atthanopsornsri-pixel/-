@@ -1,9 +1,13 @@
 "use server";
 
 import { getSecurePrisma } from "@/lib/prisma-secure";
+import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import Papa from "papaparse";
 import { z } from "zod";
+import { getRoomLimit } from "@/lib/pricing";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 const RowSchema = z.object({
   RoomNumber: z.string().min(1).trim(),
@@ -36,11 +40,54 @@ export async function importRoomsAndTenants(propertyId: string, formData: FormDa
       return { success: false, error: "ไม่พบหอพัก หรือคุณไม่มีสิทธิ์จัดการหอพักนี้" };
     }
 
+    // ── Room Limit Check ──
+    // ตรวจว่า import แล้วจะไม่เกิน room limit ของแพ็กเกจ
+    const session = await getServerSession(authOptions);
+    if (session) {
+      const ownerUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { planTier: true },
+      });
+      if (ownerUser) {
+        const limit = getRoomLimit(ownerUser.planTier);
+        const currentRoomCount = await prisma.room.count({
+          where: {
+            isDeleted: false,
+            property: { ownerId: session.user.id },
+          },
+        });
+        // Count how many rooms in CSV would be NEW (not existing in this property)
+        const existingRoomNumbers = await prisma.room.findMany({
+          where: { propertyId, isDeleted: false },
+          select: { number: true },
+        });
+        const existingSet = new Set(existingRoomNumbers.map((r) => r.number));
+        const csvText0 = await file.text();
+        const parsed0 = Papa.parse(csvText0, { header: false, skipEmptyLines: true });
+        let dataRows0 = parsed0.data as string[][];
+        if (dataRows0.length > 0 && /room|ห้อง/i.test(dataRows0[0][0] || "")) {
+          dataRows0 = dataRows0.slice(1);
+        }
+        const newRoomsInCSV = dataRows0.filter((row) => {
+          const roomNum = (row[0] || "").toString().trim();
+          return roomNum && !existingSet.has(roomNum);
+        }).length;
+        if (currentRoomCount + newRoomsInCSV > limit) {
+          return {
+            success: false,
+            error: `เกินจำนวนห้องที่แพ็กเกจอนุญาต (มีอยู่ ${currentRoomCount} ห้อง + ใหม่ ${newRoomsInCSV} ห้อง = ${currentRoomCount + newRoomsInCSV} เกิน ${limit}) — กรุณาอัปเกรดแพ็กเกจก่อน`,
+          };
+        }
+        // Re-parse from the same text (file stream already consumed above in preflight)
+        // We'll use file.text() again — Node.js File.text() can be called multiple times
+      }
+    }
+
     // Parse CSV
     const csvText = await file.text();
-    const parsed = Papa.parse(csvText, { 
-      header: false, 
-      skipEmptyLines: true 
+    const parsed = Papa.parse(csvText, {
+      header: false,
+      skipEmptyLines: true
     });
 
     // In this app, we assume the CSV has no headers or the user might pass headers.
@@ -49,7 +96,7 @@ export async function importRoomsAndTenants(propertyId: string, formData: FormDa
     if (dataRows.length > 0 && /room|ห้อง/i.test(dataRows[0][0] || '')) {
       dataRows = dataRows.slice(1);
     }
-    
+
     let importedCount = 0;
 
     await secureDb.$transaction(async (tx) => {
