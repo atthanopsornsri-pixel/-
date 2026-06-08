@@ -42,6 +42,13 @@ interface SmsAddon {
   isActive: boolean;
 }
 
+interface SaasStatus {
+  planTier: string;
+  planExpiresAt: string | null;
+  totalRooms: number;
+  roomLimit: number;
+}
+
 // =============================================
 // Component
 // =============================================
@@ -50,12 +57,14 @@ export default function SubscriptionPage() {
   const { data: session } = useSession();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [smsAddon, setSmsAddon] = useState<SmsAddon | null>(null);
+  const [saasStatus, setSaasStatus] = useState<SaasStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedInvoice, setExpandedInvoice] = useState<string | null>(null);
   const [smsLoading, setSmsLoading] = useState(false);
   const [slipUploading, setSlipUploading] = useState<string | null>(null);
 
-  const planTier = (session?.user as any)?.planTier || "FREE_TRIAL";
+  // planTier comes from the DB via saas-status API (not from JWT — it's not in the session)
+  const planTier = saasStatus?.planTier || "FREE_TRIAL";
 
   useEffect(() => {
     fetchData();
@@ -63,14 +72,19 @@ export default function SubscriptionPage() {
 
   async function fetchData() {
     try {
-      const [invoicesRes, smsRes] = await Promise.all([
+      const [invoicesRes, smsRes, saasRes] = await Promise.all([
         fetch("/api/owner/bills"),
         fetch("/api/owner/sms-addon"),
+        fetch("/api/owner/saas-status"),
       ]);
       if (invoicesRes.ok) setInvoices(await invoicesRes.json());
       if (smsRes.ok) {
         const data = await smsRes.json();
         setSmsAddon(data);
+      }
+      if (saasRes.ok) {
+        const data = await saasRes.json();
+        setSaasStatus(data);
       }
     } catch (e) {
       console.error(e);
