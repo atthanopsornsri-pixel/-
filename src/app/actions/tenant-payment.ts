@@ -3,6 +3,7 @@
 import { getSecurePrisma } from "@/lib/prisma-secure";
 import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import { verifySlip, receiverMatchesPromptPay } from "@/lib/slip-verification";
 
 /**
  * PHASE 10: Tenant Payment Portal (Upload Action)
@@ -34,7 +35,10 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
     // 1. Security Check: Ensure the logged-in TENANT actually owns this bill.
     // getSecurePrisma() automatically injects `where: { room: { tenants: { some: { userId } } } }` for TENANT role!
     const bill = await secureDb.bill.findUnique({
-      where: { id: billId }
+      where: { id: billId },
+      include: {
+        room: { select: { property: { select: { promptPayNo: true } } } },
+      },
     });
 
     if (!bill) {
@@ -47,7 +51,18 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
 
     // 2. Prepare file for Supabase Upload
     const buffer = Buffer.from(await file.arrayBuffer());
-    
+
+    // ── ตรวจสลิปอัตโนมัติ (ถ้าตั้งค่า provider ไว้) ──
+    const verification = await verifySlip({
+      imageBuffer: buffer,
+      contentType: file.type || "image/jpeg",
+      expectedAmount: bill.totalAmount,
+    });
+
+    if (verification.duplicate) {
+      return { success: false, error: "สลิปนี้เคยถูกใช้ชำระเงินไปแล้ว ไม่สามารถใช้ซ้ำได้" };
+    }
+
     // Generate secure filename using Date to prevent caching issues and CUID/BillID for uniqueness
     const fileExtension = file.name.split('.').pop() || 'jpg';
     const filename = `slips/${billId}-${Date.now()}.${fileExtension}`;
@@ -70,20 +85,52 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
       return { success: false, error: "Failed to upload slip image." };
     }
 
-    // 4. Update the Database
-    // Set status to PENDING (which means 'WAITING_APPROVAL' in our schema)
+    // 4. ตัดสินสถานะบิลตามผลการตรวจสลิป
+    let newStatus: "PENDING" | "PAID" | "PARTIAL" = "PENDING";
+    let paidAmount = bill.paidAmount;
+    let autoVerified = false;
+
+    if (verification.enabled && verification.verified) {
+      const slipAmount = verification.amount ?? 0;
+      const receiverOk = receiverMatchesPromptPay(
+        verification.receiverAccount,
+        bill.room?.property?.promptPayNo
+      );
+
+      if (!receiverOk) {
+        newStatus = "PENDING";
+      } else if (slipAmount >= bill.totalAmount) {
+        newStatus = "PAID";
+        paidAmount = bill.totalAmount;
+        autoVerified = true;
+      } else if (slipAmount > 0 && slipAmount < bill.totalAmount) {
+        newStatus = "PARTIAL";
+        paidAmount = slipAmount;
+        autoVerified = true;
+      }
+    }
+
+    // 5. Update the Database
     await secureDb.bill.update({
       where: { id: billId },
       data: {
-        status: "PENDING",
+        status: newStatus,
         slipUrl: filename, // Store the relative path for the signed URL generator
+        paidAmount,
+        paymentDate: new Date(),
       }
     });
 
     // Revalidate the dashboard so the UI instantly hides the upload form
     revalidatePath("/tenant/dashboard");
 
-    return { success: true, message: "อัปโหลดสลิปสำเร็จ! กรุณารอแอดมินตรวจสอบ" };
+    if (autoVerified && newStatus === "PAID") {
+      return { success: true, message: "ระบบตรวจสอบสลิปอัตโนมัติแล้ว — ชำระเงินสำเร็จ ✓" };
+    }
+    if (autoVerified && newStatus === "PARTIAL") {
+      return { success: true, message: "ระบบได้รับยอดชำระบางส่วนแล้ว โปรดติดต่อเจ้าของหอเรื่องยอดคงเหลือ" };
+    }
+    return { success: true, message: "อัปโหลดสลิปสำเร็จ! กรุณารอเจ้าของหอตรวจสอบ" };
 
   } catch (error: any) {
     console.error("Submit Payment Slip Error:", error);

@@ -96,8 +96,16 @@ export default function PayBillPage() {
         setIsSuccess(true);
         const updated = await res.json();
         setBill(updated);
+        if (updated.autoVerified && updated.status === "PAID") {
+          toast.success("ระบบตรวจสอบสลิปอัตโนมัติแล้ว — ชำระเงินสำเร็จ ✓");
+        }
       } else {
-        toast.error("เกิดข้อผิดพลาดในการอัปโหลดหลักฐาน");
+        const err = await res.json().catch(() => null);
+        if (err?.code === "DUPLICATE_SLIP") {
+          toast.error("สลิปนี้เคยถูกใช้ชำระเงินไปแล้ว ไม่สามารถใช้ซ้ำได้");
+        } else {
+          toast.error(err?.message || "เกิดข้อผิดพลาดในการอัปโหลดหลักฐาน");
+        }
       }
     } catch (err) {
       console.error(err);
@@ -193,10 +201,16 @@ export default function PayBillPage() {
               <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
               </div>
-              <h3 className="text-xl font-bold text-green-700 mb-2">ส่งหลักฐานสำเร็จ</h3>
+              <h3 className="text-xl font-bold text-green-700 mb-2">
+                {bill.status === "PAID" ? "ชำระเงินสำเร็จ" : "ส่งหลักฐานสำเร็จ"}
+              </h3>
               <p className="text-slate-600 text-sm">
-                {bill.status === "PAID" 
-                  ? "เจ้าของหอพักตรวจสอบและยืนยันการชำระเงินเรียบร้อยแล้ว ขอบคุณครับ" 
+                {bill.status === "PAID"
+                  ? bill.autoVerified
+                    ? "ระบบตรวจสอบสลิปอัตโนมัติแล้ว ✓ ยืนยันการชำระเงินเรียบร้อย ขอบคุณครับ"
+                    : "เจ้าของหอพักตรวจสอบและยืนยันการชำระเงินเรียบร้อยแล้ว ขอบคุณครับ"
+                  : bill.status === "PARTIAL"
+                  ? "ระบบได้รับยอดชำระบางส่วนแล้ว โปรดติดต่อเจ้าของหอพักเรื่องยอดคงเหลือ"
                   : "ระบบได้รับหลักฐานของคุณแล้ว โปรดรอเจ้าของหอพักตรวจสอบความถูกต้อง"}
               </p>
               {slipPreview && (
