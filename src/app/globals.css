@@ -138,6 +138,11 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* ป้องกัน LINE In-App Browser ขยายฟอนต์ตามการตั้งค่าของผู้ใช้ */
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* ลบ highlight สีฟ้าเวลาแตะบนมือถือ */
+    -webkit-tap-highlight-color: transparent;
   }
   html {
     @apply font-sans;

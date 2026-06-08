@@ -127,8 +127,13 @@ function TenantRegisterForm() {
             <Button 
               className="w-full h-14 bg-[#00C300] hover:bg-[#00B000] text-white font-bold rounded-2xl text-base shadow-lg shadow-[#00C300]/25 transition-all flex items-center justify-center gap-3"
               onClick={() => signIn("line", { callbackUrl: window.location.href })}
+              aria-label="ล็อกอินผ่านบัญชี LINE"
             >
-              <span>ล็อกอินผ่านบัญชี LINE</span>
+              <svg className="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M21.543 10.457c0-4.32-4.225-7.838-9.424-7.838-5.197 0-9.423 3.518-9.423 7.838 0 3.864 3.398 7.151 8.019 7.747.314.041.761.127.87.397.098.242.063.616.03.856l-.134.808c-.042.253-.195.962.846.525s5.586-3.29 7.683-5.694c1.025-1.18 1.533-2.392 1.533-3.639M8.36 12.38H5.975v-3.774h2.384v1.01H7.07v.39h1.289v.987H7.07v.397h1.29v.99zm2.463 0H9.554V8.606h1.269v3.774zm4.185 0h-1.3l-1.572-2.14v2.14h-1.269V8.606h1.29l1.551 2.131V8.606h1.269v3.774zm3.085-2.784h-1.29V8.606h-1.269v3.774h2.559v-.99h-1.29v-.397h1.29v-.987h-1.29v-.39h1.29v-.99z" />
+              </svg>
+              <span>ล็อกอินผ่านบัญชี </span>
+              <span translate="no">LINE</span>
             </Button>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4 pt-4 border-t border-slate-100">
