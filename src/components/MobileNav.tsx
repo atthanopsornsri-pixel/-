@@ -90,6 +90,9 @@ export default function MobileNav({ role }: MobileNavProps) {
               <Link href="/dashboard/billing" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-rose-50 hover:text-rose-700 transition-all font-medium">
                 ออกบิล & ค่าน้ำไฟ
               </Link>
+              <Link href="/dashboard/owner/approvals" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-amber-50 hover:text-amber-700 transition-all font-medium">
+                ตรวจสลิปโอนเงิน
+              </Link>
               <Link href="/dashboard/maintenance" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-cyan-50 hover:text-cyan-700 transition-all font-medium">
                 ระบบแจ้งซ่อม
               </Link>
