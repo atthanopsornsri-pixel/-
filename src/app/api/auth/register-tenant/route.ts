@@ -1,11 +1,24 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email: rawEmail, password, name, inviteCode, userId, lineUserId } = body;
+    const { email: rawEmail, password, name, inviteCode, userId: bodyUserId, lineUserId: bodyLineUserId } = body;
+
+    // Security: derive userId/lineUserId from the server-side session, NOT from client body.
+    // Client may pass these for reference, but we always use the authenticated session's values.
+    const session = await getServerSession(authOptions);
+    const userId    = session?.user?.id ?? null;
+    const lineUserId = session?.user?.lineUserId ?? null;
+
+    // If the client sent a userId that doesn't match the session, reject (spoofing attempt).
+    if (bodyUserId && userId && bodyUserId !== userId) {
+      return NextResponse.json({ message: "Unauthorized: session mismatch" }, { status: 403 });
+    }
 
     if (!inviteCode || !inviteCode.trim()) {
       return NextResponse.json({ message: "กรุณากรอกช่องรหัสห้องพัก (Invite Code)" }, { status: 400 });
