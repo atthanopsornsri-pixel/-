@@ -60,11 +60,11 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account, trigger, session }) {
+    async jwt({ token, user, account, trigger }) {
       // 1. Initial Login
       if (user) {
         token.id = user.id;
-        token.role = (user as any).role || "TENANT"; // LINE users default to TENANT role context
+        token.role = user.role || "TENANT"; // LINE users default to TENANT role context
         token.roleCheckedAt = Date.now();
       }
 
@@ -104,22 +104,23 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
-      // 4. Database Sync: Check if this LINE ID is bound to a Tenant
-      if (token.lineUserId) {
+      // 4. Database Sync: Check LINE binding (rate-limited เหมือน role — ทุก 5 นาที)
+      const LINE_TTL = 5 * 60 * 1000;
+      const lineLastChecked = (token.lineCheckedAt as number) ?? 0;
+
+      if (token.lineUserId && Date.now() - lineLastChecked > LINE_TTL) {
         try {
           const tenant = await prisma.tenant.findUnique({
-            where: { lineUserId: token.lineUserId as string }
+            where: { lineUserId: token.lineUserId as string },
+            select: { id: true, roomId: true }, // select เฉพาะที่ใช้
           });
 
-          if (tenant) {
-            token.tenantId = tenant.id;
-            token.roomId = tenant.roomId || undefined;
-            token.isBound = true;
-          } else {
-            token.isBound = false;
-          }
+          token.tenantId = tenant?.id ?? undefined;
+          token.roomId = tenant?.roomId ?? undefined;
+          token.isBound = !!tenant;
+          token.lineCheckedAt = Date.now();
         } catch (error) {
-          console.error("JWT Callback Prisma Error:", error);
+          console.error("JWT LINE sync error:", error);
         }
       }
 
