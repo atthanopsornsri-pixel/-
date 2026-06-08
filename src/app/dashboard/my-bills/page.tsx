@@ -60,9 +60,9 @@ export default function MyBillsPage() {
     }
   };
 
-  // Get active PromptPay details dynamically
-  const activePromptPayNumber = selectedBill?.room?.property?.promptPayNo || "0999999999";
-  const activePromptPayName = selectedBill?.room?.property?.promptPayName || "";
+  // Get active PromptPay details — ห้าม fallback เป็นเบอร์ dummy
+  const activePromptPayNumber = selectedBill?.room?.property?.promptPayNo ?? null;
+  const activePromptPayName = selectedBill?.room?.property?.promptPayName ?? "";
 
   return (
     <div>
@@ -80,15 +80,27 @@ export default function MyBillsPage() {
             </div>
             
             <div className="bg-slate-50 p-6 rounded-xl flex flex-col items-center justify-center border border-slate-200">
-              <p className="text-sm text-slate-600 mb-4 text-center">
-                สแกน QR Code ด้านล่างเพื่อชำระเงินผ่านแอปธนาคาร<br />
-                {activePromptPayName && (
-                  <span className="font-bold text-slate-700">ชื่อบัญชี: {activePromptPayName}</span>
-                )}
-              </p>
-              <div className="bg-white p-4 rounded-xl shadow-sm inline-block">
-                <QRCodeSVG value={generatePayload(activePromptPayNumber, { amount: selectedBill.totalAmount })} size={200} />
-              </div>
+              {activePromptPayNumber ? (
+                <>
+                  <p className="text-sm text-slate-600 mb-4 text-center">
+                    สแกน QR Code ด้านล่างเพื่อชำระเงินผ่านแอปธนาคาร<br />
+                    {activePromptPayName && (
+                      <span className="font-bold text-slate-700">ชื่อบัญชี: {activePromptPayName}</span>
+                    )}
+                  </p>
+                  <div className="bg-white p-4 rounded-xl shadow-sm inline-block">
+                    <QRCodeSVG value={generatePayload(activePromptPayNumber, { amount: selectedBill.totalAmount })} size={200} />
+                  </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center gap-3 py-4">
+                  <svg className="w-12 h-12 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                  </svg>
+                  <p className="text-amber-700 font-semibold text-center">ยังไม่ได้ตั้งค่าเบอร์พร้อมเพย์</p>
+                  <p className="text-sm text-slate-500 text-center">กรุณาติดต่อเจ้าของตึกเพื่อตั้งค่าบัญชีรับชำระเงิน<br />ก่อนดำเนินการชำระ</p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">

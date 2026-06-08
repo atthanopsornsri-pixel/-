@@ -65,13 +65,31 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "บิลของเดือนนี้ถูกสร้างไปแล้ว" }, { status: 400 });
     }
 
-    const totalAmount = 
-      Number(rentAmount) + 
-      Number(waterAmount) + 
-      Number(electricAmount) + 
-      Number(commonFee || 0) + 
-      Number(parkingFee || 0) + 
-      Number(internetFee || 0) + 
+    // ── Bug B Fix: คำนวณ water/electric ใหม่บน server จาก units × rate ──
+    // ป้องกัน Client แก้ไข amount ผ่าน DevTools ก่อน submit
+    const property = room.property;
+    const safeWaterUnits = waterUnits != null ? Number(waterUnits) : null;
+    const safeElectricUnits = electricUnits != null ? Number(electricUnits) : null;
+
+    // ถ้ามี units + rate → คำนวณใหม่บน server เสมอ
+    // ถ้าไม่มี units (เหมาจ่าย) → รับค่าจาก client ตามเดิม
+    const verifiedWaterAmount =
+      safeWaterUnits != null && property.waterRate != null
+        ? Math.round(safeWaterUnits * property.waterRate * 100) / 100
+        : Number(waterAmount);
+
+    const verifiedElectricAmount =
+      safeElectricUnits != null && property.electricRate != null
+        ? Math.round(safeElectricUnits * property.electricRate * 100) / 100
+        : Number(electricAmount);
+
+    const totalAmount =
+      Number(rentAmount) +
+      verifiedWaterAmount +
+      verifiedElectricAmount +
+      Number(commonFee || 0) +
+      Number(parkingFee || 0) +
+      Number(internetFee || 0) +
       Number(otherFee || 0);
 
     // secureDb doesn't filter create by default to avoid issues, we verified room ownership above.
@@ -81,10 +99,10 @@ export async function POST(req: Request) {
         year: Number(year),
         roomId,
         rentAmount: Number(rentAmount),
-        waterAmount: Number(waterAmount),
-        waterUnits: waterUnits ? Number(waterUnits) : null,
-        electricAmount: Number(electricAmount),
-        electricUnits: electricUnits ? Number(electricUnits) : null,
+        waterAmount: verifiedWaterAmount,
+        waterUnits: safeWaterUnits,
+        electricAmount: verifiedElectricAmount,
+        electricUnits: safeElectricUnits,
         commonFee: Number(commonFee || 0),
         parkingFee: Number(parkingFee || 0),
         internetFee: Number(internetFee || 0),
