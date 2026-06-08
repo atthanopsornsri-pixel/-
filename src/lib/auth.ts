@@ -65,6 +65,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = (user as any).role || "TENANT"; // LINE users default to TENANT role context
+        token.roleCheckedAt = Date.now();
       }
 
       // Capture LINE ID from the account provider
@@ -72,13 +73,38 @@ export const authOptions: NextAuthOptions = {
         token.lineUserId = account.providerAccountId;
       }
 
-      // 2. Handle Session Update (Triggered after successful account binding)
+      // 2. Force-refresh when trigger is "update"
       if (trigger === "update") {
         // Force re-evaluation of binding status
         token.isBound = false; 
+        
+        if (token.id) {
+          const fresh = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: { role: true },
+          });
+          if (fresh) {
+            token.role = fresh.role;
+            token.roleCheckedAt = Date.now();
+          }
+        }
       }
 
-      // 3. Database Sync: Check if this LINE ID is bound to a Tenant
+      // 3. Periodic refresh every 5 minutes
+      const FIVE_MIN = 5 * 60 * 1000;
+      const lastChecked = (token.roleCheckedAt as number) ?? 0;
+      if (Date.now() - lastChecked > FIVE_MIN && token.id) {
+        const fresh = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true },
+        });
+        if (fresh) {
+          token.role = fresh.role;
+          token.roleCheckedAt = Date.now();
+        }
+      }
+
+      // 4. Database Sync: Check if this LINE ID is bound to a Tenant
       if (token.lineUserId) {
         try {
           const tenant = await prisma.tenant.findUnique({

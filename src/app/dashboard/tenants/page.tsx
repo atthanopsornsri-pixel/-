@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter, useSearchParams } from "next/navigation";
+import { getBuildingsWithTenants } from "@/app/actions/tenants";
 
 function TenantsDashboardContent() {
   const router = useRouter();
@@ -14,10 +15,8 @@ function TenantsDashboardContent() {
   const actionParam = searchParams.get("action");
   const roomIdParam = searchParams.get("roomId");
 
-  const [tenants, setTenants] = useState<any[]>([]);
+  const [buildingsData, setBuildingsData] = useState<any[]>([]);
   const [availableRooms, setAvailableRooms] = useState<any[]>([]);
-  const [properties, setProperties] = useState<any[]>([]);
-  const [rooms, setRooms] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
@@ -44,13 +43,16 @@ function TenantsDashboardContent() {
 
   const loadData = async () => {
     setIsLoading(true);
-    await Promise.all([
-      fetchTenants(),
-      fetchAvailableRooms(),
-      fetchProperties(),
-      fetchRooms()
-    ]);
-    setIsLoading(false);
+    try {
+      const data = await getBuildingsWithTenants();
+      setBuildingsData(data);
+      await fetchAvailableRooms();
+    } catch (error) {
+      console.error("โหลดข้อมูลลูกบ้านล้มเหลว:", error);
+      toast.error("ไม่สามารถโหลดข้อมูลลูกบ้านได้");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -74,35 +76,11 @@ function TenantsDashboardContent() {
     }
   }, [roomIdParam, actionParam, availableRooms]);
 
-  async function fetchTenants() {
-    const res = await fetch("/api/tenants", { cache: "no-store" });
-    if (res.ok) {
-      const data = await res.json();
-      setTenants(data);
-    }
-  }
-
   async function fetchAvailableRooms() {
     const res = await fetch("/api/rooms?status=AVAILABLE", { cache: "no-store" });
     if (res.ok) {
       const data = await res.json();
       setAvailableRooms(data);
-    }
-  }
-
-  async function fetchProperties() {
-    const res = await fetch("/api/properties", { cache: "no-store" });
-    if (res.ok) {
-      const data = await res.json();
-      setProperties(data);
-    }
-  }
-
-  async function fetchRooms() {
-    const res = await fetch("/api/rooms", { cache: "no-store" });
-    if (res.ok) {
-      const data = await res.json();
-      setRooms(data);
     }
   }
 
@@ -130,26 +108,6 @@ function TenantsDashboardContent() {
       setIsSubmitting(false);
     }
   };
-
-  // Group rooms and tenants by property (building)
-  const buildingsData = properties.map((property: any) => {
-    const propertyRooms = rooms.filter((r: any) => r.propertyId === property.id);
-    const propertyTenants = tenants.filter((t: any) => t.room?.propertyId === property.id || t.room?.property?.id === property.id);
-
-    const totalRooms = propertyRooms.length;
-    const vacantRooms = propertyRooms.filter((r: any) => r.status === "AVAILABLE").length;
-    const occupiedRooms = propertyRooms.filter((r: any) => r.status === "OCCUPIED").length;
-
-    return {
-      id: property.id,
-      name: property.name,
-      location: property.address,
-      totalRooms,
-      activeTenantsCount: propertyTenants.length,
-      vacantRoomsCount: vacantRooms,
-      tenants: propertyTenants,
-    };
-  });
 
   const activeBuilding = buildingsData.find((b: any) => b.id === selectedBuildingId);
 
@@ -204,7 +162,7 @@ function TenantsDashboardContent() {
             </Card>
           ))}
         </div>
-      ) : properties.length === 0 ? (
+      ) : buildingsData.length === 0 ? (
         <Card className="rounded-[32px] border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] p-12 text-center">
           <div className="w-16 h-16 bg-slate-50 text-slate-300 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
@@ -288,13 +246,13 @@ function TenantsDashboardContent() {
                       <tr key={tenant.id} className="hover:bg-slate-50/50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="font-mono font-bold text-slate-900 bg-slate-100 px-3 py-1 rounded-lg inline-block">
-                            ห้อง {tenant.room?.number || "-"}
+                            ห้อง {tenant.roomNumber || "-"}
                           </div>
                         </td>
-                        <td className="px-6 py-4 font-bold text-slate-800">{tenant.user.name || "-"}</td>
+                        <td className="px-6 py-4 font-bold text-slate-800">{tenant.name || "-"}</td>
                         <td className="px-6 py-4">
                           <span className="text-xs bg-blue-50 text-blue-700 border border-blue-100 px-2.5 py-1 rounded-lg font-mono">
-                            {tenant.user.username || tenant.user.email}
+                            {tenant.username}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-right">

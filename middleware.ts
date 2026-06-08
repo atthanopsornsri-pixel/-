@@ -6,60 +6,59 @@ export default withAuth(
     const role = req.nextauth.token?.role;
     const path = req.nextUrl.pathname;
 
-    // 1. Admin Routes
-    if (path.startsWith("/admin") || path.startsWith("/dashboard/admin")) {
-      if (role !== "ADMIN") {
-        return NextResponse.redirect(new URL("/dashboard", req.url));
-      }
+    // Shared: inject pathname header สำหรับ Server Components
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set("x-pathname", path);
+    const passThrough = NextResponse.next({
+      request: { headers: requestHeaders },
+    });
+
+    // ✅ Fix #2 & #5 — ADMIN bypass ผ่านได้ทุก route ไม่ต้องเช็คต่อ
+    if (role === "ADMIN") {
+      return passThrough;
+    }
+
+    // 1. Admin Routes — ต้องเป็น ADMIN เท่านั้น
+    if (
+      path.startsWith("/admin") ||
+      path.startsWith("/dashboard/admin")
+    ) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+      // ถึงบรรทัดนี้ได้ แปลว่า role ไม่ใช่ ADMIN แน่นอน (bypass ด้านบนกรองออกไปแล้ว)
     }
 
     // 2. Owner Routes
-    // Including both the requested /owner path and the actual dashboard sub-paths
     const ownerRoutes = [
-      "/owner", 
-      "/dashboard/properties", 
-      "/dashboard/rooms", 
-      "/dashboard/settings", 
-      "/dashboard/tenants", 
-      "/dashboard/billing", 
-      "/dashboard/saas-billing"
+      "/owner",
+      "/dashboard/properties",
+      "/dashboard/rooms",
+      "/dashboard/settings",
+      "/dashboard/tenants",
+      "/dashboard/billing",
+      "/dashboard/saas-billing",
+      "/dashboard/meters", // ✅ Fix #1 — เพิ่มแล้ว
     ];
-    
-    const isOwnerRoute = ownerRoutes.some(r => path.startsWith(r));
-    
-    if (isOwnerRoute) {
+
+    if (ownerRoutes.some((r) => path.startsWith(r))) {
       if (role !== "OWNER") {
-        // Redirect unauthorized users (like TENANT) to their dashboard
         return NextResponse.redirect(new URL("/dashboard", req.url));
       }
     }
 
     // 3. Tenant Routes
-    // Including both the requested /tenant path and the actual dashboard sub-paths
     const tenantRoutes = [
-      "/tenant", 
-      "/dashboard/my-contract", 
-      "/dashboard/my-bills"
+      "/tenant",
+      "/dashboard/my-contract",
+      "/dashboard/my-bills",
     ];
 
-    const isTenantRoute = tenantRoutes.some(r => path.startsWith(r));
-
-    if (isTenantRoute) {
+    if (tenantRoutes.some((r) => path.startsWith(r))) {
       if (role !== "TENANT") {
-        // Redirect unauthorized users (like OWNER) to their dashboard
         return NextResponse.redirect(new URL("/dashboard", req.url));
       }
     }
 
-    // Inject pathname into headers for Server Components to read
-    const requestHeaders = new Headers(req.headers);
-    requestHeaders.set('x-pathname', req.nextUrl.pathname);
-
-    return NextResponse.next({
-      request: {
-        headers: requestHeaders,
-      }
-    });
+    return passThrough;
   },
   {
     callbacks: {
@@ -68,12 +67,11 @@ export default withAuth(
   }
 );
 
-// Protect all routes under /admin, /owner, /tenant, and /dashboard
 export const config = {
   matcher: [
-    "/admin/:path*", 
-    "/owner/:path*", 
-    "/tenant/:path*", 
-    "/dashboard/:path*"
-  ]
+    "/admin/:path*",
+    "/owner/:path*",
+    "/tenant/:path*",
+    "/dashboard/:path*",
+  ],
 };
