@@ -1,5 +1,5 @@
 import { Providers } from "@/components/providers";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Kanit } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
@@ -16,8 +16,28 @@ const kanit = Kanit({
 });
 
 export const metadata: Metadata = {
-  title: "ระบบจัดการหอพักและอพาร์ตเม้นท์",
-  description: "Dormitory and Apartment Management System",
+  applicationName: "JadHor OS",
+  title: {
+    default: "JadHor OS — ระบบจัดการหอพักและอพาร์ตเมนต์",
+    template: "%s | JadHor OS",
+  },
+  description:
+    "ระบบจัดการหอพักครบวงจร ออกบิล จดมิเตอร์ แจ้งเตือนผ่าน LINE จัดการผู้เช่า ใช้งานง่ายบนมือถือ ไม่ต้องโหลดแอป",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "JadHor OS",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#007AFF",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
 };
 
 export default function RootLayout({

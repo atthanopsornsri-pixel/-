@@ -8,14 +8,17 @@
 // Platform Subscription Plans (ค่าบริการระบบหลัก)
 // =============================================
 
+/** ค่าที่ถือว่า "ไม่จำกัดจำนวนห้อง" */
+export const UNLIMITED_ROOMS = 999999;
+
 export const PLAN_PRICES = {
-  STARTER:    { monthly: 199,   yearly: 1990,   label: "Starter",    maxRooms: 20  },
-  GROWTH:     { monthly: 599,   yearly: 5990,   label: "Growth",     maxRooms: 50  },
-  ENTERPRISE: { monthly: 1299,  yearly: 12990,  label: "Enterprise", maxRooms: 200 },
+  STARTER:    { monthly: 199,   yearly: 1990,   label: "Starter",    maxRooms: 30             },
+  GROWTH:     { monthly: 599,   yearly: 5990,   label: "Growth",     maxRooms: 100            },
+  ENTERPRISE: { monthly: 1299,  yearly: 12990,  label: "Enterprise", maxRooms: UNLIMITED_ROOMS },
 } as const;
 
-/** จำนวนห้องสูงสุดในช่วงทดลองใช้ฟรี */
-export const FREE_TRIAL_MAX_ROOMS = 10;
+/** จำนวนห้องสูงสุดในช่วงทดลองใช้ฟรี (เท่ากับ Starter เพื่อให้ทดลองได้เต็มที่) */
+export const FREE_TRIAL_MAX_ROOMS = 30;
 
 /**
  * คืนค่าจำนวนห้องสูงสุดสำหรับแต่ละแพ็กเกจ
@@ -25,6 +28,11 @@ export function getRoomLimit(planTier: string): number {
   if (planTier === "FREE_TRIAL") return FREE_TRIAL_MAX_ROOMS;
   const plan = PLAN_PRICES[planTier as PlanTierKey];
   return plan ? plan.maxRooms : FREE_TRIAL_MAX_ROOMS;
+}
+
+/** ตรวจว่า limit นี้คือ "ไม่จำกัด" หรือไม่ (ใช้กับ UI) */
+export function isUnlimitedRooms(limit: number): boolean {
+  return limit >= UNLIMITED_ROOMS;
 }
 
 export type PlanTierKey = keyof typeof PLAN_PRICES;
