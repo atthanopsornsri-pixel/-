@@ -113,9 +113,10 @@ function TenantRegisterForm() {
       <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
         <Card className="w-full max-w-md mx-auto shadow-xl border-slate-200 rounded-3xl p-6 bg-white">
           <CardHeader className="space-y-3 text-center pb-6">
-            <div className="w-16 h-16 bg-[#00C300]/10 text-[#00C300] rounded-2xl flex items-center justify-center mx-auto mb-2">
-              <svg className="w-9 h-9" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M21.543 10.457c0-4.32-4.225-7.838-9.424-7.838-5.197 0-9.423 3.518-9.423 7.838 0 3.864 3.398 7.151 8.019 7.747.314.041.761.127.87.397.098.242.063.616.03.856l-.134.808c-.042.253-.195.962.846.525s5.586-3.29 7.683-5.694c1.025-1.18 1.533-2.392 1.533-3.639M8.36 12.38H5.975v-3.774h2.384v1.01H7.07v.39h1.289v.987H7.07v.397h1.29v.99zm2.463 0H9.554V8.606h1.269v3.774zm4.185 0h-1.3l-1.572-2.14v2.14h-1.269V8.606h1.29l1.551 2.131V8.606h1.269v3.774zm3.085-2.784h-1.29V8.606h-1.269v3.774h2.559v-.99h-1.29v-.397h1.29v-.987h-1.29v-.39h1.29v-.99z" />
+            <div className="w-16 h-16 bg-[#00C300] rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-lg shadow-[#00C300]/30">
+              {/* ไอคอน chat bubble เรียบง่าย ไม่มี path ซับซ้อนที่อ่านผิดบน mobile */}
+              <svg className="w-9 h-9 text-white" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M20 2H4C2.897 2 2 2.897 2 4v18l4-4h14c1.103 0 2-.897 2-2V4c0-1.103-.897-2-2-2zm-7 11h-2v-2h2v2zm0-4h-2V5h2v4z"/>
               </svg>
             </div>
             <CardTitle className="text-[24px] font-bold text-slate-800 tracking-tight">ลงทะเบียนสำหรับลูกบ้าน</CardTitle>
@@ -126,11 +127,12 @@ function TenantRegisterForm() {
           <CardContent className="space-y-4">
             <Button 
               className="w-full h-14 bg-[#00C300] hover:bg-[#00B000] text-white font-bold rounded-2xl text-base shadow-lg shadow-[#00C300]/25 transition-all flex items-center justify-center gap-3"
-              onClick={() => signIn("line", { callbackUrl: window.location.href })}
+              onClick={() => signIn("line", { callbackUrl: "/register/tenant" })}
               aria-label="ล็อกอินผ่านบัญชี LINE"
             >
+              {/* Chat bubble icon — อ่านออกชัดบน mobile ทุกขนาดฟอนต์ */}
               <svg className="w-6 h-6 shrink-0" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M21.543 10.457c0-4.32-4.225-7.838-9.424-7.838-5.197 0-9.423 3.518-9.423 7.838 0 3.864 3.398 7.151 8.019 7.747.314.041.761.127.87.397.098.242.063.616.03.856l-.134.808c-.042.253-.195.962.846.525s5.586-3.29 7.683-5.694c1.025-1.18 1.533-2.392 1.533-3.639M8.36 12.38H5.975v-3.774h2.384v1.01H7.07v.39h1.289v.987H7.07v.397h1.29v.99zm2.463 0H9.554V8.606h1.269v3.774zm4.185 0h-1.3l-1.572-2.14v2.14h-1.269V8.606h1.29l1.551 2.131V8.606h1.269v3.774zm3.085-2.784h-1.29V8.606h-1.269v3.774h2.559v-.99h-1.29v-.397h1.29v-.987h-1.29v-.39h1.29v-.99z" />
+                <path d="M20 2H4C2.897 2 2 2.897 2 4v18l4-4h14c1.103 0 2-.897 2-2V4c0-1.103-.897-2-2-2z"/>
               </svg>
               <span>ล็อกอินผ่านบัญชี </span>
               <span translate="no">LINE</span>
