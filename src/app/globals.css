@@ -132,6 +132,80 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/* ============================================================
+   JadHor OS — Design system tokens (Apple / iCloud–minimal refit)
+   Namespaced --jh-* so they sit alongside the shadcn theme above.
+   Reference these in app/marketing surfaces via arbitrary values,
+   e.g. bg-[var(--jh-surface)] text-[var(--jh-ink)].
+   ============================================================ */
+:root {
+  /* Neutrals (Apple gray scale) */
+  --jh-white: #ffffff;
+  --jh-gray-50: #f5f5f7;   /* signature app background */
+  --jh-gray-100: #ececf0;
+  --jh-gray-200: #d2d2d7;  /* hairline borders */
+  --jh-gray-300: #c7c7cc;
+  --jh-gray-500: #8e8e93;  /* tertiary / placeholder */
+  --jh-gray-600: #6e6e73;  /* secondary text */
+  --jh-gray-800: #2c2c2e;
+  --jh-gray-900: #1d1d1f;  /* primary ink (near-black) */
+
+  /* iOS system accent colors */
+  --jh-blue: #007aff;      /* primary action */
+  --jh-blue-dark: #0066d6; /* hover / pressed */
+  --jh-green: #34c759;
+  --jh-green-ink: #1f9d4d; /* legible green text/icon on tint */
+  --jh-indigo: #5856d6;
+  --jh-orange: #ff9500;
+  --jh-orange-ink: #c2710a;
+  --jh-red: #ff3b30;
+  --jh-purple: #af52de;
+  --jh-teal: #30b0c7;
+
+  /* Soft accent tints (card / chip backgrounds) */
+  --jh-blue-tint: #e8f2ff;
+  --jh-green-tint: #e7f8ee;
+  --jh-orange-tint: #fff2e0;
+  --jh-red-tint: #ffe9e7;
+  --jh-indigo-tint: #ecebfb;
+  --jh-purple-tint: #f6ecfc;
+  --jh-cyan-tint: #e2f6fb;
+
+  /* Brand mark (logo lockup only) */
+  --jh-brand-navy: #16264c;
+  --jh-brand-gold: #d4a548;
+
+  /* Semantic aliases */
+  --jh-surface: #f5f5f7;
+  --jh-surface-card: #ffffff;
+  --jh-surface-hover: #ececf0;
+  --jh-ink: #1d1d1f;
+  --jh-ink-secondary: #6e6e73;
+  --jh-ink-tertiary: #8e8e93;
+  --jh-border: #d2d2d7;
+  --jh-border-subtle: rgba(0, 0, 0, 0.06);
+  --jh-focus-ring: rgba(0, 122, 255, 0.35);
+
+  /* Radii (continuous-corner feel) */
+  --jh-radius-md: 14px;   /* inputs, small buttons */
+  --jh-radius-lg: 18px;   /* default cards */
+  --jh-radius-xl: 24px;
+  --jh-radius-2xl: 32px;  /* hero / stat cards */
+
+  /* Shadows (soft, neutral) */
+  --jh-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --jh-shadow-card: 0 4px 20px rgba(0, 0, 0, 0.04);
+  --jh-shadow-md: 0 8px 30px rgba(0, 0, 0, 0.08);
+  --jh-shadow-lg: 0 18px 50px rgba(0, 0, 0, 0.12);
+
+  /* Glass / blur (iCloud toolbar feel) */
+  --jh-glass-bg: rgba(245, 245, 247, 0.8);
+
+  /* Motion */
+  --jh-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --jh-ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -69,20 +69,20 @@ export default async function DashboardLayout({
   // Check for unpaid SaaS bills (Deferred to AsyncNotificationBell)
 
   return (
-    <div className="min-h-screen bg-[#F5F5F7] flex font-sans text-[#1D1D1F]">
-      {/* Sidebar - Light Pastel Design */}
-      <aside className="w-72 bg-[#F5F5F7] text-[#1D1D1F] hidden md:flex flex-col border-r border-slate-200/40 relative z-20">
-        <div className="p-8 pb-4">
-          <Link href="/" className="flex items-center gap-3 mb-2 group cursor-pointer hover:opacity-80 transition-opacity">
-            <div className="relative h-12 w-12 flex-shrink-0 group-hover:scale-105 transition-transform bg-white rounded-xl shadow-sm border border-slate-100 p-1">
+    <div className="min-h-screen flex font-sans bg-[var(--jh-surface)] text-[var(--jh-ink)]">
+      {/* Sidebar */}
+      <aside className="w-[280px] flex-shrink-0 bg-[var(--jh-surface)] hidden md:flex flex-col border-r border-black/[0.06] relative z-20">
+        <div className="px-6 pt-7 pb-3">
+          <Link href="/" className="flex items-center gap-3 mb-3 group cursor-pointer hover:opacity-80 transition-opacity">
+            <div className="relative h-12 w-12 flex-shrink-0 group-hover:scale-105 transition-transform bg-white rounded-[var(--jh-radius-md)] shadow-[var(--jh-shadow-sm)] border border-black/[0.06] p-1.5">
               <Image src="/images/logo.png" alt="JadHor OS Logo" fill className="object-contain" priority />
             </div>
             <div className="flex flex-col">
-              <span className="text-xl font-extrabold text-slate-800 tracking-tight leading-none">JadHor OS</span>
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Property Manager</span>
+              <span className="text-[19px] font-bold text-[var(--jh-ink)] tracking-[-0.02em] leading-none">JadHor OS</span>
+              <span className="text-[10px] font-semibold text-[var(--jh-ink-tertiary)] uppercase tracking-[0.1em] mt-1">Property Manager</span>
             </div>
           </Link>
-          <div className="inline-block mt-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs font-medium text-slate-500">
+          <div className="inline-block px-3 py-1 rounded-full bg-white border border-[var(--jh-border)] text-xs font-medium text-[var(--jh-ink-secondary)]">
             Role: {session.user.role}
           </div>
         </div>
@@ -90,35 +90,33 @@ export default async function DashboardLayout({
         <SidebarNav role={session.user.role || "TENANT"} />
       </aside>
 
-      {/* Main Content Area */}
+      {/* Main content area */}
       <div className="flex-1 flex flex-col relative min-h-screen max-w-[100vw]">
-        
-        {/* Top Header - White minimal */}
-        <header className="h-20 bg-[#F5F5F7]/80 backdrop-blur-xl border-b border-slate-200/40 flex items-center justify-between px-4 md:px-8 sticky top-0 z-50 w-full max-w-[100vw]">
+
+        {/* Glass header — iCloud toolbar feel */}
+        <header className="h-[72px] bg-[var(--jh-glass-bg)] backdrop-blur-xl backdrop-saturate-150 border-b border-black/[0.06] flex items-center justify-between px-4 md:px-8 sticky top-0 z-50 w-full max-w-[100vw]">
           <div className="flex items-center gap-3 md:gap-4 truncate">
             <MobileNav role={session.user.role || "TENANT"} />
-            
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-slate-100 rounded-full flex items-center justify-center border border-slate-200 text-slate-500 font-bold shrink-0">
+
+            <div className="w-9 h-9 md:w-10 md:h-10 bg-[var(--jh-surface)] rounded-full flex items-center justify-center border border-[var(--jh-border)] text-[var(--jh-ink-secondary)] font-semibold shrink-0">
               {session.user.name?.charAt(0) || session.user.email?.charAt(0) || "U"}
             </div>
             <div className="truncate">
-              <div className="font-bold text-slate-700 text-sm md:text-base leading-tight truncate">
+              <div className="font-semibold text-[var(--jh-ink)] text-sm md:text-[15px] leading-tight truncate">
                 {session.user.name || "ผู้ใช้งานระบบ"}
               </div>
-              <div className="text-[10px] md:text-xs text-slate-500 truncate">
+              <div className="text-[10px] md:text-xs text-[var(--jh-ink-tertiary)] truncate">
                 {session.user.email}
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-1 md:gap-2 shrink-0">
-            {/* Notification Bell */}
             {session.user.role === "OWNER" && (
-              <Suspense fallback={<div className="w-9 h-9 animate-pulse bg-slate-200 rounded-full mr-2"></div>}>
+              <Suspense fallback={<div className="w-9 h-9 animate-pulse bg-[var(--jh-surface-hover)] rounded-full mr-2" />}>
                 <AsyncNotificationBell userId={session.user.id} role={session.user.role} />
               </Suspense>
             )}
-
             <SignOutButton />
           </div>
         </header>

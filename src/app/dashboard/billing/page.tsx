@@ -5,7 +5,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function BillingPage() {
   const [bills, setBills] = useState<any[]>([]);
@@ -227,28 +226,27 @@ export default function BillingPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">จัดการบิลค่าเช่า & ค่าน้ำไฟ</h1>
+      <h1 className="text-3xl font-semibold tracking-[-0.02em] text-[var(--jh-ink)] mb-2">ออกบิล & ค่าน้ำไฟ</h1>
+      <p className="text-[15px] text-[var(--jh-ink-secondary)] mb-8">จดเลขมิเตอร์ ระบบคำนวณยอดและสร้างใบแจ้งหนี้ให้อัตโนมัติ</p>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         {/* Create Bill Form */}
         <div className="xl:col-span-1">
-          <Card>
-            <CardHeader>
-              <CardTitle>สร้างบิลใหม่</CardTitle>
-            </CardHeader>
-            <CardContent>
+          <div className="rounded-[var(--jh-radius-2xl)] border border-black/[0.06] bg-white shadow-[var(--jh-shadow-card)] p-8">
+            <h2 className="text-lg font-semibold text-[var(--jh-ink)] mb-6">สร้างบิลใหม่</h2>
+            <div>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>อพาร์ตเม้นท์</Label>
-                    <select className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm" value={propertyId} onChange={handlePropertyChange} required>
+                    <select className="flex h-11 w-full rounded-[var(--jh-radius-md)] border border-[var(--jh-border)] bg-white px-3.5 py-2 text-sm focus:border-[var(--jh-blue)] focus:ring-4 focus:ring-[var(--jh-focus-ring)] outline-none transition-shadow" value={propertyId} onChange={handlePropertyChange} required>
                       <option value="" disabled>เลือกอพาร์ตเม้นท์</option>
                       {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                   </div>
                   <div className="space-y-2">
                     <Label>ห้องพัก</Label>
-                    <select className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm" value={roomId} onChange={handleRoomChange} required disabled={!propertyId}>
+                    <select className="flex h-11 w-full rounded-[var(--jh-radius-md)] border border-[var(--jh-border)] bg-white px-3.5 py-2 text-sm focus:border-[var(--jh-blue)] focus:ring-4 focus:ring-[var(--jh-focus-ring)] outline-none transition-shadow disabled:opacity-50" value={roomId} onChange={handleRoomChange} required disabled={!propertyId}>
                       <option value="" disabled>เลือกห้อง</option>
                       {rooms.map(r => <option key={r.id} value={r.id}>{r.number} {r.status === "OCCUPIED" ? "(มีผู้เช่า)" : ""}</option>)}
                     </select>
@@ -258,189 +256,192 @@ export default function BillingPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>ประจำเดือน</Label>
-                    <select className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm" value={month} onChange={e => setMonth(Number(e.target.value))}>
+                    <select className="flex h-11 w-full rounded-[var(--jh-radius-md)] border border-[var(--jh-border)] bg-white px-3.5 py-2 text-sm focus:border-[var(--jh-blue)] focus:ring-4 focus:ring-[var(--jh-focus-ring)] outline-none transition-shadow" value={month} onChange={e => setMonth(Number(e.target.value))}>
                       {[...Array(12)].map((_, i) => <option key={i} value={i+1}>{i+1}</option>)}
                     </select>
                   </div>
                   <div className="space-y-2">
                     <Label>ปี</Label>
-                    <Input type="number" value={year} onChange={e => setYear(Number(e.target.value))} required />
+                    <Input type="number" value={year} onChange={e => setYear(Number(e.target.value))} required className="h-11 rounded-[var(--jh-radius-md)]" />
                   </div>
                 </div>
 
                 <div className="space-y-2">
                   <Label>กำหนดชำระ</Label>
-                  <Input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} required />
+                  <Input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} required className="h-11 rounded-[var(--jh-radius-md)]" />
                 </div>
 
-                <div className="bg-slate-50 p-4 rounded-lg space-y-4 border border-slate-200">
+                <div className="bg-[var(--jh-surface)] p-4 rounded-[var(--jh-radius-lg)] space-y-4 border border-black/[0.06]">
                   <div className="space-y-2">
                     <Label>ค่าเช่าห้อง (บาท)</Label>
-                    <Input type="number" value={rentAmount} onChange={e => setRentAmount(e.target.value)} required />
+                    <Input type="number" value={rentAmount} onChange={e => setRentAmount(e.target.value)} required className="h-11 rounded-[var(--jh-radius-md)]" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>ค่าน้ำ (หน่วย)</Label>
-                      <Input type="number" step="0.1" value={waterUnits} onChange={e => handleWaterUnitsChange(e.target.value)} />
+                      <Label className="flex items-center gap-1.5">
+                        <span className="inline-block h-2 w-2 rounded-full bg-[var(--jh-blue)]" />
+                        ค่าน้ำ (หน่วย)
+                      </Label>
+                      <Input type="number" step="0.1" value={waterUnits} onChange={e => handleWaterUnitsChange(e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
                     </div>
                     <div className="space-y-2">
                       <Label>รวมค่าน้ำ (บาท)</Label>
-                      <Input type="number" value={waterAmount} onChange={e => setWaterAmount(e.target.value)} required />
+                      <Input type="number" value={waterAmount} onChange={e => setWaterAmount(e.target.value)} required className="h-11 rounded-[var(--jh-radius-md)]" />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>ค่าไฟ (หน่วย)</Label>
-                      <Input type="number" step="0.1" value={electricUnits} onChange={e => handleElectricUnitsChange(e.target.value)} />
+                      <Label className="flex items-center gap-1.5">
+                        <span className="inline-block h-2 w-2 rounded-full bg-[var(--jh-orange)]" />
+                        ค่าไฟ (หน่วย)
+                      </Label>
+                      <Input type="number" step="0.1" value={electricUnits} onChange={e => handleElectricUnitsChange(e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
                     </div>
                     <div className="space-y-2">
                       <Label>รวมค่าไฟ (บาท)</Label>
-                      <Input type="number" value={electricAmount} onChange={e => setElectricAmount(e.target.value)} required />
+                      <Input type="number" value={electricAmount} onChange={e => setElectricAmount(e.target.value)} required className="h-11 rounded-[var(--jh-radius-md)]" />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-slate-50 p-4 rounded-lg space-y-4 border border-slate-200">
-                  <p className="font-semibold text-sm text-slate-700">ค่าบริการอื่นๆ (ถ้ามี)</p>
+                <div className="bg-[var(--jh-surface)] p-4 rounded-[var(--jh-radius-lg)] space-y-4 border border-black/[0.06]">
+                  <p className="font-semibold text-sm text-[var(--jh-ink-secondary)]">ค่าบริการอื่นๆ (ถ้ามี)</p>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>ค่าส่วนกลาง</Label>
-                      <Input type="number" value={commonFee} onChange={e => setCommonFee(e.target.value)} />
+                      <Input type="number" value={commonFee} onChange={e => setCommonFee(e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
                     </div>
                     <div className="space-y-2">
                       <Label>ค่าที่จอดรถ</Label>
-                      <Input type="number" value={parkingFee} onChange={e => setParkingFee(e.target.value)} />
+                      <Input type="number" value={parkingFee} onChange={e => setParkingFee(e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
                     </div>
                     <div className="space-y-2">
                       <Label>ค่าอินเทอร์เน็ต</Label>
-                      <Input type="number" value={internetFee} onChange={e => setInternetFee(e.target.value)} />
+                      <Input type="number" value={internetFee} onChange={e => setInternetFee(e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
                     </div>
                     <div className="space-y-2">
                       <Label>อื่นๆ (ค่าปรับ ฯลฯ)</Label>
-                      <Input type="number" value={otherFee} onChange={e => setOtherFee(e.target.value)} />
+                      <Input type="number" value={otherFee} onChange={e => setOtherFee(e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 flex justify-between items-center">
-                  <span className="font-bold text-slate-700">ยอดรวมทั้งสิ้น</span>
-                  <span className="text-2xl font-black text-blue-700">฿ {calculateTotal().toLocaleString()}</span>
+                <div className="flex items-center justify-between rounded-[var(--jh-radius-md)] bg-[var(--jh-surface)] px-5 py-4 border border-black/[0.06]">
+                  <span className="text-sm font-medium text-[var(--jh-ink-secondary)]">ยอดรวมที่จะเรียกเก็บ</span>
+                  <span className="text-[26px] font-semibold tracking-[-0.02em] tabular-nums text-[var(--jh-ink)]">฿{calculateTotal().toLocaleString()}</span>
                 </div>
 
-                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isLoading}>
+                <Button type="submit" className="w-full h-11 rounded-full bg-[var(--jh-blue)] hover:bg-[var(--jh-blue-dark)] text-white font-semibold shadow-[var(--jh-shadow-sm)] transition-all active:scale-[0.99]" disabled={isLoading}>
                   {isLoading ? "กำลังบันทึก..." : "ออกใบแจ้งหนี้"}
                 </Button>
               </form>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Bills List */}
         <div className="xl:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>รายการบิลทั้งหมด</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
-                  <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b">
-                    <tr>
-                      <th className="px-4 py-3">ห้อง</th>
-                      <th className="px-4 py-3">รอบบิล</th>
-                      <th className="px-4 py-3">ยอดรวม (บาท)</th>
-                      <th className="px-4 py-3">สถานะ</th>
-                      <th className="px-4 py-3 text-right">จัดการ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {isBillsLoading ? (
-                      Array.from({ length: 5 }).map((_, i) => (
-                        <tr key={i} className="border-b animate-pulse">
-                          <td className="px-4 py-3">
-                            <div className="h-5 bg-slate-100 rounded w-16 mb-1"></div>
-                            <div className="h-3 bg-slate-100 rounded w-24"></div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="h-5 bg-slate-100 rounded w-12"></div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="h-5 bg-slate-100 rounded w-20"></div>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="h-6 bg-slate-100 rounded w-16"></div>
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <div className="h-8 bg-slate-100 rounded w-16 ml-auto"></div>
-                          </td>
-                        </tr>
-                      ))
-                    ) : bills.map(bill => (
-                      <tr key={bill.id} className="border-b hover:bg-slate-50">
-                        <td className="px-4 py-3 font-medium">
-                          {bill.room.number}
-                          <div className="text-xs text-slate-400">{bill.room.property.name}</div>
+          <div className="rounded-[var(--jh-radius-2xl)] border border-black/[0.06] bg-white shadow-[var(--jh-shadow-card)] overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-black/[0.06]">
+              <h2 className="text-lg font-semibold text-[var(--jh-ink)]">รายการบิลทั้งหมด</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead>
+                  <tr className="border-b border-black/[0.06]">
+                    <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--jh-ink-tertiary)]">ห้อง</th>
+                    <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--jh-ink-tertiary)]">รอบบิล</th>
+                    <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--jh-ink-tertiary)]">ยอดรวม</th>
+                    <th className="px-5 py-3 text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--jh-ink-tertiary)]">สถานะ</th>
+                    <th className="px-5 py-3 text-right text-[11px] font-semibold uppercase tracking-[0.06em] text-[var(--jh-ink-tertiary)]">จัดการ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {isBillsLoading ? (
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <tr key={i} className="border-b border-black/[0.04] animate-pulse">
+                        <td className="px-5 py-3.5">
+                          <div className="h-4 bg-[var(--jh-surface)] rounded w-16 mb-1" />
+                          <div className="h-3 bg-[var(--jh-surface)] rounded w-24" />
                         </td>
-                        <td className="px-4 py-3">{bill.month}/{bill.year}</td>
-                        <td className="px-4 py-3 font-bold text-blue-600">฿{bill.totalAmount.toLocaleString()}</td>
-                        <td className="px-4 py-3">
-                          <span className={`px-2 py-1 rounded text-xs font-semibold ${
-                            bill.status === "PAID" ? "bg-green-100 text-green-700" :
-                            bill.status === "PENDING" ? "bg-orange-100 text-orange-700 animate-pulse" :
-                            bill.status === "UNPAID" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"
-                          }`}>
-                            {bill.status === "PENDING" ? "รอตรวจสอบ" : bill.status}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right space-x-2">
+                        <td className="px-5 py-3.5"><div className="h-4 bg-[var(--jh-surface)] rounded w-12" /></td>
+                        <td className="px-5 py-3.5"><div className="h-4 bg-[var(--jh-surface)] rounded w-20" /></td>
+                        <td className="px-5 py-3.5"><div className="h-6 bg-[var(--jh-surface)] rounded-full w-16" /></td>
+                        <td className="px-5 py-3.5 text-right"><div className="h-8 bg-[var(--jh-surface)] rounded-full w-16 ml-auto" /></td>
+                      </tr>
+                    ))
+                  ) : bills.map(bill => (
+                    <tr key={bill.id} className="border-b border-black/[0.04] hover:bg-[var(--jh-surface)] transition-colors">
+                      <td className="px-5 py-3.5 font-semibold text-[var(--jh-ink)]">
+                        {bill.room.number}
+                        <div className="text-xs font-normal text-[var(--jh-ink-tertiary)]">{bill.room.property.name}</div>
+                      </td>
+                      <td className="px-5 py-3.5 text-[var(--jh-ink-secondary)]">{bill.month}/{bill.year}</td>
+                      <td className="px-5 py-3.5 font-semibold tabular-nums text-[var(--jh-ink)]">฿{bill.totalAmount.toLocaleString()}</td>
+                      <td className="px-5 py-3.5">
+                        <span className={`inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full text-xs font-semibold ${
+                          bill.status === "PAID"
+                            ? "bg-[var(--jh-green-tint)] text-[var(--jh-green-ink)]"
+                            : bill.status === "PENDING"
+                            ? "bg-[var(--jh-orange-tint)] text-[var(--jh-orange-ink)]"
+                            : bill.status === "UNPAID"
+                            ? "bg-[var(--jh-red-tint)] text-[var(--jh-red)]"
+                            : "bg-[var(--jh-surface)] text-[var(--jh-ink-secondary)]"
+                        }`}>
+                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                          {bill.status === "PAID" ? "ชำระแล้ว" : bill.status === "PENDING" ? "รอตรวจสอบ" : bill.status === "UNPAID" ? "ยังไม่ชำระ" : bill.status}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-2 flex-wrap">
                           {bill.status === "PENDING" && (
-                            <Button variant="default" size="sm" className="bg-orange-500 hover:bg-orange-600 text-white" onClick={() => setSelectedSlip(bill)}>
+                            <Button variant="default" size="sm" className="rounded-full bg-[var(--jh-orange)] hover:bg-[var(--jh-orange-ink)] text-white text-xs h-8 px-3" onClick={() => setSelectedSlip(bill)}>
                               ตรวจสอบสลิป
                             </Button>
                           )}
-                          <Button variant="outline" size="sm" onClick={() => window.open(`/dashboard/billing/${bill.id}/print`, '_blank')}>
-                            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                          <Button variant="outline" size="sm" className="rounded-full border-[var(--jh-border)] text-[var(--jh-ink-secondary)] text-xs h-8 px-3 hover:bg-[var(--jh-surface)]" onClick={() => window.open(`/dashboard/billing/${bill.id}/print`, '_blank')}>
+                            <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                             พิมพ์
                           </Button>
                           {bill.room?.tenants?.[0]?.lineUserId ? (
-                            <Button 
-                              variant="default" 
-                              size="sm" 
-                              className="bg-emerald-600 hover:bg-emerald-500 text-white gap-1 transition-colors rounded-xl"
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="rounded-full bg-[var(--jh-green-ink)] hover:opacity-90 text-white text-xs h-8 px-3"
                               onClick={() => handleSendLineNotify(bill.id)}
                               disabled={isSendingLineMap[bill.id]}
                             >
-                              {isSendingLineMap[bill.id] ? "กำลังส่ง..." : "💬 ส่ง LINE"}
+                              {isSendingLineMap[bill.id] ? "กำลังส่ง..." : "ส่ง LINE"}
                             </Button>
                           ) : (
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              className="border-blue-200 text-blue-600 hover:bg-blue-50 gap-1 transition-colors rounded-xl"
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="rounded-full border-[var(--jh-border)] text-[var(--jh-blue)] hover:bg-[var(--jh-blue-tint)] text-xs h-8 px-3"
                               onClick={() => {
                                 const payLink = `${window.location.origin}/pay/${bill.id}`;
                                 navigator.clipboard.writeText(payLink);
-                                toast.success("คัดลอกลิงก์สำหรับชำระเงินเรียบร้อยแล้ว! 📋 (คุณสามารถนำไปวางส่งให้ลูกบ้านในช่องทางอื่นได้ทันที)");
+                                toast.success("คัดลอกลิงก์สำหรับชำระเงินเรียบร้อยแล้ว! (คุณสามารถนำไปวางส่งให้ลูกบ้านในช่องทางอื่นได้ทันที)");
                               }}
                             >
-                              📋 คัดลอกลิงก์บิล
+                              คัดลอกลิงก์บิล
                             </Button>
                           )}
-                        </td>
-                      </tr>
-                    ))}
-                    {!isBillsLoading && bills.length === 0 && (
-                      <tr>
-                        <td colSpan={5} className="px-4 py-8 text-center text-slate-500">
-                          ยังไม่มีข้อมูลบิลในระบบ
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {!isBillsLoading && bills.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="px-5 py-10 text-center text-[var(--jh-ink-tertiary)]">
+                        ยังไม่มีข้อมูลบิลในระบบ
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
 
