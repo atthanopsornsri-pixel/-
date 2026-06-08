@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getRoomLimit } from "@/lib/pricing";
 
 export async function GET(req: Request) {
   try {
@@ -27,14 +28,7 @@ export async function GET(req: Request) {
 
     const totalRooms = user.properties.reduce((acc, p) => acc + p._count.rooms, 0);
 
-    let roomLimit = 0;
-    if (user.planTier === "FREE_TRIAL" || user.planTier === "STARTER") {
-      roomLimit = 30;
-    } else if (user.planTier === "GROWTH") {
-      roomLimit = 100;
-    } else if (user.planTier === "ENTERPRISE") {
-      roomLimit = 999999;
-    }
+    const roomLimit = getRoomLimit(user.planTier);
 
     return NextResponse.json({
       planTier: user.planTier,

@@ -79,7 +79,7 @@ export async function GET(req: Request) {
       if (!tenant?.roomId) return NextResponse.json([]);
 
       requests = await prisma.maintenanceRequest.findMany({
-        where: { roomId: tenant.roomId },
+        where: { roomId: tenant.roomId, isDeleted: false },
         orderBy: { createdAt: "desc" },
       });
     } else if (session.user.role === "OWNER") {
@@ -87,6 +87,7 @@ export async function GET(req: Request) {
       const propertyId = searchParams.get("propertyId");
 
       let whereClause: any = {
+        isDeleted: false,
         room: { property: { ownerId: session.user.id } },
       };
       if (propertyId) {

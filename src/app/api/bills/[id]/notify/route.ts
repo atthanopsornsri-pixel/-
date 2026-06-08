@@ -33,6 +33,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     if (!bill) return NextResponse.json({ message: "ไม่พบข้อมูลบิล" }, { status: 404 });
 
+    // ตรวจสิทธิ์: เจ้าของหอพักต้องเป็นเจ้าของห้องที่สร้างบิลนี้
+    if (bill.room.property.ownerId !== session.user.id) {
+      return NextResponse.json({ message: "Unauthorized: bill does not belong to your property" }, { status: 403 });
+    }
+
     const tenant = bill.room.tenants[0];
     const ownerUser = bill.room.property.owner;
 

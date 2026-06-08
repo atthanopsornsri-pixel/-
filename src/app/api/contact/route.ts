@@ -1,22 +1,49 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { sendLineOAMessage } from "@/lib/line";
 
 export async function POST(req: Request) {
   try {
     const formData = await req.formData();
-    // In a real app, you would save this to the DB or send an email.
-    // For now, we just redirect back to the home page with a success message.
-    
-    // Read data just to show we can
-    const name = formData.get("name");
-    const phone = formData.get("phone");
-    const email = formData.get("email");
-    const message = formData.get("message");
-    
-    console.log(`New Contact Inquiry: ${name} (${phone}, ${email}) - ${message}`);
 
-    // Redirect back to home page with a hash or query param (simulated success)
+    const name    = (formData.get("name")    as string | null)?.trim() || "";
+    const phone   = (formData.get("phone")   as string | null)?.trim() || "";
+    const email   = (formData.get("email")   as string | null)?.trim() || "";
+    const message = (formData.get("message") as string | null)?.trim() || "";
+
+    if (!name || !phone || !message) {
+      return NextResponse.redirect(new URL("/?contact=error#contact", req.url), { status: 303 });
+    }
+
+    // Forward to admin via LINE OA (if any ADMIN has LINE OA set up)
+    try {
+      const admin = await prisma.user.findFirst({
+        where: {
+          role: "ADMIN",
+          lineChannelAccessToken: { not: null },
+          lineUserId: { not: null },
+        },
+        select: { lineChannelAccessToken: true, lineUserId: true },
+      });
+
+      if (admin?.lineChannelAccessToken && admin.lineUserId) {
+        await sendLineOAMessage(
+          admin.lineUserId,
+          `📩 มีข้อความติดต่อจากเว็บไซต์ JadHor OS!\nชื่อ: ${name}\nเบอร์: ${phone}\nอีเมล: ${email || "-"}\nข้อความ: ${message}`,
+          admin.lineChannelAccessToken
+        );
+      } else {
+        // Fallback: log for now (can hook up email/Resend later)
+        console.info(`[Contact Form] ${name} | ${phone} | ${email} | ${message}`);
+      }
+    } catch (notifyErr) {
+      // Non-fatal — don't fail the user's request because of a notification error
+      console.error("[Contact Form] Notification error:", notifyErr);
+    }
+
     return NextResponse.redirect(new URL("/?contact=success#contact", req.url), { status: 303 });
   } catch (error) {
+    console.error("[Contact Form] Unexpected error:", error);
     return NextResponse.redirect(new URL("/?contact=error#contact", req.url), { status: 303 });
   }
 }

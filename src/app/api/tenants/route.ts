@@ -12,9 +12,12 @@ export async function GET(req: Request) {
 
     const tenants = await prisma.tenant.findMany({
       where: {
+        isDeleted: false,
         room: {
+          isDeleted: false,
           property: {
             ownerId: session.user.id,
+            isDeleted: false,
           },
         },
       },

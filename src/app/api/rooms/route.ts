@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getRoomLimit } from "@/lib/pricing";
 
 export const dynamic = "force-dynamic";
 
@@ -45,14 +46,7 @@ export async function POST(req: Request) {
 
     const totalRooms = user.properties.reduce((acc: number, p: any) => acc + p._count.rooms, 0);
 
-    let roomLimit = 0;
-    if (user.planTier === "FREE_TRIAL" || user.planTier === "STARTER") {
-      roomLimit = 30;
-    } else if (user.planTier === "GROWTH") {
-      roomLimit = 100;
-    } else if (user.planTier === "ENTERPRISE") {
-      roomLimit = 999999;
-    }
+    const roomLimit = getRoomLimit(user.planTier);
 
     if (totalRooms >= roomLimit) {
       return NextResponse.json({ 
@@ -96,6 +90,7 @@ export async function GET(req: Request) {
     const status = searchParams.get("status");
 
     let whereClause: any = {
+      isDeleted: false,
       property: { ownerId: session.user.id },
     };
 

@@ -81,12 +81,13 @@ export async function GET(req: Request) {
       if (!tenant?.roomId) return NextResponse.json([]);
 
       parcels = await prisma.parcel.findMany({
-        where: { roomId: tenant.roomId },
+        where: { roomId: tenant.roomId, isDeleted: false },
         orderBy: { receivedAt: "desc" },
       });
     } else if (session.user.role === "OWNER") {
       parcels = await prisma.parcel.findMany({
         where: {
+          isDeleted: false,
           room: { property: { ownerId: session.user.id } }
         },
         include: {

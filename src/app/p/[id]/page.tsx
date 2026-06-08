@@ -6,8 +6,8 @@ import { Label } from "@/components/ui/label";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
-  const property = await prisma.property.findUnique({
-    where: { id: resolvedParams.id },
+  const property = await prisma.property.findFirst({
+    where: { id: resolvedParams.id, isDeleted: false },
   });
   
   if (!property) return { title: "ไม่พบข้อมูลหอพัก" };
@@ -22,12 +22,12 @@ export default async function PropertyPublicPage({ params }: { params: Promise<{
   const resolvedParams = await params;
   const propertyId = resolvedParams.id;
 
-  const property = await prisma.property.findUnique({
-    where: { id: propertyId },
+  const property = await prisma.property.findFirst({
+    where: { id: propertyId, isDeleted: false },
     include: {
       owner: { select: { name: true, email: true } },
       rooms: {
-        where: { status: "AVAILABLE" },
+        where: { status: "AVAILABLE", isDeleted: false },
         orderBy: { rentPrice: "asc" },
       }
     }
