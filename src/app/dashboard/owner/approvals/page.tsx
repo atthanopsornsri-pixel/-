@@ -5,6 +5,17 @@ import { getSecurePrisma } from "@/lib/prisma-secure";
 import { ApprovalCards, ApprovalBill } from "@/components/ApprovalCards";
 import { createClient } from "@supabase/supabase-js";
 
+/**
+ * ตรวจสอบว่า slipUrl เป็น URL ที่ใช้ตรง ๆ ได้เลย (base64 / http)
+ * หรือต้องส่งต่อให้ Supabase สร้าง Signed URL ก่อน (Supabase Storage path)
+ */
+function resolveSlipUrl(raw: string): "inline" | "storage" {
+  if (raw.startsWith("data:") || raw.startsWith("http://") || raw.startsWith("https://")) {
+    return "inline";
+  }
+  return "storage";
+}
+
 export default async function ApprovalsDashboardPage() {
   const session = await getServerSession(authOptions);
   
@@ -38,18 +49,23 @@ export default async function ApprovalsDashboardPage() {
       let signedSlipUrl = "";
 
       if (bill.slipUrl) {
-        // Assume slipUrl in DB might be the full path e.g. "documents/slips/xxx.jpg"
-        // We need to parse out bucket and path if they are combined.
-        // For Phase 3, we used "documents" as default bucket.
-        const bucket = "documents"; 
-        // In case slipUrl has full path like https://..., we only need the relative path.
-        // Assuming slipUrl stored in DB is the relative path "slips/xxx.jpg"
-        const { data } = await supabase.storage
-          .from(bucket)
-          .createSignedUrl(bill.slipUrl, 60); // 60 seconds validity for maximum security
-        
-        if (data?.signedUrl) {
-          signedSlipUrl = data.signedUrl;
+        const urlType = resolveSlipUrl(bill.slipUrl);
+
+        if (urlType === "inline") {
+          // base64 Data URL หรือ HTTPS URL ใช้ตรง ๆ ได้เลย
+          signedSlipUrl = bill.slipUrl;
+        } else {
+          // Supabase Storage path → ต้องสร้าง Signed URL ก่อน
+          try {
+            const { data } = await supabase.storage
+              .from("documents")
+              .createSignedUrl(bill.slipUrl, 300); // 5 minutes validity
+            if (data?.signedUrl) {
+              signedSlipUrl = data.signedUrl;
+            }
+          } catch {
+            // ไม่แสดง error — ปล่อยให้ signedSlipUrl เป็น "" แล้ว UI จะแสดง placeholder
+          }
         }
       }
 
