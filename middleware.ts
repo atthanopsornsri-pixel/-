@@ -62,7 +62,24 @@ export default withAuth(
   },
   {
     callbacks: {
-      authorized: ({ token }) => !!token,
+      authorized: ({ token, req }) => {
+        const path = req.nextUrl.pathname;
+        // Public routes — ผ่านได้เสมอ ไม่ต้องมี token
+        if (
+          path.startsWith("/register") ||
+          path.startsWith("/login") ||
+          path.startsWith("/api/auth") ||
+          path.startsWith("/pay") ||
+          path.startsWith("/p/") ||
+          path === "/pricing" ||
+          path === "/privacy" ||
+          path === "/terms"
+        ) {
+          return true;
+        }
+        // Protected routes — ต้องมี token
+        return !!token;
+      },
     },
   }
 );
@@ -73,5 +90,6 @@ export const config = {
     "/owner/:path*",
     "/tenant/:path*",
     "/dashboard/:path*",
+    "/register/:path*", // เพิ่มเพื่อให้ authorized callback รู้จัก path นี้
   ],
 };
