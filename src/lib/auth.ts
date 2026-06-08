@@ -4,9 +4,29 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 import LineProvider from "next-auth/providers/line";
+import type { Adapter, AdapterUser } from "next-auth/adapters";
+
+/**
+ * Custom adapter ที่ override createUser เพื่อรองรับ LINE OAuth
+ * ซึ่งไม่ส่ง email มาด้วยเสมอไป แต่ DB ต้องการ email (unique, required)
+ * → สร้าง placeholder email อัตโนมัติเมื่อ LINE ไม่ส่งมา
+ */
+function createCustomAdapter(): Adapter {
+  const base = PrismaAdapter(prisma);
+  return {
+    ...base,
+    async createUser(user: Omit<AdapterUser, "id">) {
+      // LINE ไม่ส่ง email บางครั้ง — generate placeholder ที่ unique
+      const email =
+        user.email ??
+        `line-${Date.now()}-${Math.random().toString(36).slice(2, 9)}@line.placeholder.jadhor.app`;
+      return base.createUser!({ ...user, email });
+    },
+  };
+}
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: createCustomAdapter() as any,
   session: {
     strategy: "jwt",
   },
