@@ -15,36 +15,50 @@ export async function bindTenantAccount(phoneNumber: string, lineUserId: string)
 
     // If NOT found: Return a generic error (Do not leak data)
     if (!tenant) {
-      return { 
-        success: false, 
-        error: "ไม่พบเบอร์โทรศัพท์นี้ในระบบ กรุณาติดต่อเจ้าของหอพักเพื่อลงทะเบียน" 
+      return {
+        success: false,
+        error: "ไม่พบเบอร์โทรศัพท์นี้ในระบบ กรุณาติดต่อเจ้าของหอพักเพื่อลงทะเบียน"
       };
     }
 
     // 2. Check if this tenant is already bound to another LINE ID
     if (tenant.lineUserId && tenant.lineUserId !== lineUserId) {
-      return { 
-        success: false, 
-        error: "เบอร์โทรศัพท์นี้ถูกผูกกับบัญชี LINE อื่นไปแล้ว กรุณาติดต่อแอดมิน" 
+      return {
+        success: false,
+        error: "เบอร์โทรศัพท์นี้ถูกผูกกับบัญชี LINE อื่นไปแล้ว กรุณาติดต่อแอดมิน"
       };
     }
 
-    // 3. If FOUND: Update the Tenant record with lineUserId
-    await prisma.$transaction([
+    // 3. Look up the NextAuth User record that owns this LINE providerAccountId.
+    //    lineUserId is LINE's providerAccountId (e.g. "U1234abc"), NOT the User.id (cuid).
+    //    We must query the Account table to get the correct User.id for PDPA recording.
+    const lineAccount = await prisma.account.findFirst({
+      where: { provider: "line", providerAccountId: lineUserId },
+      select: { userId: true }
+    });
+
+    // 4. Build transaction: always bind tenant; record PDPA only when we can resolve the User
+    const txOps: any[] = [
       prisma.tenant.update({
         where: { id: tenant.id },
         data: { lineUserId }
       }),
-      // อัปเดตตาราง User ที่ล็อกอินมาจาก LINE (ถ้ามี) ให้บันทึกเวลา PDPA
-      prisma.user.updateMany({
-        where: { id: lineUserId }, // lineUserId might actually be the providerAccountId or the User ID? 
-        data: { pdpaAcceptedAt: new Date() }
-      })
-    ]);
+    ];
 
-    return { 
-      success: true, 
-      message: "ผูกบัญชีสำเร็จ! ยินดีต้อนรับเข้าสู่ระบบ" 
+    if (lineAccount) {
+      txOps.push(
+        prisma.user.update({
+          where: { id: lineAccount.userId },
+          data: { pdpaAcceptedAt: new Date() }
+        })
+      );
+    }
+
+    await prisma.$transaction(txOps);
+
+    return {
+      success: true,
+      message: "ผูกบัญชีสำเร็จ! ยินดีต้อนรับเข้าสู่ระบบ"
     };
 
   } catch (error: any) {

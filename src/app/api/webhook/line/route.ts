@@ -1,10 +1,41 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendLineOAMessage } from "@/lib/line";
+import crypto from "crypto";
+
+/**
+ * Verify that the request is genuinely from LINE.
+ * LINE signs each webhook request with HMAC-SHA256 using the Channel Secret.
+ * https://developers.line.biz/en/docs/messaging-api/receiving-messages/#verifying-signatures
+ */
+function verifyLineSignature(rawBody: string, signature: string | null): boolean {
+  const secret = process.env.LINE_CHANNEL_SECRET;
+  if (!secret) {
+    // If the env var is not set we skip verification (dev/test mode only).
+    // Log a warning so operators know the webhook is unprotected.
+    console.warn("[LINE Webhook] LINE_CHANNEL_SECRET is not set — skipping signature verification");
+    return true;
+  }
+  if (!signature) return false;
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(rawBody)
+    .digest("base64");
+  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+}
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    // Read raw body first so we can verify the signature before parsing JSON
+    const rawBody = await req.text();
+    const signature = req.headers.get("x-line-signature");
+
+    if (!verifyLineSignature(rawBody, signature)) {
+      console.warn("[LINE Webhook] Invalid signature — request rejected");
+      return new NextResponse("Forbidden", { status: 403 });
+    }
+
+    const body = JSON.parse(rawBody);
     const events = body.events || [];
 
     for (const event of events) {
