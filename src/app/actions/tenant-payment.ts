@@ -17,6 +17,18 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
       return { success: false, error: "Missing bill ID or file." };
     }
 
+    // Validate file size (max 5 MB)
+    const MAX_SIZE = 5 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      return { success: false, error: "ไฟล์ใหญ่เกิน 5 MB — กรุณาบีบอัดรูปก่อนอัปโหลด" };
+    }
+
+    // Validate file type (images only)
+    const ALLOWED_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return { success: false, error: "ประเภทไฟล์ไม่รองรับ — อนุญาตเฉพาะ JPEG, PNG, WebP, GIF" };
+    }
+
     const secureDb = await getSecurePrisma();
 
     // 1. Security Check: Ensure the logged-in TENANT actually owns this bill.
