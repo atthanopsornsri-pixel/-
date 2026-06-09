@@ -97,7 +97,7 @@ export function LoginForm() {
           <Input
             id="email"
             type="text"
-            placeholder="อีเมล"
+            placeholder={isTenant ? "เบอร์โทร หรือ อีเมล" : "อีเมล"}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required

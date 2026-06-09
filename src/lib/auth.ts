@@ -49,13 +49,17 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
-        const emailInput = credentials.email.trim().toLowerCase();
+        const rawInput = credentials.email.trim();
+        const emailInput = rawInput.toLowerCase();
+        // เบอร์โทร: ตัดขีด/เว้นวรรคออก เพื่อให้ตรงกับ username ที่เก็บเป็นตัวเลขล้วน
+        const phoneInput = rawInput.replace(/[-\s]/g, "");
 
         const user = await prisma.user.findFirst({
           where: {
             OR: [
               { email: emailInput },
-              { username: emailInput }
+              { username: emailInput },
+              { username: phoneInput },
             ]
           },
         });

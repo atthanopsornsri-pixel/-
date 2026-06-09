@@ -22,6 +22,10 @@ export default function TenantProfileSetupPage() {
   const [emergencyContact, setEmergencyContact] = useState("");
   const [emergencyPhone, setEmergencyPhone]     = useState("");
 
+  // ── Password (ตั้งรหัสผ่านสำหรับล็อกอินทุกเครื่อง) ──
+  const [password, setPassword]                 = useState("");
+  const [confirmPassword, setConfirmPassword]   = useState("");
+
   // ── Vehicles ──
   const [vehicles, setVehicles]   = useState<Vehicle[]>([]);
   const [plate, setPlate]         = useState("");
@@ -51,6 +55,22 @@ export default function TenantProfileSetupPage() {
       return;
     }
 
+    // ── ตรวจสอบรหัสผ่าน (ถ้ามีการกรอก) ──
+    if (password || confirmPassword) {
+      if (!phone.trim()) {
+        toast.error("กรุณากรอกเบอร์โทร เพราะจะใช้เป็นชื่อผู้ใช้ตอนล็อกอิน");
+        return;
+      }
+      if (password.length < 6) {
+        toast.error("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
+        return;
+      }
+      if (password !== confirmPassword) {
+        toast.error("รหัสผ่านทั้งสองช่องไม่ตรงกัน");
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       // 1. บันทึกข้อมูลส่วนตัว
@@ -64,6 +84,7 @@ export default function TenantProfileSetupPage() {
           address,
           emergencyContact,
           emergencyPhone,
+          password: password || undefined,
         }),
       });
 
@@ -81,7 +102,11 @@ export default function TenantProfileSetupPage() {
         });
       }
 
-      toast.success("บันทึกข้อมูลสำเร็จ!");
+      if (password) {
+        toast.success("บันทึกสำเร็จ! ล็อกอินครั้งหน้าใช้เบอร์โทร + รหัสผ่านได้เลย");
+      } else {
+        toast.success("บันทึกข้อมูลสำเร็จ!");
+      }
       router.push("/dashboard");
     } catch (err: any) {
       toast.error(err.message);
@@ -171,6 +196,43 @@ export default function TenantProfileSetupPage() {
             <div className="space-y-1.5">
               <Label className="font-semibold text-slate-700 text-sm">เบอร์โทร</Label>
               <Input value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)} placeholder="0898765432" className="h-11 rounded-xl" inputMode="tel" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* ── ตั้งรหัสผ่าน (ล็อกอินทุกเครื่อง) ── */}
+        <Card className="rounded-3xl border-slate-200 shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-base font-bold text-slate-800">ตั้งรหัสผ่าน (ไม่บังคับ)</CardTitle>
+            <CardDescription className="text-xs text-slate-500">
+              ตั้งไว้เพื่อล็อกอินจากคอมพิวเตอร์หรือเครื่องที่ไม่มีแอป LINE ได้ โดยใช้ <strong>เบอร์โทร</strong> เป็นชื่อผู้ใช้
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2.5 text-xs text-emerald-700">
+              ชื่อผู้ใช้ของคุณ = เบอร์โทร <strong className="font-mono">{phone.trim() || "(กรอกเบอร์โทรด้านบน)"}</strong>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="font-semibold text-slate-700 text-sm">รหัสผ่าน</Label>
+              <Input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="อย่างน้อย 6 ตัวอักษร"
+                className="h-11 rounded-xl"
+                autoComplete="new-password"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="font-semibold text-slate-700 text-sm">ยืนยันรหัสผ่าน</Label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="กรอกรหัสผ่านอีกครั้ง"
+                className="h-11 rounded-xl"
+                autoComplete="new-password"
+              />
             </div>
           </CardContent>
         </Card>
