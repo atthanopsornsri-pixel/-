@@ -66,6 +66,13 @@ export default function PropertiesPage() {
   const [defaultParkingFee, setDefaultParkingFee] = useState("");
   const [defaultInternetFee, setDefaultInternetFee] = useState("");
 
+  // Check-in (บิลเข้าอยู่) defaults
+  const [defaultSecurityDeposit, setDefaultSecurityDeposit] = useState("");
+  const [defaultAdvanceRent, setDefaultAdvanceRent] = useState("");
+  const [defaultKeyDeposit, setDefaultKeyDeposit] = useState("");
+  const [defaultCarFee, setDefaultCarFee] = useState("");
+  const [defaultMotorcycleFee, setDefaultMotorcycleFee] = useState("");
+
   const [isSavingSettings, setIsSavingSettings] = useState(false);
 
   useEffect(() => {
@@ -143,6 +150,11 @@ export default function PropertiesPage() {
     setDefaultCommonFee(prop.defaultCommonFee?.toString() || "");
     setDefaultParkingFee(prop.defaultParkingFee?.toString() || "");
     setDefaultInternetFee(prop.defaultInternetFee?.toString() || "");
+    setDefaultSecurityDeposit(prop.defaultSecurityDeposit?.toString() || "");
+    setDefaultAdvanceRent(prop.defaultAdvanceRent?.toString() || "");
+    setDefaultKeyDeposit(prop.defaultKeyDeposit?.toString() || "");
+    setDefaultCarFee(prop.defaultCarFee?.toString() || "");
+    setDefaultMotorcycleFee(prop.defaultMotorcycleFee?.toString() || "");
   };
 
   const handleSaveSettings = async (e: React.FormEvent) => {
@@ -161,6 +173,11 @@ export default function PropertiesPage() {
           defaultCommonFee: defaultCommonFee ? parseFloat(defaultCommonFee) : null,
           defaultParkingFee: defaultParkingFee ? parseFloat(defaultParkingFee) : null,
           defaultInternetFee: defaultInternetFee ? parseFloat(defaultInternetFee) : null,
+          defaultSecurityDeposit: defaultSecurityDeposit ? parseFloat(defaultSecurityDeposit) : null,
+          defaultAdvanceRent: defaultAdvanceRent ? parseFloat(defaultAdvanceRent) : null,
+          defaultKeyDeposit: defaultKeyDeposit ? parseFloat(defaultKeyDeposit) : null,
+          defaultCarFee: defaultCarFee ? parseFloat(defaultCarFee) : null,
+          defaultMotorcycleFee: defaultMotorcycleFee ? parseFloat(defaultMotorcycleFee) : null,
         }),
       });
 
@@ -394,6 +411,39 @@ export default function PropertiesPage() {
                   <div className="space-y-2">
                     <Label className="text-slate-600 font-medium ml-1">ค่าอินเทอร์เน็ต (บาท)</Label>
                     <Input type="number" value={defaultInternetFee} onChange={(e) => setDefaultInternetFee(e.target.value)} className="rounded-2xl h-12 bg-slate-50 border-slate-200" />
+                  </div>
+                </div>
+              </div>
+
+              {/* ── ค่าเริ่มต้นบิลเข้าอยู่ (Check-in) ── */}
+              <div className="bg-blue-50/40 rounded-3xl p-6 border border-blue-100">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-lg">🔑</span>
+                  <h3 className="font-bold text-slate-800">ค่าเริ่มต้นบิลเข้าอยู่</h3>
+                </div>
+                <p className="text-xs text-slate-500 mb-4">ค่าที่ตั้งไว้นี้จะถูกเติมให้อัตโนมัติเมื่อออกบิลเข้าอยู่ • เว้นว่าง = ใช้ค่าเช่า 1 เดือน (ประกัน/ล่วงหน้า) หรือ 0</p>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-600 font-medium ml-1">เงินประกันห้อง (บาท)</Label>
+                    <Input type="number" value={defaultSecurityDeposit} onChange={(e) => setDefaultSecurityDeposit(e.target.value)} className="rounded-2xl h-12 bg-white border-slate-200" placeholder="เว้นว่าง = ค่าเช่า 1 เดือน" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-600 font-medium ml-1">ค่าเช่าล่วงหน้า (บาท)</Label>
+                    <Input type="number" value={defaultAdvanceRent} onChange={(e) => setDefaultAdvanceRent(e.target.value)} className="rounded-2xl h-12 bg-white border-slate-200" placeholder="เว้นว่าง = ค่าเช่า 1 เดือน" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-slate-600 font-medium ml-1">มัดจำกุญแจ/คีย์การ์ด</Label>
+                    <Input type="number" value={defaultKeyDeposit} onChange={(e) => setDefaultKeyDeposit(e.target.value)} className="rounded-2xl h-12 bg-white border-slate-200" placeholder="0" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-600 font-medium ml-1">🚗 ค่ารถยนต์ (บาท)</Label>
+                    <Input type="number" value={defaultCarFee} onChange={(e) => setDefaultCarFee(e.target.value)} className="rounded-2xl h-12 bg-white border-slate-200" placeholder="0 = ฟรี" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-slate-600 font-medium ml-1">🏍️ ค่ามอเตอร์ไซค์ (บาท)</Label>
+                    <Input type="number" value={defaultMotorcycleFee} onChange={(e) => setDefaultMotorcycleFee(e.target.value)} className="rounded-2xl h-12 bg-white border-slate-200" placeholder="0 = ฟรี" />
                   </div>
                 </div>
               </div>
