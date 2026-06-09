@@ -115,16 +115,39 @@ export async function POST(req: Request) {
       }
     });
 
-    // Notify Tenant if they have lineUserId setup
+    // แจ้ง LINE ผู้เช่า (ถ้ามี lineUserId)
     const tenant = await secureDb.tenant.findFirst({
       where: { roomId },
-      select: { lineUserId: true }
+      select: { lineUserId: true, firstName: true, lastName: true, phoneNumber: true }
     });
 
     if (room?.property?.owner?.lineChannelAccessToken && tenant?.lineUserId) {
+      const tenantName =
+        [tenant.firstName, tenant.lastName].filter(Boolean).join(" ") ||
+        tenant.phoneNumber ||
+        "ผู้เช่า";
+      const yearBE = Number(year) + 543;
+      const appUrl =
+        process.env.NEXTAUTH_URL?.replace(/\/$/, "") || "https://jadhor.vercel.app";
+      const dueStr = new Date(dueDate).toLocaleDateString("th-TH", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
       await sendLineOAMessage(
         tenant.lineUserId,
-        `🧾 บิลค่าเช่าใหม่มาแล้ว!\nห้อง: ${bill.room.number}\nประจำเดือน: ${month}/${year}\nยอดชำระ: ฿${totalAmount.toLocaleString()}\nกำหนดชำระ: ${new Date(dueDate).toLocaleDateString('th-TH')}`,
+        [
+          `🧾 บิลค่าเช่าใหม่มาแล้ว!`,
+          `สวัสดีคุณ${tenantName} 🙏`,
+          `━━━━━━━━━━━━━━━━━━━━`,
+          `🏠 ห้อง: ${bill.room.number}  |  ประจำเดือน ${month}/${yearBE}`,
+          `━━━━━━━━━━━━━━━━━━━━`,
+          `💰 ยอดชำระ: ฿${totalAmount.toLocaleString()}`,
+          `📅 กำหนดชำระ: ${dueStr}`,
+          `━━━━━━━━━━━━━━━━━━━━`,
+          `👉 ชำระเงินและแนบสลิปได้ที่:`,
+          `${appUrl}/dashboard/my-bills`,
+        ].join("\n"),
         room.property.owner.lineChannelAccessToken
       );
     }

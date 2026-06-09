@@ -4,6 +4,8 @@ import { getSecurePrisma } from "@/lib/prisma-secure";
 import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 import { verifySlip, receiverMatchesPromptPay } from "@/lib/slip-verification";
+import { sendLineOAMessage } from "@/lib/line";
+import { prisma } from "@/lib/prisma";
 
 /**
  * PHASE 10: Tenant Payment Portal (Upload Action)
@@ -37,7 +39,22 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
     const bill = await secureDb.bill.findUnique({
       where: { id: billId },
       include: {
-        room: { select: { property: { select: { promptPayNo: true } } } },
+        room: {
+          select: {
+            number: true,
+            property: {
+              select: {
+                promptPayNo: true,
+                owner: {
+                  select: {
+                    lineChannelAccessToken: true,
+                    lineUserId: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -61,6 +78,16 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
 
     if (verification.duplicate) {
       return { success: false, error: "สลิปนี้เคยถูกใช้ชำระเงินไปแล้ว ไม่สามารถใช้ซ้ำได้" };
+    }
+
+    // ถ้า SlipOK เปิดใช้งานและตรวจว่ายอดไม่ตรง → แจ้งผู้เช่าทันที ไม่เก็บสลิป
+    if (verification.enabled && verification.amountMismatch) {
+      const slipAmt = verification.amount;
+      const amtStr = slipAmt != null ? `฿${slipAmt.toLocaleString()}` : "ไม่ทราบ";
+      return {
+        success: false,
+        error: `ยอดเงินในสลิป (${amtStr}) ไม่ตรงกับยอดบิล (฿${bill.totalAmount.toLocaleString()}) — กรุณาตรวจสอบและโอนให้ครบจำนวน`,
+      };
     }
 
     // Generate secure filename using Date to prevent caching issues and CUID/BillID for uniqueness
@@ -134,14 +161,47 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
 
     // Revalidate the dashboard so the UI instantly hides the upload form
     revalidatePath("/tenant/dashboard");
+    revalidatePath("/dashboard/my-bills");
+
+    // ──────────────────────────────────────────────────────────────────────
+    // แจ้ง LINE เจ้าของเมื่อสลิปยังรอตรวจสอบ (PENDING)
+    // — เพื่อให้เจ้าของรู้ทันทีว่ามีสลิปใหม่รอการอนุมัติ
+    // ──────────────────────────────────────────────────────────────────────
+    if (newStatus === "PENDING") {
+      const ownerToken = bill.room?.property?.owner?.lineChannelAccessToken;
+      const ownerLineId = bill.room?.property?.owner?.lineUserId;
+      if (ownerToken && ownerLineId) {
+        const roomNumber = bill.room?.number || "-";
+        const appUrl =
+          process.env.NEXTAUTH_URL?.replace(/\/$/, "") ||
+          "https://jadhor.vercel.app";
+        const noteLines: string[] = [];
+        if (verification.enabled && !verification.verified) {
+          noteLines.push(`⚠️ หมายเหตุ: ตรวจสลิปอัตโนมัติไม่ผ่าน — รอตรวจด้วยตนเอง`);
+        }
+        const ownerMsg = [
+          `📬 มีสลิปรอการอนุมัติ!`,
+          `━━━━━━━━━━━━━━━━━━━━`,
+          `🚪 ห้อง ${roomNumber}`,
+          `💰 ยอดบิล: ฿${bill.totalAmount.toLocaleString()}`,
+          ...noteLines,
+          `━━━━━━━━━━━━━━━━━━━━`,
+          `👉 ตรวจสอบและอนุมัติ:`,
+          `${appUrl}/dashboard/owner/approvals`,
+        ].join("\n");
+        sendLineOAMessage(ownerLineId, ownerMsg, ownerToken).catch((err) =>
+          console.error("[LINE] owner slip notify error:", err)
+        );
+      }
+    }
 
     if (autoVerified && newStatus === "PAID") {
-      return { success: true, message: "ระบบตรวจสอบสลิปอัตโนมัติแล้ว — ชำระเงินสำเร็จ ✓" };
+      return { success: true, message: "✅ ระบบตรวจสอบสลิปอัตโนมัติแล้ว — ชำระเงินสำเร็จ!" };
     }
     if (autoVerified && newStatus === "PARTIAL") {
-      return { success: true, message: "ระบบได้รับยอดชำระบางส่วนแล้ว โปรดติดต่อเจ้าของหอเรื่องยอดคงเหลือ" };
+      return { success: true, message: "⚠️ รับยอดชำระบางส่วนแล้ว — โปรดติดต่อเจ้าของหอเรื่องยอดคงเหลือ" };
     }
-    return { success: true, message: "อัปโหลดสลิปสำเร็จ! กรุณารอเจ้าของหอตรวจสอบ" };
+    return { success: true, message: "📨 ส่งสลิปสำเร็จ! เจ้าของหอได้รับแจ้ง LINE แล้ว — กรุณารอการอนุมัติ" };
 
   } catch (error: any) {
     console.error("Submit Payment Slip Error:", error);
