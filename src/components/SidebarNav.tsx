@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface SidebarNavProps {
   role: string;
@@ -9,6 +10,27 @@ interface SidebarNavProps {
 
 export default function SidebarNav({ role }: SidebarNavProps) {
   const pathname = usePathname() || "";
+  const [pendingMaintenance, setPendingMaintenance] = useState(0);
+
+  // โหลด badge จำนวนงานซ่อมรอดำเนินการ (เฉพาะ OWNER)
+  useEffect(() => {
+    if (role !== "OWNER") return;
+    async function loadCounts() {
+      try {
+        const res = await fetch("/api/maintenance/counts");
+        if (res.ok) {
+          const data = await res.json();
+          setPendingMaintenance((data.pending ?? 0) + (data.inProgress ?? 0));
+        }
+      } catch {
+        // ไม่แสดง error — badge แค่ไม่ขึ้น
+      }
+    }
+    loadCounts();
+    // รีเฟรชทุก 60 วินาที
+    const interval = setInterval(loadCounts, 60_000);
+    return () => clearInterval(interval);
+  }, [role]);
 
   return (
     <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
@@ -78,7 +100,12 @@ export default function SidebarNav({ role }: SidebarNavProps) {
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname.startsWith("/dashboard/maintenance") ? "bg-cyan-100 text-cyan-600" : "bg-cyan-50 text-cyan-500 group-hover:bg-cyan-100"}`}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
             </div>
-            ระบบแจ้งซ่อม
+            <span className="flex-1">ระบบแจ้งซ่อม</span>
+            {pendingMaintenance > 0 && (
+              <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white shadow-sm">
+                {pendingMaintenance > 99 ? "99+" : pendingMaintenance}
+              </span>
+            )}
           </Link>
           <Link href="/dashboard/parcels" className={`flex items-center px-4 py-3 rounded-xl transition-all group font-medium ${pathname.startsWith("/dashboard/parcels") ? "bg-orange-50 text-orange-700" : "text-slate-600 hover:bg-orange-50 hover:text-orange-700"}`}>
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname.startsWith("/dashboard/parcels") ? "bg-orange-100 text-orange-600" : "bg-orange-50 text-orange-500 group-hover:bg-orange-100"}`}>

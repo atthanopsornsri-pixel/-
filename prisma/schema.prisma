@@ -253,16 +253,18 @@ enum PaymentStatus {
 }
 
 model MaintenanceRequest {
-  id           String    @id @default(cuid())
-  roomId       String
-  room         Room      @relation(fields: [roomId], references: [id])
-  title        String
-  description  String
-  imageUrl     String?
-  status       MaintenanceStatus @default(PENDING)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  isDeleted    Boolean   @default(false)
+  id            String    @id @default(cuid())
+  roomId        String
+  room          Room      @relation(fields: [roomId], references: [id])
+  title         String
+  description   String
+  imageUrl      String?
+  status        MaintenanceStatus @default(PENDING)
+  scheduledAt   DateTime? // วันเวลานัดหมายเข้าซ่อม
+  scheduledNote String?   // หมายเหตุการนัดหมาย
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  isDeleted     Boolean   @default(false)
 }
 
 enum MaintenanceStatus {
