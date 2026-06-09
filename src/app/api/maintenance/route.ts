@@ -46,13 +46,26 @@ export async function POST(req: Request) {
       },
     });
 
-    // Notify landlord about new maintenance request
+    // ส่ง LINE แบบ fire-and-forget (ไม่ await เพื่อ response เร็ว)
     if (tenant.room?.property?.owner?.lineChannelAccessToken && tenant.room?.property?.owner?.lineUserId) {
-      await sendLineOAMessage(
+      const propertyName = tenant.room.property.name || "หอพัก";
+      const roomNumber = tenant.room.number;
+      const tenantName = tenant.room.property.owner.name || "ผู้เช่า";
+      const lineMsg = [
+        `📋 แจ้งซ่อมใหม่`,
+        `━━━━━━━━━━━━━━`,
+        `🏠 ${propertyName} ห้อง ${roomNumber}`,
+        `📌 เรื่อง: ${title}`,
+        `📝 รายละเอียด: ${description}`,
+        `━━━━━━━━━━━━━━`,
+        `กรุณาเข้าระบบเพื่อตรวจสอบและอัปเดตสถานะ`,
+      ].join("\n");
+
+      sendLineOAMessage(
         tenant.room.property.owner.lineUserId,
-        `🛠️ แจ้งซ่อมใหม่จากห้อง ${tenant.room.number}!\nเรื่อง: ${title}\nรายละเอียด: ${description}`,
+        lineMsg,
         tenant.room.property.owner.lineChannelAccessToken
-      );
+      ).catch((err) => console.error("[LINE] maintenance notify error:", err));
     }
 
     return NextResponse.json(request, { status: 201 });
@@ -159,12 +172,22 @@ export async function PATCH(req: Request) {
     });
 
     if (maintReq.room.property.owner.lineChannelAccessToken && tenant?.lineUserId) {
-      const statusText = status === "IN_PROGRESS" ? "กำลังดำเนินการแก้ไข 👨‍🔧" : "แก้ไขเสร็จสิ้นเรียบร้อยแล้ว ✅";
-      await sendLineOAMessage(
+      const statusEmoji = status === "IN_PROGRESS" ? "🔧" : "✅";
+      const statusText = status === "IN_PROGRESS" ? "กำลังดำเนินการแก้ไข" : "ดำเนินการแก้ไขเสร็จสิ้นแล้ว";
+      const lineMsg = [
+        `${statusEmoji} อัปเดตสถานะแจ้งซ่อม`,
+        `━━━━━━━━━━━━━━`,
+        `🏠 ห้อง ${request.room.number}`,
+        `📌 เรื่อง: ${request.title}`,
+        `📊 สถานะ: ${statusText}`,
+        status === "DONE" ? `━━━━━━━━━━━━━━\nขอบคุณที่ใช้บริการ 🙏` : "",
+      ].filter(Boolean).join("\n");
+
+      sendLineOAMessage(
         tenant.lineUserId,
-        `🛠️ อัปเดตสถานะแจ้งซ่อม!\nห้อง: ${request.room.number}\nเรื่อง: ${request.title}\nสถานะ: ${statusText}`,
+        lineMsg,
         maintReq.room.property.owner.lineChannelAccessToken
-      );
+      ).catch((err) => console.error("[LINE] maintenance status notify error:", err));
     }
 
     return NextResponse.json(request);
