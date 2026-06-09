@@ -8,36 +8,40 @@ export const dynamic = "force-dynamic";
 
 // GET: ดึง credentials (masked)
 export async function GET() {
-  const session = await getServerSession(authOptions);
-  if (!session || session.user.role !== "OWNER") {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "OWNER") {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const addon = await prisma.smsAddon.findUnique({
+      where: { ownerId: session.user.id },
+      select: {
+        isActive: true,
+        tier: true,
+        quota: true,
+        used: true,
+        resetMonth: true,
+        resetYear: true,
+        thaibulkApiKey: true,
+        thaibulkSenderId: true,
+      },
+    });
+
+    if (!addon) return NextResponse.json(null);
+
+    const key = addon.thaibulkApiKey;
+    return NextResponse.json({
+      ...addon,
+      hasApiKey: !!key,
+      thaibulkApiKey: key && key.length > 8
+        ? key.slice(0, 4) + "****" + key.slice(-4)
+        : key ? "****" : null,
+    });
+  } catch (error) {
+    console.error("SMS credentials GET error:", error);
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
-
-  const addon = await prisma.smsAddon.findUnique({
-    where: { ownerId: session.user.id },
-    select: {
-      isActive: true,
-      tier: true,
-      quota: true,
-      used: true,
-      resetMonth: true,
-      resetYear: true,
-      thaibulkApiKey: true,
-      thaibulkSenderId: true,
-    },
-  });
-
-  if (!addon) return NextResponse.json(null);
-
-  const key = addon.thaibulkApiKey;
-  return NextResponse.json({
-    ...addon,
-    hasApiKey: !!key,
-    // แสดง masked: 4 ตัวแรก + **** + 4 ตัวท้าย
-    thaibulkApiKey: key && key.length > 8
-      ? key.slice(0, 4) + "****" + key.slice(-4)
-      : key ? "****" : null,
-  });
 }
 
 // PUT: บันทึก/อัปเดต API Key (ไม่ต้องการ secret)

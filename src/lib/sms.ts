@@ -114,7 +114,6 @@ export async function sendSmsWithAddon(
       resetMonth: true,
       resetYear: true,
       thaibulkApiKey: true,
-      thaibulkApiSecret: true,
       thaibulkSenderId: true,
     },
   });
@@ -123,8 +122,8 @@ export async function sendSmsWithAddon(
     return { success: false, error: "SMS Addon ไม่ได้เปิดใช้งาน" };
   }
 
-  if (!addon.thaibulkApiKey || !addon.thaibulkApiSecret) {
-    return { success: false, error: "ยังไม่ได้ตั้งค่า Thaibulksms API credentials" };
+  if (!addon.thaibulkApiKey) {
+    return { success: false, error: "ยังไม่ได้ตั้งค่า Thaibulksms API Key" };
   }
 
   // Auto-reset quota ถ้าขึ้นเดือนใหม่
@@ -151,7 +150,7 @@ export async function sendSmsWithAddon(
     toPhone,
     message,
     addon.thaibulkApiKey,
-    addon.thaibulkApiSecret,
+    "",
     addon.thaibulkSenderId ?? "JadHor"
   );
 
