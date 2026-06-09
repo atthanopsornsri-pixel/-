@@ -75,6 +75,9 @@ export default function SubscriptionPage() {
   const [smsTestMsg, setSmsTestMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [smsHasKey, setSmsHasKey] = useState(false); // ตั้งค่า credentials แล้วหรือยัง
 
+  // Slip upload feedback
+  const [slipFeedback, setSlipFeedback] = useState<{ invoiceId: string; ok: boolean; text: string } | null>(null);
+
   // planTier comes from the DB via saas-status API (not from JWT — it's not in the session)
   const planTier = saasStatus?.planTier || "FREE_TRIAL";
 
@@ -205,8 +208,8 @@ export default function SubscriptionPage() {
 
   async function handleSlipUpload(invoiceId: string, file: File) {
     setSlipUploading(invoiceId);
+    setSlipFeedback(null);
     try {
-      // Convert to base64 for simplicity (production should use cloud storage)
       const reader = new FileReader();
       reader.onload = async () => {
         const base64 = reader.result as string;
@@ -215,14 +218,30 @@ export default function SubscriptionPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ slipUrl: base64 }),
         });
+        const data = await res.json().catch(() => ({}));
         if (res.ok) {
           fetchData();
+          setSlipFeedback({
+            invoiceId,
+            ok: true,
+            text: data?.message || (data?.autoApproved
+              ? "✅ ชำระสำเร็จ! สลิปผ่านการตรวจอัตโนมัติ"
+              : "📤 อัปโหลดสลิปสำเร็จ — กำลังรอ Admin ตรวจสอบ"),
+          });
+        } else {
+          const errText = data?.code === "AMOUNT_MISMATCH"
+            ? `ยอดเงินในสลิปไม่ตรง: ${data.message}`
+            : data?.code === "DUPLICATE_SLIP"
+            ? "สลิปซ้ำ: สลิปนี้เคยใช้งานไปแล้ว"
+            : data?.message || "เกิดข้อผิดพลาดในการอัปโหลดสลิป";
+          setSlipFeedback({ invoiceId, ok: false, text: errText });
         }
         setSlipUploading(null);
       };
       reader.readAsDataURL(file);
     } catch (e) {
       console.error(e);
+      setSlipFeedback({ invoiceId: invoiceId, ok: false, text: "เกิดข้อผิดพลาดที่ไม่คาดคิด" });
       setSlipUploading(null);
     }
   }
@@ -712,22 +731,44 @@ export default function SubscriptionPage() {
                         </div>
 
                         <label className="flex items-center gap-3 cursor-pointer group">
-                          <div className="flex-shrink-0 px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-full hover:bg-blue-700 transition-all group-hover:shadow-lg active:scale-[0.98]">
-                            📎 แนบสลิปโอนเงิน
+                          <div
+                            className={`flex-shrink-0 px-5 py-2.5 text-white text-sm font-bold rounded-full transition-all group-hover:shadow-lg active:scale-[0.98] ${
+                              slipUploading === inv.id ? "bg-slate-400 cursor-wait" : "bg-blue-600 hover:bg-blue-700"
+                            }`}
+                          >
+                            {slipUploading === inv.id ? (
+                              <span className="flex items-center gap-2">
+                                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                                กำลังตรวจสอบสลิป...
+                              </span>
+                            ) : "📎 แนบสลิปโอนเงิน"}
                           </div>
                           <span className="text-xs text-slate-400">
-                            {slipUploading === inv.id ? "กำลังอัพโหลด..." : "เลือกไฟล์รูปสลิป (.jpg, .png)"}
+                            {slipUploading === inv.id ? "กำลังประมวลผลและตรวจสอบ SlipOK..." : "เลือกไฟล์รูปสลิป (.jpg, .png)"}
                           </span>
                           <input
                             type="file"
                             accept="image/*"
                             className="hidden"
+                            disabled={slipUploading === inv.id}
                             onChange={(e) => {
                               const file = e.target.files?.[0];
                               if (file) handleSlipUpload(inv.id, file);
                             }}
                           />
                         </label>
+
+                        {/* Slip feedback message */}
+                        {slipFeedback?.invoiceId === inv.id && (
+                          <div className={`mt-3 flex items-start gap-2 px-4 py-3 rounded-xl text-sm font-semibold ${
+                            slipFeedback.ok
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : "bg-red-50 text-red-600 border border-red-200"
+                          }`}>
+                            <span className="shrink-0">{slipFeedback.ok ? "✅" : "⚠️"}</span>
+                            <span>{slipFeedback.text}</span>
+                          </div>
+                        )}
                       </div>
                     )}
 

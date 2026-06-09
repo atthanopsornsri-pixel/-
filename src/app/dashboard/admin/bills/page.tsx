@@ -174,8 +174,21 @@ export default function AdminBillsPage() {
                   </td>
                   <td className="px-6 py-4">
                     {bill.status === "UNPAID" && <span className="bg-red-50 text-red-600 px-2 py-1 rounded font-medium">รอชำระ</span>}
-                    {bill.status === "PENDING" && <span className="bg-amber-50 text-amber-600 px-2 py-1 rounded font-medium">รอตรวจสลิป</span>}
-                    {bill.status === "PAID" && <span className="bg-green-50 text-green-600 px-2 py-1 rounded font-medium">จ่ายแล้ว</span>}
+                    {bill.status === "PENDING" && (
+                      <span className="bg-amber-50 text-amber-600 px-2 py-1 rounded font-medium">
+                        รอตรวจสลิป
+                      </span>
+                    )}
+                    {bill.status === "PAID" && (
+                      <span className="inline-flex items-center gap-1 bg-green-50 text-green-600 px-2 py-1 rounded font-medium">
+                        จ่ายแล้ว
+                        {bill.slipVerified && (
+                          <span title="ผ่านการตรวจสลิปอัตโนมัติ (SlipOK)" className="text-emerald-500 font-bold">
+                            ✓ Auto
+                          </span>
+                        )}
+                      </span>
+                    )}
                   </td>
                   <td className="px-6 py-4 text-right flex items-center justify-end gap-2">
                     {bill.slipUrl ? (

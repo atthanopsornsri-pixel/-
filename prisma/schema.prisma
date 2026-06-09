@@ -354,9 +354,15 @@ model Invoice {
   totalAmount   Float // ยอดรวมสุทธิ (คำนวณจาก items)
   status        BillStatus    @default(UNPAID)
   slipUrl       String? // URL สลิปโอนเงินที่เจ้าของหอแนบมา
-  paidAt        DateTime? // วันเวลาที่ Admin อนุมัติ
+  paidAt        DateTime? // วันเวลาที่ Admin อนุมัติ (หรือ auto-verify)
   dueDate       DateTime? // วันครบกำหนดชำระ
   note          String? // หมายเหตุจาก Admin
+
+  // SlipOK verification results
+  slipVerified  Boolean?  @default(false) // ผ่านการตรวจอัตโนมัติหรือไม่
+  slipAmount    Float?    // ยอดเงินที่อ่านได้จากสลิป
+  slipTransRef  String?   // เลขอ้างอิงรายการ (กันซ้ำ)
+
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
