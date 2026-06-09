@@ -64,6 +64,8 @@ export default function MaintenancePage() {
   // ── ฟอร์มผู้เช่า ──
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [preferredDate, setPreferredDate] = useState("");
+  const [preferredTime, setPreferredTime] = useState("09:00");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -131,10 +133,16 @@ export default function MaintenancePage() {
       const formData = new FormData();
       formData.append("title", title);
       formData.append("description", description);
+      // แนบวันเวลาที่สะดวก (ถ้าเลือกไว้)
+      if (preferredDate) {
+        const iso = new Date(`${preferredDate}T${preferredTime}:00`).toISOString();
+        formData.append("preferredAt", iso);
+      }
       if (imageFile) formData.append("file", imageFile);
       const res = await fetch("/api/maintenance", { method: "POST", body: formData });
       if (res.ok) {
         setTitle(""); setDescription(""); clearImage();
+        setPreferredDate(""); setPreferredTime("09:00");
         await fetchRequests();
         toast.success("ส่งเรื่องแจ้งซ่อมสำเร็จ เจ้าของหอพักได้รับแจ้งแล้ว 🔧");
       } else {
@@ -308,6 +316,37 @@ export default function MaintenancePage() {
                     placeholder="อธิบายปัญหาให้ละเอียด เพื่อให้ช่างเตรียมอุปกรณ์ได้ถูกต้อง"
                   />
                 </div>
+                {/* วันที่สะดวกรับช่าง (optional) */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold text-slate-700">
+                    📅 วันที่สะดวกรับช่าง{" "}
+                    <span className="text-slate-400 font-normal">(ถ้าระบุได้)</span>
+                  </Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="date"
+                      value={preferredDate}
+                      onChange={(e) => setPreferredDate(e.target.value)}
+                      min={new Date().toISOString().split("T")[0]}
+                      className="flex h-11 w-full rounded-xl border border-slate-200 bg-white/80 px-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#5856d6]/30"
+                    />
+                    <input
+                      type="time"
+                      value={preferredTime}
+                      onChange={(e) => setPreferredTime(e.target.value)}
+                      className="flex h-11 w-full rounded-xl border border-slate-200 bg-white/80 px-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#5856d6]/30"
+                    />
+                  </div>
+                  {preferredDate && (
+                    <button
+                      type="button"
+                      onClick={() => setPreferredDate("")}
+                      className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      ✕ ล้างวัน
+                    </button>
+                  )}
+                </div>
                 <div className="space-y-1.5">
                   <Label className="text-sm font-semibold text-slate-700">แนบรูปภาพ (ถ้ามี)</Label>
                   {imagePreview ? (
@@ -384,6 +423,23 @@ export default function MaintenancePage() {
                     <p className="text-sm text-slate-600 whitespace-pre-wrap line-clamp-3 leading-relaxed">
                       {req.description}
                     </p>
+
+                    {/* ผู้เช่าแจ้งวันสะดวก — แสดงให้เจ้าของเห็น */}
+                    {role === "OWNER" && req.preferredAt && req.status !== "COMPLETED" && (
+                      <div
+                        className="mt-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold"
+                        style={{ background: "#fff9f2", color: "#ff9500" }}
+                      >
+                        <CalendarClock className="w-3.5 h-3.5 shrink-0" />
+                        <span>
+                          ผู้เช่าสะดวก:{" "}
+                          {new Date(req.preferredAt).toLocaleString("th-TH", {
+                            dateStyle: "short",
+                            timeStyle: "short",
+                          })}
+                        </span>
+                      </div>
+                    )}
 
                     {/* แสดงวันนัดหมาย */}
                     {hasAppt && req.status === "IN_PROGRESS" && (

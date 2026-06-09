@@ -260,7 +260,8 @@ model MaintenanceRequest {
   description   String
   imageUrl      String?
   status        MaintenanceStatus @default(PENDING)
-  scheduledAt   DateTime? // วันเวลานัดหมายเข้าซ่อม
+  preferredAt   DateTime? // วันเวลาที่ผู้เช่าสะดวกรับช่าง (แจ้งตอน submit)
+  scheduledAt   DateTime? // วันเวลานัดหมายยืนยันโดยเจ้าของ
   scheduledNote String?   // หมายเหตุการนัดหมาย
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt

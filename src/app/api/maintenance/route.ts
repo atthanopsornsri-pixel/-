@@ -17,13 +17,19 @@ export async function POST(req: Request) {
     let description: string = "";
     let imageUrl: string = "";
 
+    let preferredAt: Date | null = null;
+
     if (contentType.includes("multipart/form-data")) {
       const formData = await req.formData();
       title = (formData.get("title") as string) || "";
       description = (formData.get("description") as string) || "";
+      const preferredAtStr = formData.get("preferredAt") as string | null;
+      if (preferredAtStr) {
+        const d = new Date(preferredAtStr);
+        if (!isNaN(d.getTime())) preferredAt = d;
+      }
       const file = formData.get("file") as File | null;
       if (file && file.size > 0) {
-        // ตรวจขนาดไฟล์ (max 5MB)
         if (file.size > 5 * 1024 * 1024) {
           return NextResponse.json({ message: "ไฟล์ใหญ่เกิน 5 MB" }, { status: 413 });
         }
@@ -36,6 +42,10 @@ export async function POST(req: Request) {
       title = body.title || "";
       description = body.description || "";
       imageUrl = body.imageUrl || "";
+      if (body.preferredAt) {
+        const d = new Date(body.preferredAt);
+        if (!isNaN(d.getTime())) preferredAt = d;
+      }
     }
 
     if (!title || !description) {
@@ -61,7 +71,13 @@ export async function POST(req: Request) {
     }
 
     const request = await prisma.maintenanceRequest.create({
-      data: { roomId: tenant.roomId, title, description, imageUrl },
+      data: {
+        roomId: tenant.roomId,
+        title,
+        description,
+        imageUrl,
+        ...(preferredAt && { preferredAt }),
+      },
     });
 
     // ส่ง LINE แจ้งเจ้าของ (fire-and-forget — ไม่ await เพื่อ response เร็ว)
@@ -75,6 +91,10 @@ export async function POST(req: Request) {
         "ผู้เช่า";
       const now = new Date().toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" });
 
+      const preferredStr = preferredAt
+        ? preferredAt.toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })
+        : null;
+
       const lineMsg = [
         `🔧 แจ้งซ่อมใหม่ — ต้องการความช่วยเหลือ!`,
         `━━━━━━━━━━━━━━━━━━━━`,
@@ -84,10 +104,12 @@ export async function POST(req: Request) {
         `🔴 เรื่อง: ${title}`,
         `📝 รายละเอียด:`,
         description,
+        preferredStr ? `━━━━━━━━━━━━━━━━━━━━` : "",
+        preferredStr ? `🗓 ผู้เช่าสะดวกรับช่าง: ${preferredStr}` : "",
         `━━━━━━━━━━━━━━━━━━━━`,
         `⏰ แจ้งเมื่อ: ${now}`,
-        `👉 เข้าระบบเพื่อรับเรื่องและอัปเดตสถานะ`,
-      ].join("\n");
+        `👉 เข้าระบบเพื่อรับเรื่องและนัดหมาย`,
+      ].filter(Boolean).join("\n");
 
       sendLineOAMessage(owner.lineUserId, lineMsg, owner.lineChannelAccessToken)
         .catch((err) => console.error("[LINE] maintenance notify error:", err));
