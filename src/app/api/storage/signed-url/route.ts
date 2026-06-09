@@ -42,8 +42,12 @@ export async function POST(req: Request) {
     }
 
     // If we reach here, getSecurePrisma has confirmed the user owns/has access to the record!
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("[SIGNED-URL] Missing Supabase env vars");
+      return NextResponse.json({ error: "Storage not configured" }, { status: 503 });
+    }
 
     // Must use SERVICE ROLE KEY to bypass RLS, because the bucket is Private and Supabase doesn't know NextAuth
     const supabase = createClient(supabaseUrl, supabaseServiceKey);

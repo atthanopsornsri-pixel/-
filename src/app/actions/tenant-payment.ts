@@ -68,8 +68,12 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
     const filename = `slips/${billId}-${Date.now()}.${fileExtension}`;
 
     // Initialize Supabase with SERVICE ROLE to bypass Private Bucket RLS
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; 
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error("[SLIP UPLOAD] Missing Supabase env vars (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)");
+      return { success: false, error: "ระบบจัดเก็บสลิปยังไม่ได้ตั้งค่า (ติดต่อผู้ดูแลระบบ)" };
+    }
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // 3. Upload to Private Bucket (Phase 3 logic used "documents" bucket)
