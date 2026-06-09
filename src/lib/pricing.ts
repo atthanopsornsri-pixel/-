@@ -77,8 +77,8 @@ export function generateInvoiceNumber(year: number, month: number, sequence: num
 // =============================================
 
 export function getPlatformFeeDescription(planTier: string, cycle: string): string {
-  const plan = PLAN_PRICES[planTier as PlanTierKey];
-  if (!plan) return `ค่าบริการระบบหลัก JadHor OS`;
+  // FREE_TRIAL → ออกบิลในราคา Starter (แผนเริ่มต้นหลังจาก trial หมด)
+  const plan = PLAN_PRICES[planTier as PlanTierKey] ?? PLAN_PRICES.STARTER;
   const cycleLabel = cycle === "YEARLY" ? "รายปี" : "รายเดือน";
   return `ค่าบริการระบบหลัก JadHor OS — แพ็กเกจ ${plan.label} (${cycleLabel})`;
 }

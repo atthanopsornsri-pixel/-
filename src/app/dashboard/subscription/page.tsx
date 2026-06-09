@@ -66,6 +66,7 @@ export default function SubscriptionPage() {
 
   // SMS Credentials state
   const [smsApiKey, setSmsApiKey] = useState("");
+  const [smsApiKeyMasked, setSmsApiKeyMasked] = useState(""); // แสดงผลเท่านั้น — ไม่ใส่ใน input
   const [smsSenderId, setSmsSenderId] = useState("JadHor");
   const [smsTestPhone, setSmsTestPhone] = useState("");
   const [smsCredSaving, setSmsCredSaving] = useState(false);
@@ -105,7 +106,8 @@ export default function SubscriptionPage() {
         const cred = await smsCredRes.json();
         if (cred) {
           setSmsHasKey(cred.hasApiKey || false);
-          setSmsApiKey(cred.thaibulkApiKey || ""); // masked key for display
+          setSmsApiKeyMasked(cred.thaibulkApiKey || ""); // แสดงผลข้าง label เท่านั้น
+          setSmsApiKey(""); // input ว่างเสมอ — กรอกใหม่เพื่ออัปเดต
           setSmsSenderId(cred.thaibulkSenderId || "JadHor");
         }
       }
@@ -136,7 +138,7 @@ export default function SubscriptionPage() {
   }
 
   async function handleSmsCredSave() {
-    if (!smsApiKey) {
+    if (!smsApiKey && !smsHasKey) {
       setSmsCredMsg({ ok: false, text: "กรุณากรอก API Key" });
       return;
     }
@@ -146,7 +148,8 @@ export default function SubscriptionPage() {
       const res = await fetch("/api/owner/sms-credentials", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey: smsApiKey, senderId: smsSenderId }),
+        // ถ้า input ว่างและมี key อยู่แล้ว → ส่ง null เพื่อบอก backend ว่าอย่าอัปเดต key
+        body: JSON.stringify({ apiKey: smsApiKey || null, senderId: smsSenderId }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -477,13 +480,21 @@ export default function SubscriptionPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <label className="block text-sm font-semibold text-slate-700">
-                API Key {smsHasKey && <span className="text-xs text-slate-400 font-normal">(แสดง masked — กรอกใหม่เพื่ออัปเดต)</span>}
+                API Key{" "}
+                {smsHasKey && smsApiKeyMasked && (
+                  <span className="ml-1 text-xs font-mono font-normal text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                    {smsApiKeyMasked}
+                  </span>
+                )}
+                {smsHasKey && (
+                  <span className="ml-1 text-xs text-slate-400 font-normal">(กรอกใหม่เพื่ออัปเดต — ว่างไว้ = คงของเดิม)</span>
+                )}
               </label>
               <input
                 type="text"
                 value={smsApiKey}
                 onChange={(e) => setSmsApiKey(e.target.value)}
-                placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                placeholder={smsHasKey ? "กรอก API Key ใหม่ (ว่างไว้เพื่อคงของเดิม)" : "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"}
                 className="flex h-11 w-full rounded-xl border border-slate-200 bg-white/80 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
               />
             </div>

@@ -54,9 +54,21 @@ export async function PUT(req: Request) {
 
     const { apiKey, senderId } = await req.json();
 
-    if (!apiKey?.trim()) {
+    // apiKey === null หมายความว่า "คงของเดิม" (อัปเดตแค่ senderId)
+    const isUpdatingKey = apiKey !== null && apiKey !== undefined;
+
+    // ถ้าส่ง key มาจริงๆ → validate
+    if (isUpdatingKey && !apiKey?.trim()) {
       return NextResponse.json(
         { message: "กรุณาระบุ API Key" },
+        { status: 400 }
+      );
+    }
+
+    // ป้องกัน masked key หลุดเข้ามา (defensive guard)
+    if (isUpdatingKey && apiKey?.includes("****")) {
+      return NextResponse.json(
+        { message: "กรุณากรอก API Key ใหม่ทั้งหมด (ไม่ใช่ค่า masked)" },
         { status: 400 }
       );
     }
@@ -68,13 +80,31 @@ export async function PUT(req: Request) {
       );
     }
 
+    // ตรวจว่ามี addon อยู่แล้วหรือไม่ (กรณี apiKey=null และยังไม่มี record → error)
+    if (!isUpdatingKey) {
+      const existing = await prisma.smsAddon.findUnique({
+        where: { ownerId: session.user.id },
+        select: { id: true, thaibulkApiKey: true },
+      });
+      if (!existing?.thaibulkApiKey) {
+        return NextResponse.json(
+          { message: "กรุณาระบุ API Key ก่อนบันทึก" },
+          { status: 400 }
+        );
+      }
+    }
+
     const now = new Date();
+    const updateData: Record<string, unknown> = {
+      thaibulkSenderId: (senderId?.trim() || "JadHor").slice(0, 11),
+    };
+    if (isUpdatingKey) {
+      updateData.thaibulkApiKey = (apiKey as string).trim();
+    }
+
     const addon = await prisma.smsAddon.upsert({
       where: { ownerId: session.user.id },
-      update: {
-        thaibulkApiKey: apiKey.trim(),
-        thaibulkSenderId: (senderId?.trim() || "JadHor").slice(0, 11),
-      },
+      update: updateData,
       create: {
         ownerId: session.user.id,
         tier: "SIZE_S",
@@ -83,7 +113,7 @@ export async function PUT(req: Request) {
         resetMonth: now.getMonth() + 1,
         resetYear: now.getFullYear(),
         isActive: false,
-        thaibulkApiKey: apiKey.trim(),
+        thaibulkApiKey: isUpdatingKey ? (apiKey as string).trim() : "",
         thaibulkSenderId: (senderId?.trim() || "JadHor").slice(0, 11),
       },
     });
