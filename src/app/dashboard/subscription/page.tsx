@@ -66,7 +66,6 @@ export default function SubscriptionPage() {
 
   // SMS Credentials state
   const [smsApiKey, setSmsApiKey] = useState("");
-  const [smsApiSecret, setSmsApiSecret] = useState("");
   const [smsSenderId, setSmsSenderId] = useState("JadHor");
   const [smsTestPhone, setSmsTestPhone] = useState("");
   const [smsCredSaving, setSmsCredSaving] = useState(false);
@@ -137,8 +136,8 @@ export default function SubscriptionPage() {
   }
 
   async function handleSmsCredSave() {
-    if (!smsApiKey || !smsApiSecret) {
-      setSmsCredMsg({ ok: false, text: "กรุณากรอก API Key และ API Secret" });
+    if (!smsApiKey) {
+      setSmsCredMsg({ ok: false, text: "กรุณากรอก API Key" });
       return;
     }
     setSmsCredSaving(true);
@@ -147,13 +146,12 @@ export default function SubscriptionPage() {
       const res = await fetch("/api/owner/sms-credentials", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey: smsApiKey, apiSecret: smsApiSecret, senderId: smsSenderId }),
+        body: JSON.stringify({ apiKey: smsApiKey, senderId: smsSenderId }),
       });
       const data = await res.json();
       if (res.ok) {
         setSmsHasKey(true);
-        setSmsCredMsg({ ok: true, text: "บันทึก API credentials สำเร็จแล้ว" });
-        setSmsApiSecret(""); // ล้าง secret ออกจาก UI หลัง save
+        setSmsCredMsg({ ok: true, text: "บันทึก API Key สำเร็จแล้ว" });
       } else {
         setSmsCredMsg({ ok: false, text: data?.message || "เกิดข้อผิดพลาด" });
       }
@@ -470,7 +468,7 @@ export default function SubscriptionPage() {
                   className="underline font-bold hover:text-blue-900 transition-colors">
                   thaibulksms.com
                 </a>{" "}
-                → ไปที่ &ldquo;การตั้งค่า&rdquo; → &ldquo;API&rdquo; → คัดลอก API Key และ API Secret มาวางด้านล่าง
+                → ไปที่ &ldquo;Developer Settings&rdquo; → &ldquo;API Key&rdquo; → สร้าง key (เลือกช่องทาง SMS) → คัดลอก API Key มาวางด้านล่าง
               </p>
             </div>
           </div>
@@ -486,18 +484,6 @@ export default function SubscriptionPage() {
                 value={smsApiKey}
                 onChange={(e) => setSmsApiKey(e.target.value)}
                 placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                className="flex h-11 w-full rounded-xl border border-slate-200 bg-white/80 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="block text-sm font-semibold text-slate-700">
-                API Secret <span className="text-xs text-red-400 font-normal">(จะไม่แสดงอีกหลังบันทึก)</span>
-              </label>
-              <input
-                type="password"
-                value={smsApiSecret}
-                onChange={(e) => setSmsApiSecret(e.target.value)}
-                placeholder="••••••••••••••••"
                 className="flex h-11 w-full rounded-xl border border-slate-200 bg-white/80 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
               />
             </div>

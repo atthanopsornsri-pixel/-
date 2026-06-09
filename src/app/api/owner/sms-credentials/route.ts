@@ -6,7 +6,7 @@ import { sendThaibulkSms, normalizeThaiPhone } from "@/lib/sms";
 
 export const dynamic = "force-dynamic";
 
-// GET: ดึง credentials (ส่งคืนแค่สถานะ — ไม่ส่ง secret กลับไป frontend)
+// GET: ดึง credentials (masked)
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session || session.user.role !== "OWNER") {
@@ -22,25 +22,25 @@ export async function GET() {
       used: true,
       resetMonth: true,
       resetYear: true,
-      thaibulkApiKey: true,     // แสดงเพื่อให้ user รู้ว่าตั้งค่าแล้วหรือยัง
+      thaibulkApiKey: true,
       thaibulkSenderId: true,
-      // ไม่ส่ง thaibulkApiSecret กลับ (masked)
     },
   });
 
   if (!addon) return NextResponse.json(null);
 
+  const key = addon.thaibulkApiKey;
   return NextResponse.json({
     ...addon,
-    hasApiKey: !!addon.thaibulkApiKey,
-    thaibulkApiKey: addon.thaibulkApiKey
-      ? addon.thaibulkApiKey.slice(0, 4) + "****" + addon.thaibulkApiKey.slice(-4)
-      : null,
-    // อย่าส่ง secret กลับเลย
+    hasApiKey: !!key,
+    // แสดง masked: 4 ตัวแรก + **** + 4 ตัวท้าย
+    thaibulkApiKey: key && key.length > 8
+      ? key.slice(0, 4) + "****" + key.slice(-4)
+      : key ? "****" : null,
   });
 }
 
-// PUT: บันทึก/อัปเดต Thaibulksms credentials
+// PUT: บันทึก/อัปเดต API Key (ไม่ต้องการ secret)
 export async function PUT(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -48,11 +48,11 @@ export async function PUT(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { apiKey, apiSecret, senderId } = await req.json();
+    const { apiKey, senderId } = await req.json();
 
-    if (!apiKey || !apiSecret) {
+    if (!apiKey?.trim()) {
       return NextResponse.json(
-        { message: "กรุณาระบุ API Key และ API Secret" },
+        { message: "กรุณาระบุ API Key" },
         { status: 400 }
       );
     }
@@ -64,13 +64,11 @@ export async function PUT(req: Request) {
       );
     }
 
-    // upsert SmsAddon กรณียังไม่มี record
     const now = new Date();
     const addon = await prisma.smsAddon.upsert({
       where: { ownerId: session.user.id },
       update: {
         thaibulkApiKey: apiKey.trim(),
-        thaibulkApiSecret: apiSecret.trim(),
         thaibulkSenderId: (senderId?.trim() || "JadHor").slice(0, 11),
       },
       create: {
@@ -80,9 +78,8 @@ export async function PUT(req: Request) {
         used: 0,
         resetMonth: now.getMonth() + 1,
         resetYear: now.getFullYear(),
-        isActive: false, // ยังไม่ active จนกว่าจะสมัครแพ็กเกจ
+        isActive: false,
         thaibulkApiKey: apiKey.trim(),
-        thaibulkApiSecret: apiSecret.trim(),
         thaibulkSenderId: (senderId?.trim() || "JadHor").slice(0, 11),
       },
     });
@@ -94,7 +91,7 @@ export async function PUT(req: Request) {
   }
 }
 
-// POST /api/owner/sms-credentials → ทดสอบส่ง SMS
+// POST: ทดสอบส่ง SMS
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -102,51 +99,46 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { testPhone, apiKey, apiSecret, senderId } = await req.json();
+    const { testPhone } = await req.json();
 
     if (!testPhone) {
       return NextResponse.json({ message: "กรุณาระบุเบอร์โทรทดสอบ" }, { status: 400 });
     }
 
-    // ใช้ credentials ที่ส่งมาใน body (ก่อน save) หรือดึงจาก DB
-    let resolvedApiKey = apiKey;
-    let resolvedApiSecret = apiSecret;
-    let resolvedSenderId = senderId || "JadHor";
+    // ดึง API Key จาก DB
+    const addon = await prisma.smsAddon.findUnique({
+      where: { ownerId: session.user.id },
+      select: { thaibulkApiKey: true, thaibulkSenderId: true },
+    });
 
-    if (!resolvedApiKey || !resolvedApiSecret) {
-      const addon = await prisma.smsAddon.findUnique({
-        where: { ownerId: session.user.id },
-        select: { thaibulkApiKey: true, thaibulkApiSecret: true, thaibulkSenderId: true },
-      });
-      if (!addon?.thaibulkApiKey || !addon?.thaibulkApiSecret) {
-        return NextResponse.json(
-          { message: "ยังไม่ได้ตั้งค่า API credentials กรุณาบันทึกก่อนทดสอบ" },
-          { status: 400 }
-        );
-      }
-      resolvedApiKey = addon.thaibulkApiKey;
-      resolvedApiSecret = addon.thaibulkApiSecret;
-      resolvedSenderId = addon.thaibulkSenderId || "JadHor";
+    if (!addon?.thaibulkApiKey) {
+      return NextResponse.json(
+        { message: "ยังไม่ได้บันทึก API Key กรุณาบันทึกก่อนทดสอบ" },
+        { status: 400 }
+      );
     }
 
     const normalized = normalizeThaiPhone(testPhone);
     if (!normalized) {
       return NextResponse.json(
-        { message: `เบอร์โทร "${testPhone}" ไม่ถูกต้อง` },
+        { message: `เบอร์โทร "${testPhone}" ไม่ถูกต้อง (ตัวอย่าง: 0812345678)` },
         { status: 400 }
       );
     }
 
     const result = await sendThaibulkSms(
       normalized,
-      `[JadHor] ทดสอบระบบ SMS สำเร็จ! 🎉 ขอบคุณที่ใช้บริการ JadHor OS`,
-      resolvedApiKey,
-      resolvedApiSecret,
-      resolvedSenderId
+      "[JadHor] ทดสอบระบบ SMS สำเร็จ! ขอบคุณที่ใช้บริการ JadHor OS",
+      addon.thaibulkApiKey,
+      "",
+      addon.thaibulkSenderId ?? "JadHor"
     );
 
     if (result.success) {
-      return NextResponse.json({ success: true, message: `ส่ง SMS ทดสอบไปยัง ${testPhone} สำเร็จ` });
+      return NextResponse.json({
+        success: true,
+        message: `ส่ง SMS ทดสอบไปยัง ${testPhone} สำเร็จ`,
+      });
     } else {
       return NextResponse.json(
         { success: false, message: result.error || "ส่ง SMS ไม่สำเร็จ" },

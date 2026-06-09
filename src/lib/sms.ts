@@ -2,7 +2,7 @@
  * Thaibulksms SMS Notification Utility
  * ──────────────────────────────────────
  * API v2: https://api-v2.thaibulksms.com
- * Auth: HTTP Basic (apiKey:apiSecret)
+ * Auth: Authorization: apikey <API_KEY>  (single key — no secret needed)
  * Docs: https://www.thaibulksms.com/sms-api/
  */
 
@@ -14,20 +14,19 @@ export interface SmsSendResult {
 
 /**
  * ส่ง SMS ผ่าน Thaibulksms API v2
- * @param to  เบอร์โทรปลายทาง (09xxxxxxxx หรือ 6xxxxxxxxx)
+ * @param to       เบอร์โทรปลายทาง (09xxxxxxxx หรือ 6xxxxxxxxx)
  * @param message  ข้อความ (รองรับภาษาไทย Unicode)
- * @param apiKey  Thaibulksms API Key
- * @param apiSecret  Thaibulksms API Secret
- * @param senderId  ชื่อผู้ส่ง (max 11 chars, default "JadHor")
+ * @param apiKey   Thaibulksms API Key (จาก dashboard → Developer Settings → API Key)
+ * @param senderId ชื่อผู้ส่ง (max 11 chars, default "JadHor")
  */
 export async function sendThaibulkSms(
   to: string,
   message: string,
   apiKey: string,
-  apiSecret: string,
+  _apiSecret: string = "",   // deprecated — ไม่ได้ใช้แล้ว เก็บไว้กัน breaking change
   senderId: string = "JadHor"
 ): Promise<SmsSendResult> {
-  if (!to || !message || !apiKey || !apiSecret) {
+  if (!to || !message || !apiKey) {
     console.error("[SMS] Missing required parameters");
     return { success: false, error: "ข้อมูลไม่ครบถ้วน" };
   }
@@ -39,31 +38,32 @@ export async function sendThaibulkSms(
   }
 
   try {
-    const credentials = Buffer.from(`${apiKey}:${apiSecret}`).toString("base64");
-
     const response = await fetch("https://api-v2.thaibulksms.com/message/sms", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Basic ${credentials}`,
+        "Authorization": `apikey ${apiKey}`,
       },
       body: JSON.stringify({
         msisdn: normalizedPhone,
         message,
-        sender: senderId.slice(0, 11), // max 11 chars
+        sender: senderId.slice(0, 11),
         force: "standard",
       }),
     });
 
-    const data = await response.json().catch(() => ({}));
+    // Thaibulksms อาจคืน HTML เมื่อ auth ผิด — จัดการ gracefully
+    const contentType = response.headers.get("content-type") || "";
+    const isJson = contentType.includes("application/json");
+    const data = isJson ? await response.json().catch(() => ({})) : {};
 
     if (!response.ok) {
-      const errMsg = data?.message || data?.error || `HTTP ${response.status}`;
-      console.error("[SMS] Thaibulksms API error:", errMsg);
+      const errMsg = data?.message || data?.error || `HTTP ${response.status} — ตรวจสอบ API Key ให้ถูกต้อง`;
+      console.error("[SMS] Thaibulksms API error:", response.status, errMsg);
       return { success: false, error: errMsg };
     }
 
-    // Thaibulksms v2: { status: "200", ... }
+    // success: HTTP 200 + status "200"
     if (data?.status === "200" || response.status === 200) {
       return { success: true, remaining: data?.remaining };
     }
