@@ -129,9 +129,20 @@ model Tenant {
   leaseStart    DateTime?
   leaseEnd      DateTime?
   depositAmount Float?
-  idCardNumber  String?
-  phoneNumber   String?   @unique
   lineUserId    String?   @unique
+
+  // ── ข้อมูลส่วนตัวตามกฎหมาย ──
+  firstName        String?           // ชื่อจริง (ภาษาไทย)
+  lastName         String?           // นามสกุล (ภาษาไทย)
+  idCardNumber     String?           // เลขบัตรประชาชน 13 หลัก
+  phoneNumber      String?  @unique   // เบอร์โทร
+  address          String?  @db.Text // ที่อยู่ตามทะเบียนบ้าน
+  emergencyContact String?           // ชื่อผู้ติดต่อฉุกเฉิน
+  emergencyPhone   String?           // เบอร์ผู้ติดต่อฉุกเฉิน
+  moveInDate       DateTime?         // วันย้ายเข้าจริง
+  profileCompleted Boolean  @default(false) // กรอกข้อมูลครบแล้วหรือยัง
+
+  vehicles         Vehicle[]         // ยานพาหนะที่ลงทะเบียน
 
   // E-Contract Fields
   signatureUrl      String?   @db.Text
@@ -143,6 +154,24 @@ model Tenant {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   isDeleted     Boolean   @default(false)
+}
+
+model Vehicle {
+  id           String      @id @default(cuid())
+  tenantId     String
+  tenant       Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  licensePlate String      // ทะเบียนรถ เช่น กก 1234
+  brand        String?     // ยี่ห้อ เช่น Honda, Toyota
+  color        String?     // สี
+  type         VehicleType @default(MOTORCYCLE)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+enum VehicleType {
+  CAR
+  MOTORCYCLE
+  OTHER
 }
 
 model Bill {

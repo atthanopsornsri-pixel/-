@@ -201,7 +201,8 @@ function TenantRegisterForm() {
       }
 
       await update();
-      router.push("/dashboard");
+      // redirect ไปกรอกข้อมูลจริง (ชื่อ/บัตร/รถ) ก่อนเข้า dashboard
+      router.push("/register/tenant/profile");
     } catch (err: any) {
       setError(err.message);
     } finally {

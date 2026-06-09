@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getSecurePrisma } from "@/lib/prisma-secure";
 import { TenantPaymentForm } from "@/components/TenantPaymentForm";
 import { AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import Link from "next/link";
 
 export default async function TenantDashboardPage() {
   const session = await getServerSession(authOptions);
@@ -19,6 +20,13 @@ export default async function TenantDashboardPage() {
   }
 
   const secureDb = await getSecurePrisma();
+
+  // ดึงข้อมูล tenant เพื่อเช็ค profileCompleted
+  const { prisma } = await import("@/lib/prisma");
+  const tenantProfile = await prisma.tenant.findUnique({
+    where: { userId: session.user.id },
+    select: { profileCompleted: true, firstName: true },
+  });
 
   // Fetch the latest bill for this tenant's room
   // Thanks to getSecurePrisma, it implicitly filters to ONLY this tenant's room!
@@ -40,8 +48,26 @@ export default async function TenantDashboardPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col items-center p-4 pt-8 animate-in fade-in duration-500">
+      {/* Banner: กรอกข้อมูลก่อน (ถ้ายังไม่ครบ) */}
+      {!tenantProfile?.profileCompleted && (
+        <div className="max-w-md w-full mb-4">
+          <Link href="/register/tenant/profile" className="block">
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
+              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0 mt-0.5">
+                <AlertCircle className="w-4 h-4 text-amber-600" />
+              </div>
+              <div>
+                <p className="font-bold text-amber-800 text-sm">กรอกข้อมูลให้ครบก่อนนะ</p>
+                <p className="text-amber-700 text-xs mt-0.5">ต้องใช้ชื่อจริงและเลขบัตรประชาชนเพื่อออกสัญญาเช่า</p>
+                <p className="text-amber-600 text-xs font-semibold mt-1">กดที่นี่เพื่อกรอกข้อมูล →</p>
+              </div>
+            </div>
+          </Link>
+        </div>
+      )}
+
       <div className="max-w-md w-full bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] p-6 md:p-8">
-        
+
         {/* Header section */}
         <div className="text-center mb-6">
           <h1 className="text-2xl font-extrabold text-slate-800">

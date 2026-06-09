@@ -27,11 +27,14 @@ export async function GET(request: Request) {
       return new NextResponse("Tenant data not found", { status: 404 });
     }
 
+    // ชื่อที่ใช้ในสัญญา: ใช้ firstName+lastName (ข้อมูลจริง) ก่อน fallback ไป user.name (LINE name)
+    const legalName = [tenant.firstName, tenant.lastName].filter(Boolean).join(" ") || tenant.user.name || "________________";
+
     let content = tenant.room.property.leaseTemplate || "";
 
     // Replace Placeholders for backwards compatibility
     if (content) {
-      content = content.replace(/{{TENANT_NAME}}/g, tenant.user.name || "________________");
+      content = content.replace(/{{TENANT_NAME}}/g, legalName);
       content = content.replace(/{{ROOM_NUMBER}}/g, tenant.room.number);
       content = content.replace(/{{RENT_PRICE}}/g, tenant.room.rentPrice.toString());
       content = content.replace(/{{DEPOSIT_AMOUNT}}/g, tenant.depositAmount?.toString() || "0");
@@ -43,13 +46,13 @@ export async function GET(request: Request) {
     // Auto-generate standard preamble
     const preamble = `
 <p style="margin-bottom: 1rem;">
-  สัญญาฉบับนี้ทำขึ้นระหว่าง <strong>${tenant.room.property.name}</strong> (ผู้ให้เช่า) 
-  และ <strong>${tenant.user.name || "________________"}</strong> (ผู้เช่า) ผู้ถือบัตรประชาชนเลขที่ <strong>${tenant.idCardNumber || "________________"}</strong>
+  สัญญาฉบับนี้ทำขึ้นระหว่าง <strong>${tenant.room.property.name}</strong> (ผู้ให้เช่า)
+  และ <strong>${legalName}</strong> (ผู้เช่า) ผู้ถือบัตรประชาชนเลขที่ <strong>${tenant.idCardNumber || "________________"}</strong>
 </p>
 <p style="margin-bottom: 1rem;">
-  ตกลงเช่าห้องพักหมายเลข <strong>${tenant.room.number}</strong> 
-  ในอัตราค่าเช่าเดือนละ <strong>${tenant.room.rentPrice.toLocaleString()}</strong> บาท 
-  โดยมีเงินประกันการเช่าจำนวน <strong>${tenant.depositAmount ? tenant.depositAmount.toLocaleString() : "0"}</strong> บาท 
+  ตกลงเช่าห้องพักหมายเลข <strong>${tenant.room.number}</strong>
+  ในอัตราค่าเช่าเดือนละ <strong>${tenant.room.rentPrice.toLocaleString()}</strong> บาท
+  โดยมีเงินประกันการเช่าจำนวน <strong>${tenant.depositAmount ? tenant.depositAmount.toLocaleString() : "0"}</strong> บาท
   โดยสัญญาเริ่มต้นตั้งแต่วันที่ <strong>${tenant.leaseStart ? new Intl.DateTimeFormat('th-TH', { dateStyle: 'long' }).format(new Date(tenant.leaseStart)) : "________________"}</strong> เป็นต้นไป
 </p>
 <hr style="margin: 2rem 0; border: 0; border-top: 1px solid #cbd5e1;" />
