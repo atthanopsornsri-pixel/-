@@ -38,7 +38,7 @@ export default function SidebarNav({ role }: SidebarNavProps) {
         <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname === "/dashboard" ? "bg-blue-100 text-blue-600" : "bg-blue-50 text-blue-500 group-hover:bg-blue-100"}`}>
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
         </div>
-        ภาพรวมระบบ
+        {role === "TENANT" ? "หน้าหลัก" : "ภาพรวมระบบ"}
       </Link>
 
       {role === "OWNER" && (

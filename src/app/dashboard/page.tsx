@@ -144,10 +144,12 @@ export default async function DashboardPage() {
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="text-3xl font-semibold tracking-[-0.02em] text-[var(--jh-ink)] md:text-[32px]">
-            ภาพรวมระบบ
+            {role === "TENANT" ? "หน้าหลัก" : "ภาพรวมระบบ"}
           </h1>
           <p className="mt-2 text-sm text-[var(--jh-ink-secondary)] md:text-[15px]">
-            ยินดีต้อนรับกลับมา, ขอให้วันนี้เป็นวันที่ดีในการบริหารจัดการ
+            {role === "TENANT"
+              ? "ยินดีต้อนรับกลับมา! ดูบิล แจ้งซ่อม และจัดการห้องพักของคุณได้ที่นี่"
+              : "ยินดีต้อนรับกลับมา, ขอให้วันนี้เป็นวันที่ดีในการบริหารจัดการ"}
           </p>
         </div>
         {role === "OWNER" && (
