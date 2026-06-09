@@ -1,22 +1,91 @@
 "use client";
 import { toast } from "sonner";
-
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSession } from "next-auth/react";
 import { PageHeader } from "@/components/PageHeader";
-import { Wrench } from "lucide-react";
+import {
+  Wrench,
+  Clock,
+  Hammer,
+  CheckCircle2,
+  ImagePlus,
+  Send,
+  ListFilter,
+} from "lucide-react";
+
+type StatusKey = "PENDING" | "IN_PROGRESS" | "COMPLETED";
+type FilterKey = "ALL" | StatusKey;
+
+const STATUS_META: Record<
+  StatusKey,
+  {
+    label: string;
+    color: string;
+    bg: string;
+    gradFrom: string;
+    gradTo: string;
+    solid: string;
+  }
+> = {
+  PENDING: {
+    label: "รอดำเนินการ",
+    color: "text-orange-600",
+    bg: "bg-orange-100",
+    gradFrom: "#fff9f2",
+    gradTo: "#ffeed9",
+    solid: "#ff9500",
+  },
+  IN_PROGRESS: {
+    label: "กำลังซ่อม",
+    color: "text-blue-600",
+    bg: "bg-blue-100",
+    gradFrom: "#f4f9ff",
+    gradTo: "#e3f0ff",
+    solid: "#007aff",
+  },
+  COMPLETED: {
+    label: "เสร็จสิ้น",
+    color: "text-green-600",
+    bg: "bg-green-100",
+    gradFrom: "#f3fcf6",
+    gradTo: "#e0f7e9",
+    solid: "#34c759",
+  },
+};
+
+const FILTER_TABS: { key: FilterKey; label: string; icon?: React.ReactNode }[] =
+  [
+    { key: "ALL", label: "ทั้งหมด", icon: <ListFilter className="w-3.5 h-3.5" /> },
+    {
+      key: "PENDING",
+      label: "รอดำเนินการ",
+      icon: <Clock className="w-3.5 h-3.5" />,
+    },
+    {
+      key: "IN_PROGRESS",
+      label: "กำลังซ่อม",
+      icon: <Hammer className="w-3.5 h-3.5" />,
+    },
+    {
+      key: "COMPLETED",
+      label: "เสร็จสิ้น",
+      icon: <CheckCircle2 className="w-3.5 h-3.5" />,
+    },
+  ];
 
 export default function MaintenancePage() {
   const { data: session } = useSession();
   const [requests, setRequests] = useState<any[]>([]);
+  const [filter, setFilter] = useState<FilterKey>("ALL");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const role = session?.user?.role;
 
@@ -26,154 +95,405 @@ export default function MaintenancePage() {
 
   async function fetchRequests() {
     const res = await fetch("/api/maintenance");
-    if (res.ok) {
-      const data = await res.json();
-      setRequests(data);
-    }
-  };
+    if (res.ok) setRequests(await res.json());
+  }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0] || null;
+    setImageFile(file);
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (ev) => setImagePreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
+    }
+  }
+
+  function clearImage() {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileRef.current) fileRef.current.value = "";
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsSubmitting(true);
-
     try {
-      let imageUrl = "";
-      if (imageFile) {
-        const formData = new FormData();
-        formData.append("file", imageFile);
+      // ส่ง FormData เดียว — รูป + ข้อมูลในคราวเดียว (เร็วกว่า 2 calls เดิม)
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("description", description);
+      if (imageFile) formData.append("file", imageFile);
 
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (uploadRes.ok) {
-          const uploadData = await uploadRes.json();
-          imageUrl = uploadData.url;
-        }
-      }
-
-      const res = await fetch("/api/maintenance", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, imageUrl }),
-      });
-
+      const res = await fetch("/api/maintenance", { method: "POST", body: formData });
       if (res.ok) {
         setTitle("");
         setDescription("");
-        setImageFile(null);
-        fetchRequests();
-        toast.success("แจ้งซ่อมสำเร็จ");
+        clearImage();
+        await fetchRequests();
+        toast.success("ส่งเรื่องแจ้งซ่อมสำเร็จ เจ้าของหอพักได้รับแจ้งแล้ว 🔧");
       } else {
         const data = await res.json();
         toast.error(data.message || "เกิดข้อผิดพลาด");
       }
-    } catch (err) {
-      toast.error("เกิดข้อผิดพลาด");
+    } catch {
+      toast.error("เกิดข้อผิดพลาด กรุณาลองใหม่");
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }
 
-  const handleUpdateStatus = async (id: string, status: string) => {
-    const res = await fetch("/api/maintenance", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, status }),
-    });
-
-    if (res.ok) {
-      fetchRequests();
+  async function handleUpdateStatus(id: string, status: string) {
+    setUpdatingId(id);
+    try {
+      const res = await fetch("/api/maintenance", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      if (res.ok) {
+        await fetchRequests();
+        if (status === "COMPLETED") {
+          toast.success("ซ่อมเสร็จสิ้น! แจ้งผู้เช่าทาง LINE แล้ว ✅");
+        } else {
+          toast.success("อัปเดตสถานะเรียบร้อย");
+        }
+      } else {
+        toast.error("เกิดข้อผิดพลาดในการอัปเดต");
+      }
+    } catch {
+      toast.error("เกิดข้อผิดพลาด");
+    } finally {
+      setUpdatingId(null);
     }
+  }
+
+  const counts: Record<FilterKey, number> = {
+    ALL: requests.length,
+    PENDING: requests.filter((r) => r.status === "PENDING").length,
+    IN_PROGRESS: requests.filter((r) => r.status === "IN_PROGRESS").length,
+    COMPLETED: requests.filter((r) => r.status === "COMPLETED").length,
   };
 
-  const getStatusBadge = (status: string) => {
-    if (status === "PENDING") return <span className="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs font-semibold">รอดำเนินการ</span>;
-    if (status === "IN_PROGRESS") return <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-semibold">กำลังแก้ไข</span>;
-    if (status === "COMPLETED") return <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-semibold">เรียบร้อย</span>;
-    return null;
-  };
+  const filteredRequests =
+    filter === "ALL" ? requests : requests.filter((r) => r.status === filter);
 
   return (
-    <div>
+    <div className="p-6 md:p-10 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       <PageHeader
         icon={Wrench}
         tone="cyan"
         title="ระบบแจ้งซ่อม"
-        subtitle={role === "TENANT" ? "แจ้งปัญหาในห้องพักให้ช่างเข้าตรวจสอบ" : "ติดตามและอัปเดตสถานะงานซ่อมทั้งหมด"}
+        subtitle={
+          role === "TENANT"
+            ? "แจ้งปัญหาในห้องพักให้ช่างเข้าตรวจสอบ"
+            : "ติดตามและอัปเดตสถานะงานซ่อมทั้งหมด"
+        }
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Owner: Filter tabs + stat chips */}
+      {role === "OWNER" && (
+        <div className="flex flex-wrap gap-2 mb-7">
+          {FILTER_TABS.map(({ key, label, icon }) => {
+            const isActive = filter === key;
+            const meta = key !== "ALL" ? STATUS_META[key as StatusKey] : null;
+            return (
+              <button
+                key={key}
+                onClick={() => setFilter(key)}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all duration-200 border"
+                style={
+                  isActive
+                    ? meta
+                      ? {
+                          background: meta.solid,
+                          color: "#fff",
+                          borderColor: "transparent",
+                          boxShadow: `0 4px 14px -4px ${meta.solid}`,
+                        }
+                      : {
+                          background: "#1e293b",
+                          color: "#fff",
+                          borderColor: "transparent",
+                        }
+                    : { background: "#fff", color: "#64748b", borderColor: "#e2e8f0" }
+                }
+              >
+                {icon}
+                <span>{label}</span>
+                <span
+                  className="ml-0.5 px-1.5 py-0.5 rounded-full text-xs font-bold"
+                  style={
+                    isActive
+                      ? { background: "rgba(255,255,255,0.25)", color: "#fff" }
+                      : { background: "#f1f5f9", color: "#64748b" }
+                  }
+                >
+                  {counts[key]}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <div
+        className={`grid grid-cols-1 gap-6 ${
+          role === "TENANT" ? "lg:grid-cols-3" : ""
+        }`}
+      >
+        {/* Tenant: Submit form */}
         {role === "TENANT" && (
           <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <CardTitle>แจ้งปัญหาใหม่</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>หัวข้อปัญหา</Label>
-                    <Input value={title} onChange={e => setTitle(e.target.value)} required placeholder="เช่น แอร์ไม่เย็น, ท่อน้ำซึม" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>รายละเอียด</Label>
-                    <textarea 
-                      className="flex min-h-[80px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-950 focus:ring-offset-2"
-                      value={description} onChange={e => setDescription(e.target.value)} required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>แนบรูปภาพ (ถ้ามี)</Label>
-                    <Input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} />
-                  </div>
-                  <Button type="submit" className="w-full rounded-full bg-[#30b0c7] hover:brightness-105 text-white font-semibold shadow-[0_8px_18px_-6px_#30b0c7] transition-all hover:-translate-y-0.5" disabled={isSubmitting}>
-                    {isSubmitting ? "กำลังส่ง..." : "ส่งเรื่องแจ้งซ่อม"}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
+            <div
+              className="rounded-[var(--jh-radius-2xl)] border border-white/60 shadow-[var(--jh-shadow-card)] p-6"
+              style={{
+                background: "linear-gradient(150deg, #f6f6ff 0%, #e8e7fb 100%)",
+              }}
+            >
+              <div className="flex items-center gap-3 mb-5">
+                <div
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--jh-radius-md)] transition-transform duration-300"
+                  style={{
+                    background: "#5856d6",
+                    color: "#fff",
+                    boxShadow: "0 10px 22px -8px #5856d6",
+                  }}
+                >
+                  <Wrench className="h-5 w-5" strokeWidth={2} />
+                </div>
+                <h2 className="font-bold text-lg text-[var(--jh-ink)]">
+                  แจ้งปัญหาใหม่
+                </h2>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold text-slate-700">
+                    หัวข้อปัญหา
+                  </Label>
+                  <Input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    required
+                    placeholder="เช่น แอร์ไม่เย็น, ท่อน้ำซึม, ไฟไม่ติด"
+                    className="bg-white/80 border-slate-200 rounded-xl"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold text-slate-700">
+                    รายละเอียด
+                  </Label>
+                  <textarea
+                    className="flex min-h-[100px] w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#5856d6]/30 resize-none"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    required
+                    placeholder="อธิบายปัญหาให้ละเอียด เพื่อให้ช่างเตรียมอุปกรณ์ได้ถูกต้อง"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold text-slate-700">
+                    แนบรูปภาพ (ถ้ามี)
+                  </Label>
+                  {imagePreview ? (
+                    <div className="relative rounded-xl overflow-hidden border border-slate-200">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={imagePreview}
+                        alt="preview"
+                        className="w-full h-40 object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={clearImage}
+                        className="absolute top-2 right-2 bg-black/50 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-black/70 transition-colors"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center gap-2 p-5 rounded-xl border-2 border-dashed border-indigo-200 bg-white/50 cursor-pointer hover:bg-indigo-50/50 transition-colors">
+                      <ImagePlus className="w-6 h-6 text-indigo-400" />
+                      <span className="text-xs text-slate-500">
+                        คลิกเพื่อเลือกรูป (max 5MB)
+                      </span>
+                      <input
+                        ref={fileRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageChange}
+                      />
+                    </label>
+                  )}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-full font-bold text-white transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-60 disabled:translate-y-0 disabled:cursor-not-allowed"
+                  style={{
+                    background: "#5856d6",
+                    boxShadow: "0 8px 18px -6px #5856d6",
+                  }}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      กำลังส่ง...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      ส่งเรื่องแจ้งซ่อม
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
           </div>
         )}
 
-        <div className={role === "TENANT" ? "lg:col-span-2" : "lg:col-span-3"}>
+        {/* Request cards list */}
+        <div className={role === "TENANT" ? "lg:col-span-2" : ""}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {requests.map(req => (
-              <Card key={req.id}>
-                {req.imageUrl && (
-                  <div className="h-40 w-full bg-slate-100 relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={req.imageUrl} alt={req.title} className="w-full h-full object-cover" />
-                  </div>
-                )}
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="font-bold text-lg text-slate-800">{req.title}</h3>
-                      {role === "OWNER" && (
-                        <p className="text-xs text-blue-600 font-medium">ห้อง {req.room?.number} ({req.room?.property?.name})</p>
-                      )}
-                      <p className="text-xs text-slate-500 mt-1">{new Date(req.createdAt).toLocaleString("th-TH")}</p>
-                    </div>
-                    {getStatusBadge(req.status)}
-                  </div>
-                  <p className="text-sm text-slate-600 my-3 whitespace-pre-wrap">{req.description}</p>
-                  
-                  {role === "OWNER" && req.status !== "COMPLETED" && (
-                    <div className="pt-3 border-t border-slate-100 flex gap-2">
-                      {req.status === "PENDING" && (
-                        <Button size="sm" variant="outline" className="w-full" onClick={() => handleUpdateStatus(req.id, "IN_PROGRESS")}>รับเรื่อง/กำลังซ่อม</Button>
-                      )}
-                      <Button size="sm" className="w-full rounded-full bg-[#34c759] hover:brightness-105 text-white font-semibold shadow-[0_8px_18px_-6px_#34c759] transition-all" onClick={() => handleUpdateStatus(req.id, "COMPLETED")}>ซ่อมเสร็จสิ้น</Button>
+            {filteredRequests.map((req) => {
+              const meta =
+                STATUS_META[req.status as StatusKey] ?? STATUS_META.PENDING;
+              const isUpdating = updatingId === req.id;
+
+              return (
+                <div
+                  key={req.id}
+                  className="group rounded-[var(--jh-radius-2xl)] border border-white/60 shadow-[var(--jh-shadow-card)] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
+                  style={{
+                    background: `linear-gradient(150deg, ${meta.gradFrom} 0%, ${meta.gradTo} 100%)`,
+                  }}
+                >
+                  {/* รูปภาพ (ถ้ามี) */}
+                  {req.imageUrl && (
+                    <div className="h-44 w-full overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={req.imageUrl}
+                        alt={req.title}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            ))}
-            {requests.length === 0 && (
-              <div className="col-span-full text-center py-12 text-slate-500 bg-white rounded-xl border border-dashed border-slate-300">
-                ไม่มีประวัติการแจ้งซ่อม
+
+                  <div className="p-4">
+                    {/* Header: title + badge */}
+                    <div className="flex justify-between items-start gap-2 mb-2">
+                      <h3 className="font-bold text-[var(--jh-ink)] leading-tight">
+                        {req.title}
+                      </h3>
+                      <span
+                        className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${meta.bg} ${meta.color}`}
+                      >
+                        {meta.label}
+                      </span>
+                    </div>
+
+                    {/* Room + property (owner only) */}
+                    {role === "OWNER" && (
+                      <p
+                        className="text-xs font-semibold mb-1"
+                        style={{ color: meta.solid }}
+                      >
+                        ห้อง {req.room?.number}
+                        {req.room?.property?.name
+                          ? ` · ${req.room.property.name}`
+                          : ""}
+                      </p>
+                    )}
+
+                    {/* Date */}
+                    <p className="text-xs text-slate-400 mb-2">
+                      {new Date(req.createdAt).toLocaleString("th-TH", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </p>
+
+                    {/* Description */}
+                    <p className="text-sm text-slate-600 whitespace-pre-wrap line-clamp-3 leading-relaxed">
+                      {req.description}
+                    </p>
+
+                    {/* Owner: action buttons */}
+                    {role === "OWNER" && req.status !== "COMPLETED" && (
+                      <div className="mt-4 pt-3 border-t border-black/5 flex flex-col gap-2">
+                        {req.status === "PENDING" && (
+                          <button
+                            onClick={() =>
+                              handleUpdateStatus(req.id, "IN_PROGRESS")
+                            }
+                            disabled={isUpdating}
+                            className="w-full py-2.5 rounded-full text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-60 disabled:translate-y-0"
+                            style={{
+                              background: "#007aff",
+                              boxShadow: "0 8px 18px -6px #007aff",
+                            }}
+                          >
+                            {isUpdating ? (
+                              <span className="flex items-center justify-center gap-2">
+                                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                กำลังอัปเดต...
+                              </span>
+                            ) : (
+                              "🔧 รับเรื่อง / กำลังดำเนินการ"
+                            )}
+                          </button>
+                        )}
+                        <button
+                          onClick={() =>
+                            handleUpdateStatus(req.id, "COMPLETED")
+                          }
+                          disabled={isUpdating}
+                          className="w-full py-2.5 rounded-full text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-60 disabled:translate-y-0"
+                          style={{
+                            background: "#34c759",
+                            boxShadow: "0 8px 18px -6px #34c759",
+                          }}
+                        >
+                          {isUpdating ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              กำลังอัปเดต...
+                            </span>
+                          ) : (
+                            "✅ ซ่อมเสร็จ — แจ้งผู้เช่าทาง LINE"
+                          )}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Completed state */}
+                    {req.status === "COMPLETED" && (
+                      <div className="mt-3 pt-3 border-t border-black/5 text-center">
+                        <p className="text-xs text-green-600 font-semibold">
+                          ✅ ดำเนินการเสร็จสิ้นแล้ว
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            {filteredRequests.length === 0 && (
+              <div className="col-span-full text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200">
+                <Wrench className="w-10 h-10 mx-auto mb-3 text-slate-200" />
+                <p className="font-semibold text-slate-400">
+                  {filter === "ALL"
+                    ? "ไม่มีประวัติการแจ้งซ่อม"
+                    : `ไม่มีรายการ "${STATUS_META[filter as StatusKey]?.label ?? filter}"`}
+                </p>
               </div>
             )}
           </div>

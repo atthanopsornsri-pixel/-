@@ -11,22 +11,45 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { title, description, imageUrl } = await req.json();
+    // รองรับทั้ง FormData (รูปรวมมาด้วย 1 call) และ JSON (backwards compat)
+    const contentType = req.headers.get("content-type") || "";
+    let title: string = "";
+    let description: string = "";
+    let imageUrl: string = "";
+
+    if (contentType.includes("multipart/form-data")) {
+      const formData = await req.formData();
+      title = (formData.get("title") as string) || "";
+      description = (formData.get("description") as string) || "";
+      const file = formData.get("file") as File | null;
+      if (file && file.size > 0) {
+        // ตรวจขนาดไฟล์ (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          return NextResponse.json({ message: "ไฟล์ใหญ่เกิน 5 MB" }, { status: 413 });
+        }
+        const bytes = await file.arrayBuffer();
+        const buffer = Buffer.from(bytes);
+        imageUrl = `data:${file.type || "image/jpeg"};base64,${buffer.toString("base64")}`;
+      }
+    } else {
+      const body = await req.json();
+      title = body.title || "";
+      description = body.description || "";
+      imageUrl = body.imageUrl || "";
+    }
 
     if (!title || !description) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
 
-    // Get tenant's room and owner info for LINE notification
+    // ดึงข้อมูลผู้เช่าพร้อม room/property/owner สำหรับ LINE notification
     const tenant = await prisma.tenant.findUnique({
       where: { userId: session.user.id },
       include: {
         room: {
           include: {
             property: {
-              include: {
-                owner: true
-              }
+              include: { owner: true }
             }
           }
         }
@@ -38,34 +61,36 @@ export async function POST(req: Request) {
     }
 
     const request = await prisma.maintenanceRequest.create({
-      data: {
-        roomId: tenant.roomId,
-        title,
-        description,
-        imageUrl,
-      },
+      data: { roomId: tenant.roomId, title, description, imageUrl },
     });
 
-    // ส่ง LINE แบบ fire-and-forget (ไม่ await เพื่อ response เร็ว)
-    if (tenant.room?.property?.owner?.lineChannelAccessToken && tenant.room?.property?.owner?.lineUserId) {
-      const propertyName = tenant.room.property.name || "หอพัก";
-      const roomNumber = tenant.room.number;
-      const tenantName = tenant.room.property.owner.name || "ผู้เช่า";
+    // ส่ง LINE แจ้งเจ้าของ (fire-and-forget — ไม่ await เพื่อ response เร็ว)
+    const owner = tenant.room?.property?.owner;
+    if (owner?.lineChannelAccessToken && owner?.lineUserId) {
+      const propertyName = tenant.room?.property?.name || "หอพัก";
+      const roomNumber = tenant.room?.number || "-";
+      const tenantName =
+        [tenant.firstName, tenant.lastName].filter(Boolean).join(" ") ||
+        tenant.phoneNumber ||
+        "ผู้เช่า";
+      const now = new Date().toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" });
+
       const lineMsg = [
-        `📋 แจ้งซ่อมใหม่`,
-        `━━━━━━━━━━━━━━`,
-        `🏠 ${propertyName} ห้อง ${roomNumber}`,
-        `📌 เรื่อง: ${title}`,
-        `📝 รายละเอียด: ${description}`,
-        `━━━━━━━━━━━━━━`,
-        `กรุณาเข้าระบบเพื่อตรวจสอบและอัปเดตสถานะ`,
+        `🔧 แจ้งซ่อมใหม่ — ต้องการความช่วยเหลือ!`,
+        `━━━━━━━━━━━━━━━━━━━━`,
+        `🏠 ${propertyName}  ห้อง ${roomNumber}`,
+        `👤 ผู้เช่า: ${tenantName}`,
+        `━━━━━━━━━━━━━━━━━━━━`,
+        `🔴 เรื่อง: ${title}`,
+        `📝 รายละเอียด:`,
+        description,
+        `━━━━━━━━━━━━━━━━━━━━`,
+        `⏰ แจ้งเมื่อ: ${now}`,
+        `👉 เข้าระบบเพื่อรับเรื่องและอัปเดตสถานะ`,
       ].join("\n");
 
-      sendLineOAMessage(
-        tenant.room.property.owner.lineUserId,
-        lineMsg,
-        tenant.room.property.owner.lineChannelAccessToken
-      ).catch((err) => console.error("[LINE] maintenance notify error:", err));
+      sendLineOAMessage(owner.lineUserId, lineMsg, owner.lineChannelAccessToken)
+        .catch((err) => console.error("[LINE] maintenance notify error:", err));
     }
 
     return NextResponse.json(request, { status: 201 });
@@ -88,7 +113,6 @@ export async function GET(req: Request) {
       const tenant = await prisma.tenant.findUnique({
         where: { userId: session.user.id },
       });
-      
       if (!tenant?.roomId) return NextResponse.json([]);
 
       requests = await prisma.maintenanceRequest.findMany({
@@ -99,7 +123,7 @@ export async function GET(req: Request) {
       const { searchParams } = new URL(req.url);
       const propertyId = searchParams.get("propertyId");
 
-      let whereClause: any = {
+      const whereClause: any = {
         isDeleted: false,
         room: { property: { ownerId: session.user.id } },
       };
@@ -133,16 +157,14 @@ export async function PATCH(req: Request) {
 
     const { id, status } = await req.json();
 
-    // Verify ownership of the maintenance request room's property
+    // ยืนยันความเป็นเจ้าของก่อนอัปเดต
     const maintReq = await prisma.maintenanceRequest.findUnique({
       where: { id },
       include: {
         room: {
           include: {
             property: {
-              include: {
-                owner: true
-              }
+              include: { owner: true }
             }
           }
         }
@@ -152,9 +174,8 @@ export async function PATCH(req: Request) {
     if (!maintReq) {
       return NextResponse.json({ message: "Maintenance request not found" }, { status: 404 });
     }
-
     if (maintReq.room.property.ownerId !== session.user.id) {
-      return NextResponse.json({ message: "Unauthorized: You do not own this property" }, { status: 403 });
+      return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
     const request = await prisma.maintenanceRequest.update({
@@ -165,29 +186,45 @@ export async function PATCH(req: Request) {
       }
     });
 
-    // Notify Tenant if they have lineUserId setup
+    // แจ้ง LINE ผู้เช่า (ถ้ามี lineUserId)
+    const owner = maintReq.room.property.owner;
     const tenant = await prisma.tenant.findFirst({
       where: { roomId: request.roomId },
       select: { lineUserId: true }
     });
 
-    if (maintReq.room.property.owner.lineChannelAccessToken && tenant?.lineUserId) {
-      const statusEmoji = status === "IN_PROGRESS" ? "🔧" : "✅";
-      const statusText = status === "IN_PROGRESS" ? "กำลังดำเนินการแก้ไข" : "ดำเนินการแก้ไขเสร็จสิ้นแล้ว";
-      const lineMsg = [
-        `${statusEmoji} อัปเดตสถานะแจ้งซ่อม`,
-        `━━━━━━━━━━━━━━`,
-        `🏠 ห้อง ${request.room.number}`,
-        `📌 เรื่อง: ${request.title}`,
-        `📊 สถานะ: ${statusText}`,
-        status === "DONE" ? `━━━━━━━━━━━━━━\nขอบคุณที่ใช้บริการ 🙏` : "",
-      ].filter(Boolean).join("\n");
+    if (owner.lineChannelAccessToken && tenant?.lineUserId) {
+      const roomNumber = request.room.number;
+      const reqTitle = maintReq.title;
 
-      sendLineOAMessage(
-        tenant.lineUserId,
-        lineMsg,
-        maintReq.room.property.owner.lineChannelAccessToken
-      ).catch((err) => console.error("[LINE] maintenance status notify error:", err));
+      const lineMsg = status === "IN_PROGRESS"
+        ? [
+            `🔧 อัปเดตเรื่องแจ้งซ่อมของคุณ`,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            `🏠 ห้อง ${roomNumber}`,
+            `📌 เรื่อง: ${reqTitle}`,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            `🔄 สถานะ: กำลังดำเนินการซ่อม`,
+            `ช่างได้รับเรื่องและกำลังเข้ามาแก้ไขให้คุณแล้ว`,
+            `โปรดเตรียมพร้อมต้อนรับช่างด้วยนะคะ 🙏`,
+          ].join("\n")
+        : status === "COMPLETED"
+        ? [
+            `✅ งานซ่อมเสร็จสิ้นแล้ว!`,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            `🏠 ห้อง ${roomNumber}`,
+            `📌 เรื่อง: ${reqTitle}`,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            `✨ ช่างซ่อมเรียบร้อยแล้วค่ะ`,
+            `หากมีปัญหาเพิ่มเติมหรืออยากแจ้งซ่อมอีกครั้ง`,
+            `สามารถแจ้งผ่านแอปได้เลยนะคะ 😊`,
+          ].join("\n")
+        : null;
+
+      if (lineMsg) {
+        sendLineOAMessage(tenant.lineUserId, lineMsg, owner.lineChannelAccessToken)
+          .catch((err) => console.error("[LINE] maintenance status notify error:", err));
+      }
     }
 
     return NextResponse.json(request);
