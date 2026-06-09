@@ -133,14 +133,14 @@ export async function saveBulkMeterReadings(
       const amount = unitsUsed * currentRate;
 
       // ค้นหาบิลรอบปัจจุบัน
-      const existingBill = await tx.bill.findUnique({
+      // ใช้ findFirst (ไม่ใช่ composite key) เพราะ getSecurePrisma แปลง findUnique → findFirst
+      // unique constraint [roomId,month,year,type] รับประกันว่ามีบิลเดียวอยู่แล้ว
+      const existingBill = await tx.bill.findFirst({
         where: {
-          roomId_month_year_type: {
-            roomId: reading.roomId,
-            month: month,
-            year: year,
-            type: "MONTHLY",
-          },
+          roomId: reading.roomId,
+          month: month,
+          year: year,
+          type: "MONTHLY",
         },
       });
 
@@ -254,14 +254,13 @@ export async function getRoomsForMeterEntry(
     // ดึงค่าสถานะรอบบิลปัจจุบันเพื่อผูกเข้ากับ row
     const rowsWithBillStatus = await Promise.all(
       rows.map(async (row) => {
-        const bill = await prisma.bill.findUnique({
+        // findFirst + flat where (getSecurePrisma แปลง findUnique → findFirst)
+        const bill = await prisma.bill.findFirst({
           where: {
-            roomId_month_year_type: {
-              roomId: row.roomId,
-              month,
-              year,
-              type: "MONTHLY",
-            },
+            roomId: row.roomId,
+            month,
+            year,
+            type: "MONTHLY",
           },
         });
 
