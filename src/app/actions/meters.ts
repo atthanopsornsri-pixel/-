@@ -38,16 +38,18 @@ export async function getOccupiedRoomsForMeterEntry(
   const calculatedRows = await Promise.all(
     rooms.map(async (room) => {
       // คิวรีตรงไปยังบิลเดือนก่อนหน้าแค่ 1 แถวข้อมูล (ความเร็วระดับ Milliseconds ด้วย Index)
+      // ต้องกรอง type: "MONTHLY" เสมอ เพื่อไม่หยิบ CHECKIN bill มาใช้
       const lastMonthBill = await prisma.bill.findFirst({
         where: {
           roomId: room.id,
           month: prevPeriod.month,
           year: prevPeriod.year,
+          type: "MONTHLY",
           isDeleted: false,
         },
         select: {
-          waterReading: true, // ในโมเดลจริงคือ waterReading
-          electricReading: true, // ในโมเดลจริงคือ electricReading
+          waterReading: true,
+          electricReading: true,
         },
       });
 
@@ -103,11 +105,13 @@ export async function saveBulkMeterReadings(
       });
       if (!room) throw new Error(`ไม่พบห้องพัก ${reading.roomId}`);
 
+      // กรอง type: "MONTHLY" เพื่อไม่หยิบ CHECKIN bill มาเป็น previousReading
       const lastMonthBill = await tx.bill.findFirst({
         where: {
           roomId: reading.roomId,
           month: prevPeriod.month,
           year: prevPeriod.year,
+          type: "MONTHLY",
           isDeleted: false,
         },
         select: {
@@ -206,7 +210,8 @@ export async function saveBulkMeterReadings(
             roomId: reading.roomId,
             month: month,
             year: year,
-            status: "UNPAID", // Schema ไม่รองรับ DRAFT จึงใช้ UNPAID
+            type: "MONTHLY", // ระบุ explicit ป้องกัน default เปลี่ยน
+            status: "UNPAID",
             rentAmount: 0, // สลักเป็น 0 ตามที่บอสต้องการ
             waterUnits: waterUnitsVal,
             waterAmount: waterAmountVal,
