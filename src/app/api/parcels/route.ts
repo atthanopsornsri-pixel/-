@@ -51,11 +51,12 @@ export async function POST(req: Request) {
     });
 
     if (room?.property?.owner?.lineChannelAccessToken && tenant?.lineUserId) {
-      await sendLineOAMessage(
+      // fire-and-forget — ไม่ await เพื่อให้ response เร็ว
+      sendLineOAMessage(
         tenant.lineUserId,
         `📦 มีพัสดุมาส่งถึงคุณ!\nชื่อผู้รับ: ${recipientName || "-"}\nห้อง: ${parcel.room.number}\nเลขพัสดุ: ${trackingNumber || "-"}`,
         room.property.owner.lineChannelAccessToken
-      );
+      ).catch((err) => console.error("[LINE] parcel notify error:", err));
     }
 
     return NextResponse.json(parcel, { status: 201 });

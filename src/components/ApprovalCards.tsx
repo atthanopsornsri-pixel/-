@@ -117,7 +117,7 @@ export function ApprovalCards({ initialBills }: { initialBills: ApprovalBill[] }
 
             {/* Body */}
             <div className="p-4 flex flex-col flex-grow">
-              <div className="text-sm text-slate-500 font-medium">ยอดโอน (เดือน {bill.month}/{bill.year})</div>
+              <div className="text-sm text-slate-500 font-medium">ยอดโอน (เดือน {bill.month}/{bill.year + 543})</div>
               <div className="text-2xl font-black text-slate-800 mb-4">{formatTHB(bill.totalAmount)}</div>
               
               <div className="mt-auto flex flex-col gap-2">

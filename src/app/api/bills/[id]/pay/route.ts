@@ -54,6 +54,20 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       );
     }
 
+    // ยอดเงินในสลิปไม่ตรงกับยอดบิล → แจ้งผู้ใช้ ไม่บันทึก
+    if (verification.enabled && verification.amountMismatch) {
+      const slipAmt = verification.amount != null
+        ? `฿${verification.amount.toLocaleString()}`
+        : "ไม่ทราบยอด";
+      return NextResponse.json(
+        {
+          message: `ยอดเงินในสลิป (${slipAmt}) ไม่ตรงกับยอดบิล (฿${bill.totalAmount.toLocaleString()}) กรุณาตรวจสอบสลิปให้ถูกต้องแล้วลองใหม่อีกครั้ง`,
+          code: "AMOUNT_MISMATCH",
+        },
+        { status: 400 }
+      );
+    }
+
     // ตัดสินสถานะบิลตามผลการตรวจ
     let newStatus: "PENDING" | "PAID" | "PARTIAL" = "PENDING"; // ค่าเริ่มต้น = รอเจ้าของตรวจ (manual fallback)
     let paidAmount = bill.paidAmount;

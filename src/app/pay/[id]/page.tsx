@@ -103,6 +103,8 @@ export default function PayBillPage() {
         const err = await res.json().catch(() => null);
         if (err?.code === "DUPLICATE_SLIP") {
           toast.error("สลิปนี้เคยถูกใช้ชำระเงินไปแล้ว ไม่สามารถใช้ซ้ำได้");
+        } else if (err?.code === "AMOUNT_MISMATCH") {
+          toast.error(err.message || "ยอดเงินในสลิปไม่ตรงกับยอดบิล กรุณาตรวจสอบและลองใหม่");
         } else {
           toast.error(err?.message || "เกิดข้อผิดพลาดในการอัปโหลดหลักฐาน");
         }
@@ -136,7 +138,7 @@ export default function PayBillPage() {
 
         <div className="p-6">
           <div className="text-center mb-6">
-            <p className="text-sm text-slate-500 mb-1">ยอดชำระประจำเดือน {bill.month}/{bill.year}</p>
+            <p className="text-sm text-slate-500 mb-1">ยอดชำระประจำเดือน {bill.month}/{bill.year + 543}</p>
             <h2 className="text-4xl font-extrabold text-[#007AFF]">฿{bill.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</h2>
           </div>
 

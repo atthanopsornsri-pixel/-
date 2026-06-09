@@ -138,7 +138,7 @@ export default function BillPrintPage() {
             <tbody className="text-slate-800">
               <tr>
                 <td className="py-2 px-3 border border-slate-300 text-center">1</td>
-                <td className="py-2 px-3 border border-slate-300">ค่าเช่าห้องพักประจำเดือน {bill.month}/{bill.year}</td>
+                <td className="py-2 px-3 border border-slate-300">ค่าเช่าห้องพักประจำเดือน {bill.month}/{bill.year + 543}</td>
                 <td className="py-2 px-3 border border-slate-300 text-center">-</td>
                 <td className="py-2 px-3 border border-slate-300 text-right">{bill.rentAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
               </tr>

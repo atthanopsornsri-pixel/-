@@ -196,7 +196,7 @@ export default function OwnerBillingPage() {
                   {bill.planTier} <span className="text-xs text-slate-400 ml-1 font-medium">({bill.cycle})</span>
                 </td>
                 <td className="px-6 py-4 font-medium text-slate-800">
-                  {bill.month}/{bill.year}
+                  {bill.month}/{bill.year + 543}
                 </td>
                 <td className="px-6 py-4 font-bold text-slate-800">
                   {bill.amount.toLocaleString()}

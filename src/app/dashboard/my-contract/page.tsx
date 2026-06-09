@@ -265,7 +265,7 @@ export default function TenantContractPage() {
                   {checkinBill.status === "PENDING" && " (รอเจ้าของหอตรวจสอบสลิป)"}
                 </p>
               )}
-              <a href="/tenant/dashboard">
+              <a href="/dashboard/my-bills">
                 <Button className="bg-amber-600 hover:bg-amber-700 text-white rounded-full px-8">
                   ไปหน้าชำระบิลค่าเข้าอยู่ →
                 </Button>

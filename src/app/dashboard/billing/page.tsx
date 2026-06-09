@@ -544,7 +544,7 @@ export default function BillingPage() {
                         </div>
                         <div className="text-xs font-normal text-[var(--jh-ink-tertiary)]">{bill.room.property.name}</div>
                       </td>
-                      <td className="px-5 py-3.5 text-[var(--jh-ink-secondary)]">{bill.type === "CHECKIN" ? "—" : `${bill.month}/${bill.year}`}</td>
+                      <td className="px-5 py-3.5 text-[var(--jh-ink-secondary)]">{bill.type === "CHECKIN" ? "—" : `${bill.month}/${bill.year + 543}`}</td>
                       <td className="px-5 py-3.5 font-semibold tabular-nums text-[var(--jh-ink)]">฿{bill.totalAmount.toLocaleString()}</td>
                       <td className="px-5 py-3.5">
                         <span className={`inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full text-xs font-semibold ${

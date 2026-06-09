@@ -164,7 +164,7 @@ export default function AdminBillsPage() {
               {bills.map(bill => (
                 <tr key={bill.id} className="hover:bg-slate-50/50">
                   <td className="px-6 py-4 font-medium text-slate-800">
-                    {bill.month}/{bill.year}
+                    {bill.month}/{bill.year + 543}
                   </td>
                   <td className="px-6 py-4 text-slate-600">
                     {bill.owner?.name || bill.owner?.email}
