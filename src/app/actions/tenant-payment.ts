@@ -67,26 +67,33 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
     const fileExtension = file.name.split('.').pop() || 'jpg';
     const filename = `slips/${billId}-${Date.now()}.${fileExtension}`;
 
-    // Initialize Supabase with SERVICE ROLE to bypass Private Bucket RLS
+    // 3. เก็บรูปสลิป — รองรับ 2 แบบ:
+    //    (ก) ถ้าตั้งค่า Supabase Storage → อัปโหลดเป็นไฟล์ (เบากว่า, แนะนำ)
+    //    (ข) ถ้าไม่ได้ตั้งค่า → fallback เก็บเป็น base64 ในฐานข้อมูลเลย (ใช้งานได้ทันที)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl || !supabaseServiceKey) {
-      console.error("[SLIP UPLOAD] Missing Supabase env vars (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)");
-      return { success: false, error: "ระบบจัดเก็บสลิปยังไม่ได้ตั้งค่า (ติดต่อผู้ดูแลระบบ)" };
-    }
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const base64DataUrl = () =>
+      `data:${file.type || "image/jpeg"};base64,${buffer.toString("base64")}`;
 
-    // 3. Upload to Private Bucket (Phase 3 logic used "documents" bucket)
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from("documents")
-      .upload(filename, buffer, {
-        contentType: file.type || "image/jpeg",
-        upsert: true
-      });
-
-    if (uploadError) {
-      console.error("Supabase Upload Error:", uploadError);
-      return { success: false, error: "Failed to upload slip image." };
+    let slipUrlToStore: string;
+    if (supabaseUrl && supabaseServiceKey) {
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+      const { error: uploadError } = await supabase.storage
+        .from("documents")
+        .upload(filename, buffer, {
+          contentType: file.type || "image/jpeg",
+          upsert: true,
+        });
+      if (uploadError) {
+        // อัปโหลดไม่สำเร็จ → fallback base64 แทนการ fail ทั้ง flow
+        console.error("Supabase Upload Error (falling back to base64):", uploadError);
+        slipUrlToStore = base64DataUrl();
+      } else {
+        slipUrlToStore = filename; // เก็บ path ไว้ให้ตัวสร้าง signed URL
+      }
+    } else {
+      // ไม่ได้ตั้งค่า Supabase → เก็บ base64 ในฐานข้อมูล
+      slipUrlToStore = base64DataUrl();
     }
 
     // 4. ตัดสินสถานะบิลตามผลการตรวจสลิป
@@ -119,7 +126,7 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
       where: { id: billId },
       data: {
         status: newStatus,
-        slipUrl: filename, // Store the relative path for the signed URL generator
+        slipUrl: slipUrlToStore, // path (Supabase) หรือ base64 data URL (fallback)
         paidAmount,
         paymentDate: new Date(),
       }
