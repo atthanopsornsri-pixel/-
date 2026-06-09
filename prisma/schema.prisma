@@ -72,6 +72,13 @@ model Property {
   defaultParkingFee Float?  // ค่าที่จอดรถ (Default)
   defaultInternetFee Float? // ค่าอินเทอร์เน็ต (Default)
 
+  // ── ค่าเริ่มต้นสำหรับ "บิลเข้าอยู่" (Check-in) ──
+  defaultSecurityDeposit Float? // เงินประกันห้อง (ถ้าไม่ตั้ง จะ default = ค่าเช่า 1 เดือน)
+  defaultAdvanceRent     Float? // ค่าเช่าล่วงหน้า
+  defaultKeyDeposit      Float? // ค่ามัดจำกุญแจ/คีย์การ์ด
+  defaultCarFee          Float? // ค่าลงทะเบียน/ที่จอด รถยนต์ (0 = ฟรี)
+  defaultMotorcycleFee   Float? // ค่าลงทะเบียน/ที่จอด มอเตอร์ไซค์ (0 = ฟรี)
+
   ownerId       String
   owner         User     @relation(fields: [ownerId], references: [id])
   rooms         Room[]
@@ -176,6 +183,7 @@ enum VehicleType {
 
 model Bill {
   id             String    @id @default(cuid())
+  type           BillType  @default(MONTHLY) // MONTHLY = บิลรายเดือน, CHECKIN = บิลเข้าอยู่
   month          Int
   year           Int
   roomId         String
@@ -191,6 +199,13 @@ model Bill {
   parkingFee     Float     @default(0)
   internetFee    Float     @default(0)
   otherFee       Float     @default(0)
+
+  // ── ฟิลด์เฉพาะบิลเข้าอยู่ (Check-in) ──
+  securityDeposit Float    @default(0) // เงินประกันห้อง (คืนได้ตอนย้ายออก)
+  advanceRent     Float    @default(0) // ค่าเช่าล่วงหน้า
+  keyDeposit      Float    @default(0) // ค่ามัดจำกุญแจ/คีย์การ์ด
+  vehicleFee      Float    @default(0) // ค่าลงทะเบียน/ที่จอดรถ
+
   balanceForward Float     @default(0) // ยอดค้างชำระยกมา
   totalAmount    Float
   paidAmount     Float     @default(0) // ยอดที่ชำระแล้ว
@@ -203,7 +218,12 @@ model Bill {
   updatedAt      DateTime  @updatedAt
   isDeleted      Boolean   @default(false)
 
-  @@unique([roomId, month, year])
+  @@unique([roomId, month, year, type])
+}
+
+enum BillType {
+  MONTHLY
+  CHECKIN
 }
 
 enum BillStatus {

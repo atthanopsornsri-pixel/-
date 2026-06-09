@@ -135,10 +135,11 @@ export async function saveBulkMeterReadings(
       // ค้นหาบิลรอบปัจจุบัน
       const existingBill = await tx.bill.findUnique({
         where: {
-          roomId_month_year: {
+          roomId_month_year_type: {
             roomId: reading.roomId,
             month: month,
             year: year,
+            type: "MONTHLY",
           },
         },
       });
@@ -255,10 +256,11 @@ export async function getRoomsForMeterEntry(
       rows.map(async (row) => {
         const bill = await prisma.bill.findUnique({
           where: {
-            roomId_month_year: {
+            roomId_month_year_type: {
               roomId: row.roomId,
               month,
               year,
+              type: "MONTHLY",
             },
           },
         });

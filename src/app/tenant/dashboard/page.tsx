@@ -87,37 +87,76 @@ export default async function TenantDashboardPage() {
             {/* Bill Info Card */}
             <div className="bg-slate-50 border border-slate-200 rounded-2xl p-5 mb-6">
               <div className="flex justify-between items-center mb-4 pb-4 border-b border-slate-200">
-                <span className="text-slate-500 font-semibold">ประจำเดือน</span>
+                <span className="text-slate-500 font-semibold">
+                  {latestBill.type === "CHECKIN" ? "ประเภทบิล" : "ประจำเดือน"}
+                </span>
                 <span className="font-bold text-slate-800">
-                  {getMonthName(latestBill.month)} {latestBill.year + 543}
+                  {latestBill.type === "CHECKIN"
+                    ? "🔑 บิลค่าเข้าอยู่"
+                    : `${getMonthName(latestBill.month)} ${latestBill.year + 543}`}
                 </span>
               </div>
-              
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">ค่าเช่า</span>
-                  <span className="font-semibold text-slate-700">{formatTHB(latestBill.rentAmount)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">ค่าน้ำ ({latestBill.waterUnits || 0} หน่วย)</span>
-                  <span className="font-semibold text-slate-700">{formatTHB(latestBill.waterAmount)}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">ค่าไฟ ({latestBill.electricUnits || 0} หน่วย)</span>
-                  <span className="font-semibold text-slate-700">{formatTHB(latestBill.electricAmount)}</span>
-                </div>
-                {(latestBill.commonFee > 0) && (
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">ค่าส่วนกลาง</span>
-                    <span className="font-semibold text-slate-700">{formatTHB(latestBill.commonFee)}</span>
+
+              {latestBill.type === "CHECKIN" ? (
+                /* ── บิลเข้าอยู่ ── */
+                <div className="space-y-3 text-sm">
+                  {latestBill.securityDeposit > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">เงินประกันห้อง <span className="text-xs text-emerald-600">(คืนตอนย้ายออก)</span></span>
+                      <span className="font-semibold text-slate-700">{formatTHB(latestBill.securityDeposit)}</span>
+                    </div>
+                  )}
+                  {latestBill.advanceRent > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">ค่าเช่าล่วงหน้า</span>
+                      <span className="font-semibold text-slate-700">{formatTHB(latestBill.advanceRent)}</span>
+                    </div>
+                  )}
+                  {latestBill.keyDeposit > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">ค่ามัดจำกุญแจ / คีย์การ์ด</span>
+                      <span className="font-semibold text-slate-700">{formatTHB(latestBill.keyDeposit)}</span>
+                    </div>
+                  )}
+                  {latestBill.vehicleFee > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">ค่าลงทะเบียน / ที่จอดรถ</span>
+                      <span className="font-semibold text-slate-700">{formatTHB(latestBill.vehicleFee)}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-end mt-4 pt-4 border-t border-slate-200">
+                    <span className="text-slate-800 font-bold">ยอดสุทธิ</span>
+                    <span className="text-3xl font-black text-rose-600">{formatTHB(latestBill.totalAmount)}</span>
                   </div>
-                )}
-                {/* Total */}
-                <div className="flex justify-between items-end mt-4 pt-4 border-t border-slate-200">
-                  <span className="text-slate-800 font-bold">ยอดสุทธิ</span>
-                  <span className="text-3xl font-black text-rose-600">{formatTHB(latestBill.totalAmount)}</span>
                 </div>
-              </div>
+              ) : (
+                /* ── บิลรายเดือน ── */
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">ค่าเช่า</span>
+                    <span className="font-semibold text-slate-700">{formatTHB(latestBill.rentAmount)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">ค่าน้ำ ({latestBill.waterUnits || 0} หน่วย)</span>
+                    <span className="font-semibold text-slate-700">{formatTHB(latestBill.waterAmount)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500">ค่าไฟ ({latestBill.electricUnits || 0} หน่วย)</span>
+                    <span className="font-semibold text-slate-700">{formatTHB(latestBill.electricAmount)}</span>
+                  </div>
+                  {(latestBill.commonFee > 0) && (
+                    <div className="flex justify-between">
+                      <span className="text-slate-500">ค่าส่วนกลาง</span>
+                      <span className="font-semibold text-slate-700">{formatTHB(latestBill.commonFee)}</span>
+                    </div>
+                  )}
+                  {/* Total */}
+                  <div className="flex justify-between items-end mt-4 pt-4 border-t border-slate-200">
+                    <span className="text-slate-800 font-bold">ยอดสุทธิ</span>
+                    <span className="text-3xl font-black text-rose-600">{formatTHB(latestBill.totalAmount)}</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Payment Status section */}

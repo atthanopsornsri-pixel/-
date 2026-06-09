@@ -28,6 +28,14 @@ export default function BillingPage() {
   const [internetFee, setInternetFee] = useState("");
   const [otherFee, setOtherFee] = useState("");
 
+  // ── โหมดบิล + ฟิลด์บิลเข้าอยู่ (Check-in) ──
+  const [billMode, setBillMode] = useState<"MONTHLY" | "CHECKIN">("MONTHLY");
+  const [securityDeposit, setSecurityDeposit] = useState("");
+  const [advanceRent, setAdvanceRent] = useState("");
+  const [keyDeposit, setKeyDeposit] = useState("");
+  const [vehicleFee, setVehicleFee] = useState("");
+  const [leaseStart, setLeaseStart] = useState("");
+
   const [isLoading, setIsLoading] = useState(false);
   const [isBillsLoading, setIsBillsLoading] = useState(true);
   const [selectedSlip, setSelectedSlip] = useState<any>(null);
@@ -110,13 +118,81 @@ export default function BillingPage() {
     if (prop) {
       if (prop.defaultCommonFee) setCommonFee(prop.defaultCommonFee.toString());
       else setCommonFee("");
-      
+
       if (prop.defaultParkingFee) setParkingFee(prop.defaultParkingFee.toString());
       else setParkingFee("");
-      
+
       if (prop.defaultInternetFee) setInternetFee(prop.defaultInternetFee.toString());
       else setInternetFee("");
+
+      // ── ค่าเริ่มต้นบิลเข้าอยู่ ──
+      const rent = room ? Number(room.rentPrice) : 0;
+      // เงินประกัน: ใช้ค่าที่ตั้งไว้ ถ้าไม่มี default = ค่าเช่า 1 เดือน
+      setSecurityDeposit((prop.defaultSecurityDeposit ?? rent).toString());
+      // ค่าเช่าล่วงหน้า: ใช้ค่าที่ตั้งไว้ ถ้าไม่มี default = ค่าเช่า 1 เดือน
+      setAdvanceRent((prop.defaultAdvanceRent ?? rent).toString());
+      setKeyDeposit((prop.defaultKeyDeposit ?? 0).toString());
+      setVehicleFee("0"); // ค่ารถยืดหยุ่นตามผู้เช่า — เริ่มที่ 0 ให้เจ้าของเลือกกรอกเอง
     }
+  };
+
+  const setVehiclePreset = (kind: "car" | "motorcycle") => {
+    const prop = properties.find(p => p.id === propertyId);
+    if (!prop) return;
+    const fee = kind === "car" ? prop.defaultCarFee : prop.defaultMotorcycleFee;
+    setVehicleFee((fee ?? 0).toString());
+    if (!fee) toast.info(kind === "car" ? "หอนี้ยังไม่ตั้งค่ารถยนต์ (ฟรี) — แก้ได้ในตั้งค่า" : "หอนี้ยังไม่ตั้งค่ามอเตอร์ไซค์ (ฟรี) — แก้ได้ในตั้งค่า");
+  };
+
+  const calculateCheckinTotal = () => {
+    return (
+      (parseFloat(securityDeposit) || 0) +
+      (parseFloat(advanceRent) || 0) +
+      (parseFloat(keyDeposit) || 0) +
+      (parseFloat(vehicleFee) || 0)
+    );
+  };
+
+  const handleCheckinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!roomId) return toast.error("กรุณาเลือกห้องพัก");
+    if (!dueDate) return toast.error("กรุณาระบุวันครบกำหนดชำระ");
+
+    if (
+      Number(securityDeposit || 0) < 0 ||
+      Number(advanceRent || 0) < 0 ||
+      Number(keyDeposit || 0) < 0 ||
+      Number(vehicleFee || 0) < 0
+    ) {
+      return toast.error("จำนวนเงินห้ามติดลบ");
+    }
+    if (calculateCheckinTotal() <= 0) {
+      return toast.error("ยอดรวมบิลเข้าอยู่ต้องมากกว่า 0");
+    }
+
+    setIsLoading(true);
+    const res = await fetch("/api/bills/checkin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        roomId,
+        securityDeposit: Number(securityDeposit || 0),
+        advanceRent: Number(advanceRent || 0),
+        keyDeposit: Number(keyDeposit || 0),
+        vehicleFee: Number(vehicleFee || 0),
+        dueDate,
+        leaseStart: leaseStart || undefined,
+      }),
+    });
+
+    if (res.ok) {
+      toast.success("ออกบิลเข้าอยู่สำเร็จ! เงินประกันถูกบันทึกลงสัญญาให้อัตโนมัติ");
+      fetchBills();
+    } else {
+      const data = await res.json();
+      toast.error(data.message || "เกิดข้อผิดพลาด");
+    }
+    setIsLoading(false);
   };
 
   const handleWaterUnitsChange = (val: string) => {
@@ -233,26 +309,47 @@ export default function BillingPage() {
         {/* Create Bill Form */}
         <div className="xl:col-span-1">
           <div className="rounded-[var(--jh-radius-2xl)] border border-black/[0.06] bg-white shadow-[var(--jh-shadow-card)] p-8">
-            <h2 className="text-lg font-semibold text-[var(--jh-ink)] mb-6">สร้างบิลใหม่</h2>
-            <div>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>อพาร์ตเม้นท์</Label>
-                    <select className="flex h-11 w-full rounded-[var(--jh-radius-md)] border border-[var(--jh-border)] bg-white px-3.5 py-2 text-sm focus:border-[var(--jh-blue)] focus:ring-4 focus:ring-[var(--jh-focus-ring)] outline-none transition-shadow" value={propertyId} onChange={handlePropertyChange} required>
-                      <option value="" disabled>เลือกอพาร์ตเม้นท์</option>
-                      {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>ห้องพัก</Label>
-                    <select className="flex h-11 w-full rounded-[var(--jh-radius-md)] border border-[var(--jh-border)] bg-white px-3.5 py-2 text-sm focus:border-[var(--jh-blue)] focus:ring-4 focus:ring-[var(--jh-focus-ring)] outline-none transition-shadow disabled:opacity-50" value={roomId} onChange={handleRoomChange} required disabled={!propertyId}>
-                      <option value="" disabled>เลือกห้อง</option>
-                      {rooms.map(r => <option key={r.id} value={r.id}>{r.number} {r.status === "OCCUPIED" ? "(มีผู้เช่า)" : ""}</option>)}
-                    </select>
-                  </div>
-                </div>
+            <h2 className="text-lg font-semibold text-[var(--jh-ink)] mb-4">สร้างบิลใหม่</h2>
 
+            {/* ── Toggle: บิลรายเดือน / บิลเข้าอยู่ ── */}
+            <div className="grid grid-cols-2 gap-1.5 p-1 bg-[var(--jh-surface)] rounded-full border border-black/[0.06] mb-6">
+              <button
+                type="button"
+                onClick={() => setBillMode("MONTHLY")}
+                className={`h-9 rounded-full text-sm font-semibold transition-all ${billMode === "MONTHLY" ? "bg-white text-[var(--jh-ink)] shadow-[var(--jh-shadow-sm)]" : "text-[var(--jh-ink-tertiary)]"}`}
+              >
+                🗓️ บิลรายเดือน
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillMode("CHECKIN")}
+                className={`h-9 rounded-full text-sm font-semibold transition-all ${billMode === "CHECKIN" ? "bg-white text-[var(--jh-ink)] shadow-[var(--jh-shadow-sm)]" : "text-[var(--jh-ink-tertiary)]"}`}
+              >
+                🔑 บิลเข้าอยู่
+              </button>
+            </div>
+
+            {/* ── Shared: เลือกหอ + ห้อง ── */}
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="space-y-2">
+                <Label>อพาร์ตเม้นท์</Label>
+                <select className="flex h-11 w-full rounded-[var(--jh-radius-md)] border border-[var(--jh-border)] bg-white px-3.5 py-2 text-sm focus:border-[var(--jh-blue)] focus:ring-4 focus:ring-[var(--jh-focus-ring)] outline-none transition-shadow" value={propertyId} onChange={handlePropertyChange} required>
+                  <option value="" disabled>เลือกอพาร์ตเม้นท์</option>
+                  {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <Label>ห้องพัก</Label>
+                <select className="flex h-11 w-full rounded-[var(--jh-radius-md)] border border-[var(--jh-border)] bg-white px-3.5 py-2 text-sm focus:border-[var(--jh-blue)] focus:ring-4 focus:ring-[var(--jh-focus-ring)] outline-none transition-shadow disabled:opacity-50" value={roomId} onChange={handleRoomChange} required disabled={!propertyId}>
+                  <option value="" disabled>เลือกห้อง</option>
+                  {rooms.map(r => <option key={r.id} value={r.id}>{r.number} {r.status === "OCCUPIED" ? "(มีผู้เช่า)" : ""}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* ════════ โหมดบิลรายเดือน ════════ */}
+            {billMode === "MONTHLY" && (
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>ประจำเดือน</Label>
@@ -335,7 +432,62 @@ export default function BillingPage() {
                   {isLoading ? "กำลังบันทึก..." : "ออกใบแจ้งหนี้"}
                 </Button>
               </form>
-            </div>
+            )}
+
+            {/* ════════ โหมดบิลเข้าอยู่ (Check-in) ════════ */}
+            {billMode === "CHECKIN" && (
+              <form onSubmit={handleCheckinSubmit} className="space-y-4">
+                <div className="rounded-[var(--jh-radius-md)] bg-[var(--jh-blue-tint)] border border-[var(--jh-blue)]/20 px-4 py-3 text-xs text-[var(--jh-blue-dark)] leading-relaxed">
+                  💡 บิลเข้าอยู่ออกครั้งเดียวตอนรับผู้เช่าใหม่ — เงินประกันจะถูกบันทึกลงสัญญาเช่าให้อัตโนมัติ และลูกบ้านต้องจ่ายบิลนี้ก่อนจึงจะเซ็นสัญญาได้
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>วันเริ่มสัญญา (ถ้ามี)</Label>
+                    <Input type="date" value={leaseStart} onChange={e => setLeaseStart(e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>กำหนดชำระ</Label>
+                    <Input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} required className="h-11 rounded-[var(--jh-radius-md)]" />
+                  </div>
+                </div>
+
+                <div className="bg-[var(--jh-surface)] p-4 rounded-[var(--jh-radius-lg)] space-y-4 border border-black/[0.06]">
+                  <div className="space-y-2">
+                    <Label>เงินประกันห้อง (คืนตอนย้ายออก)</Label>
+                    <Input type="number" value={securityDeposit} onChange={e => setSecurityDeposit(e.target.value)} placeholder="0" className="h-11 rounded-[var(--jh-radius-md)]" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>ค่าเช่าล่วงหน้า</Label>
+                    <Input type="number" value={advanceRent} onChange={e => setAdvanceRent(e.target.value)} placeholder="0" className="h-11 rounded-[var(--jh-radius-md)]" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>ค่ามัดจำกุญแจ / คีย์การ์ด</Label>
+                    <Input type="number" value={keyDeposit} onChange={e => setKeyDeposit(e.target.value)} placeholder="0" className="h-11 rounded-[var(--jh-radius-md)]" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>ค่าลงทะเบียน / ที่จอดรถ</Label>
+                      <div className="flex gap-1.5">
+                        <button type="button" onClick={() => setVehiclePreset("car")} className="px-2.5 py-1 rounded-full bg-white border border-[var(--jh-border)] text-[11px] font-semibold text-[var(--jh-ink-secondary)] hover:bg-[var(--jh-surface)] transition-colors">🚗 รถยนต์</button>
+                        <button type="button" onClick={() => setVehiclePreset("motorcycle")} className="px-2.5 py-1 rounded-full bg-white border border-[var(--jh-border)] text-[11px] font-semibold text-[var(--jh-ink-secondary)] hover:bg-[var(--jh-surface)] transition-colors">🏍️ มอ'ไซค์</button>
+                      </div>
+                    </div>
+                    <Input type="number" value={vehicleFee} onChange={e => setVehicleFee(e.target.value)} placeholder="0 = ฟรี" className="h-11 rounded-[var(--jh-radius-md)]" />
+                    <p className="text-[11px] text-[var(--jh-ink-tertiary)]">กดปุ่มเพื่อเติมค่าเริ่มต้นตามชนิดรถ หรือพิมพ์เอง • ใส่ 0 = จอดฟรี</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between rounded-[var(--jh-radius-md)] bg-[var(--jh-surface)] px-5 py-4 border border-black/[0.06]">
+                  <span className="text-sm font-medium text-[var(--jh-ink-secondary)]">ยอดรวมบิลเข้าอยู่</span>
+                  <span className="text-[26px] font-semibold tracking-[-0.02em] tabular-nums text-[var(--jh-ink)]">฿{calculateCheckinTotal().toLocaleString()}</span>
+                </div>
+
+                <Button type="submit" className="w-full h-11 rounded-full bg-[var(--jh-blue)] hover:bg-[var(--jh-blue-dark)] text-white font-semibold shadow-[var(--jh-shadow-sm)] transition-all active:scale-[0.99]" disabled={isLoading}>
+                  {isLoading ? "กำลังบันทึก..." : "ออกบิลเข้าอยู่"}
+                </Button>
+              </form>
+            )}
           </div>
         </div>
 
@@ -373,10 +525,15 @@ export default function BillingPage() {
                   ) : bills.map(bill => (
                     <tr key={bill.id} className="border-b border-black/[0.04] hover:bg-[var(--jh-surface)] transition-colors">
                       <td className="px-5 py-3.5 font-semibold text-[var(--jh-ink)]">
-                        {bill.room.number}
+                        <div className="flex items-center gap-2">
+                          {bill.room.number}
+                          {bill.type === "CHECKIN" && (
+                            <span className="inline-flex items-center h-5 px-2 rounded-full bg-[var(--jh-blue-tint)] text-[var(--jh-blue-dark)] text-[10px] font-bold">🔑 เข้าอยู่</span>
+                          )}
+                        </div>
                         <div className="text-xs font-normal text-[var(--jh-ink-tertiary)]">{bill.room.property.name}</div>
                       </td>
-                      <td className="px-5 py-3.5 text-[var(--jh-ink-secondary)]">{bill.month}/{bill.year}</td>
+                      <td className="px-5 py-3.5 text-[var(--jh-ink-secondary)]">{bill.type === "CHECKIN" ? "—" : `${bill.month}/${bill.year}`}</td>
                       <td className="px-5 py-3.5 font-semibold tabular-nums text-[var(--jh-ink)]">฿{bill.totalAmount.toLocaleString()}</td>
                       <td className="px-5 py-3.5">
                         <span className={`inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full text-xs font-semibold ${

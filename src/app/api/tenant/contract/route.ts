@@ -20,6 +20,7 @@ export async function GET(request: Request) {
           }
         },
         user: true,
+        vehicles: true,
       }
     });
 
@@ -27,20 +28,46 @@ export async function GET(request: Request) {
       return new NextResponse("Tenant data not found", { status: 404 });
     }
 
+    // ── Gate: ต้องจ่าย "บิลเข้าอยู่" ให้เรียบร้อยก่อนถึงจะเซ็นสัญญาได้ ──
+    const checkinBill = await prisma.bill.findFirst({
+      where: { roomId: tenant.roomId!, type: "CHECKIN" },
+      orderBy: { createdAt: "desc" },
+      select: { id: true, status: true, totalAmount: true },
+    });
+    // มีบิลเข้าอยู่และยังไม่ชำระ → ห้ามเซ็น; ไม่มีบิลเข้าอยู่ หรือชำระแล้ว → เซ็นได้
+    const hasUnpaidCheckin = !!checkinBill && checkinBill.status !== "PAID";
+    const canSign = !hasUnpaidCheckin;
+
+    const fmtDate = (d: Date | null | undefined) =>
+      d ? new Intl.DateTimeFormat("th-TH", { dateStyle: "long" }).format(new Date(d)) : "________________";
+
     // ชื่อที่ใช้ในสัญญา: ใช้ firstName+lastName (ข้อมูลจริง) ก่อน fallback ไป user.name (LINE name)
     const legalName = [tenant.firstName, tenant.lastName].filter(Boolean).join(" ") || tenant.user.name || "________________";
 
+    // รายการยานพาหนะ (ทะเบียน) สำหรับ {{VEHICLES}}
+    const vehiclesText =
+      tenant.vehicles.length > 0
+        ? tenant.vehicles
+            .map((v) => `${v.licensePlate}${v.brand ? ` (${v.brand}${v.color ? ` ${v.color}` : ""})` : ""}`)
+            .join(", ")
+        : "ไม่มี";
+
     let content = tenant.room.property.leaseTemplate || "";
 
-    // Replace Placeholders for backwards compatibility
+    // Replace Placeholders
     if (content) {
       content = content.replace(/{{TENANT_NAME}}/g, legalName);
       content = content.replace(/{{ROOM_NUMBER}}/g, tenant.room.number);
-      content = content.replace(/{{RENT_PRICE}}/g, tenant.room.rentPrice.toString());
-      content = content.replace(/{{DEPOSIT_AMOUNT}}/g, tenant.depositAmount?.toString() || "0");
-      content = content.replace(/{{LEASE_START}}/g, tenant.leaseStart ? new Intl.DateTimeFormat('th-TH', { dateStyle: 'long' }).format(new Date(tenant.leaseStart)) : "________________");
-      content = content.replace(/{{START_DATE}}/g, tenant.leaseStart ? new Intl.DateTimeFormat('th-TH', { dateStyle: 'long' }).format(new Date(tenant.leaseStart)) : "________________");
+      content = content.replace(/{{RENT_PRICE}}/g, tenant.room.rentPrice.toLocaleString());
+      content = content.replace(/{{DEPOSIT_AMOUNT}}/g, tenant.depositAmount?.toLocaleString() || "0");
+      content = content.replace(/{{LEASE_START}}/g, fmtDate(tenant.leaseStart));
+      content = content.replace(/{{START_DATE}}/g, fmtDate(tenant.leaseStart));
+      content = content.replace(/{{LEASE_END}}/g, fmtDate(tenant.leaseEnd));
+      content = content.replace(/{{END_DATE}}/g, fmtDate(tenant.leaseEnd));
       content = content.replace(/{{ID_CARD}}/g, tenant.idCardNumber || "________________");
+      content = content.replace(/{{ADDRESS}}/g, tenant.address || "________________");
+      content = content.replace(/{{PHONE}}/g, tenant.phoneNumber || "________________");
+      content = content.replace(/{{VEHICLES}}/g, vehiclesText);
     }
 
     // Auto-generate standard preamble
@@ -69,6 +96,8 @@ export async function GET(request: Request) {
         landlordSignatureUrl: tenant.room.property.signatureUrl,
         landlordName: tenant.room.property.promptPayName || tenant.room.property.name,
       },
+      canSign,
+      checkinBill, // { id, status, totalAmount } | null
       content,
     });
   } catch (error) {

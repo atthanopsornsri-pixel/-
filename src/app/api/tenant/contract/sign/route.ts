@@ -18,6 +18,25 @@ export async function POST(request: Request) {
       return new NextResponse("Signature is required", { status: 400 });
     }
 
+    // ── Server-side gate: ต้องจ่ายบิลเข้าอยู่ก่อนถึงจะเซ็นได้ ──
+    const tenantRecord = await prisma.tenant.findUnique({
+      where: { userId: session.user.id },
+      select: { roomId: true },
+    });
+    if (tenantRecord?.roomId) {
+      const checkinBill = await prisma.bill.findFirst({
+        where: { roomId: tenantRecord.roomId, type: "CHECKIN" },
+        orderBy: { createdAt: "desc" },
+        select: { status: true },
+      });
+      if (checkinBill && checkinBill.status !== "PAID") {
+        return NextResponse.json(
+          { message: "กรุณาชำระบิลค่าเข้าอยู่ให้เรียบร้อยก่อนเซ็นสัญญา" },
+          { status: 403 }
+        );
+      }
+    }
+
     const ipAddress = request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "Unknown IP";
     const userAgent = request.headers.get("user-agent") || "Unknown Browser";
 

@@ -156,7 +156,7 @@ export default function TenantContractPage() {
     return <div className="p-8 text-center text-red-500">ไม่พบข้อมูลสัญญาของคุณ</div>;
   }
 
-  const { tenant, content } = contractData;
+  const { tenant, content, canSign = true, checkinBill = null } = contractData;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 print-card">
@@ -249,12 +249,34 @@ export default function TenantContractPage() {
                 </Button>
               </div>
             </div>
+          ) : !canSign ? (
+            /* ── Gate: ยังไม่จ่ายบิลเข้าอยู่ ── */
+            <div className="text-center p-6 bg-amber-50 rounded-xl border border-amber-200 no-print">
+              <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-3">
+                <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+              </div>
+              <h3 className="font-bold text-amber-800 mb-1">ต้องชำระบิลค่าเข้าอยู่ก่อน</h3>
+              <p className="text-sm text-amber-700 mb-1">
+                กรุณาชำระบิลค่าเข้าอยู่ (เงินประกัน + ค่าเช่าล่วงหน้า) ให้เรียบร้อยก่อนจึงจะเซ็นสัญญาได้
+              </p>
+              {checkinBill && (
+                <p className="text-sm font-bold text-amber-900 mb-4">
+                  ยอดที่ต้องชำระ: ฿{Number(checkinBill.totalAmount).toLocaleString()}
+                  {checkinBill.status === "PENDING" && " (รอเจ้าของหอตรวจสอบสลิป)"}
+                </p>
+              )}
+              <a href="/tenant/dashboard">
+                <Button className="bg-amber-600 hover:bg-amber-700 text-white rounded-full px-8">
+                  ไปหน้าชำระบิลค่าเข้าอยู่ →
+                </Button>
+              </a>
+            </div>
           ) : (
             <div>
               {!isSigning ? (
                 <div className="text-center">
                   <p className="mb-4 text-slate-600">คุณยังไม่ได้เซ็นสัญญาเช่าออนไลน์</p>
-                  <Button 
+                  <Button
                     onClick={() => setIsSigning(true)}
                     className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 rounded-full"
                     disabled={!content}

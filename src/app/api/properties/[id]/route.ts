@@ -61,6 +61,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         defaultCommonFee: body.defaultCommonFee !== undefined ? body.defaultCommonFee : property.defaultCommonFee,
         defaultParkingFee: body.defaultParkingFee !== undefined ? body.defaultParkingFee : property.defaultParkingFee,
         defaultInternetFee: body.defaultInternetFee !== undefined ? body.defaultInternetFee : property.defaultInternetFee,
+        // ── ค่าเริ่มต้นบิลเข้าอยู่ ──
+        defaultSecurityDeposit: body.defaultSecurityDeposit !== undefined ? body.defaultSecurityDeposit : property.defaultSecurityDeposit,
+        defaultAdvanceRent: body.defaultAdvanceRent !== undefined ? body.defaultAdvanceRent : property.defaultAdvanceRent,
+        defaultKeyDeposit: body.defaultKeyDeposit !== undefined ? body.defaultKeyDeposit : property.defaultKeyDeposit,
+        defaultCarFee: body.defaultCarFee !== undefined ? body.defaultCarFee : property.defaultCarFee,
+        defaultMotorcycleFee: body.defaultMotorcycleFee !== undefined ? body.defaultMotorcycleFee : property.defaultMotorcycleFee,
       },
     });
 

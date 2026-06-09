@@ -69,9 +69,15 @@ export default function ContractSettingsPage() {
 
   const variables = [
     { label: "ชื่อผู้เช่า", code: "{{TENANT_NAME}}" },
+    { label: "เลขบัตรประชาชน", code: "{{ID_CARD}}" },
+    { label: "ที่อยู่ผู้เช่า", code: "{{ADDRESS}}" },
+    { label: "เบอร์โทรผู้เช่า", code: "{{PHONE}}" },
     { label: "เลขห้อง", code: "{{ROOM_NUMBER}}" },
     { label: "ค่าเช่าพื้นฐาน", code: "{{RENT_PRICE}}" },
+    { label: "เงินประกัน", code: "{{DEPOSIT_AMOUNT}}" },
     { label: "วันที่เริ่มสัญญา", code: "{{START_DATE}}" },
+    { label: "วันที่สิ้นสุดสัญญา", code: "{{END_DATE}}" },
+    { label: "ยานพาหนะ (ทะเบียนรถ)", code: "{{VEHICLES}}" },
   ];
 
   const insertVariable = (variableCode: string) => {
