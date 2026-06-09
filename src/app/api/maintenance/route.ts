@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendLineOAMessage } from "@/lib/line";
+import { sendSmsWithAddon } from "@/lib/sms";
 
 export async function POST(req: Request) {
   try {
@@ -212,69 +213,73 @@ export async function PATCH(req: Request) {
       }
     });
 
-    // แจ้ง LINE ผู้เช่า (ถ้ามี lineUserId)
+    // แจ้ง LINE + SMS ผู้เช่า (fire-and-forget)
     const owner = maintReq.room.property.owner;
     const tenant = await prisma.tenant.findFirst({
       where: { roomId: request.roomId },
-      select: { lineUserId: true }
+      select: { lineUserId: true, phoneNumber: true }
     });
 
-    if (owner.lineChannelAccessToken && tenant?.lineUserId) {
-      const roomNumber = request.room.number;
-      const reqTitle = maintReq.title;
+    const roomNumber = request.room.number;
+    const reqTitle = maintReq.title;
+    let lineMsg: string | null = null;
+    let smsMsg: string | null = null;
 
-      let lineMsg: string | null = null;
+    if (status === "IN_PROGRESS" && scheduledAt) {
+      const apptDate = new Date(scheduledAt);
+      const dateStr = apptDate.toLocaleDateString("th-TH", {
+        weekday: "long", day: "numeric", month: "long", year: "numeric",
+      });
+      const timeStr = apptDate.toLocaleTimeString("th-TH", {
+        hour: "2-digit", minute: "2-digit",
+      });
+      const noteLines = scheduledNote ? [`📝 หมายเหตุ: ${scheduledNote}`] : [];
+      lineMsg = [
+        `📅 นัดหมายเข้าซ่อมแล้วค่ะ!`,
+        `━━━━━━━━━━━━━━━━━━━━`,
+        `🏠 ห้อง ${roomNumber}`,
+        `📌 เรื่อง: ${reqTitle}`,
+        `━━━━━━━━━━━━━━━━━━━━`,
+        `📅 วันที่: ${dateStr}`,
+        `⏰ เวลา: ${timeStr} น.`,
+        ...noteLines,
+        `━━━━━━━━━━━━━━━━━━━━`,
+        `⚠️ กรุณาเตรียมพร้อมและเปิดห้องรับช่างด้วยนะคะ 🙏`,
+      ].join("\n");
+      smsMsg = `[JadHor] นัดซ่อมห้อง ${roomNumber} เรื่อง "${reqTitle}" วันที่ ${dateStr} เวลา ${timeStr} น.${scheduledNote ? ` (${scheduledNote})` : ""}`;
+    } else if (status === "IN_PROGRESS") {
+      lineMsg = [
+        `🔧 อัปเดตเรื่องแจ้งซ่อมของคุณ`,
+        `━━━━━━━━━━━━━━━━━━━━`,
+        `🏠 ห้อง ${roomNumber}`,
+        `📌 เรื่อง: ${reqTitle}`,
+        `━━━━━━━━━━━━━━━━━━━━`,
+        `🔄 สถานะ: รับเรื่องแล้ว กำลังประสานงาน`,
+        `จะแจ้งวันนัดหมายให้ทราบอีกครั้งนะคะ 🙏`,
+      ].join("\n");
+      smsMsg = `[JadHor] รับเรื่องแจ้งซ่อมห้อง ${roomNumber} แล้ว (${reqTitle}) กำลังประสานงาน จะแจ้งนัดหมายเพิ่มเติม`;
+    } else if (status === "COMPLETED") {
+      lineMsg = [
+        `✅ งานซ่อมเสร็จสิ้นแล้ว!`,
+        `━━━━━━━━━━━━━━━━━━━━`,
+        `🏠 ห้อง ${roomNumber}`,
+        `📌 เรื่อง: ${reqTitle}`,
+        `━━━━━━━━━━━━━━━━━━━━`,
+        `✨ ช่างซ่อมเรียบร้อยแล้วค่ะ`,
+        `หากมีปัญหาเพิ่มเติมหรืออยากแจ้งซ่อมอีกครั้ง`,
+        `สามารถแจ้งผ่านแอปได้เลยนะคะ 😊`,
+      ].join("\n");
+      smsMsg = `[JadHor] งานซ่อมห้อง ${roomNumber} (${reqTitle}) เสร็จสิ้นแล้ว ขอบคุณที่ใช้บริการ`;
+    }
 
-      if (status === "IN_PROGRESS" && scheduledAt) {
-        // มีการนัดหมาย → ส่งข้อความนัดหมาย
-        const apptDate = new Date(scheduledAt);
-        const dateStr = apptDate.toLocaleDateString("th-TH", {
-          weekday: "long", day: "numeric", month: "long", year: "numeric",
-        });
-        const timeStr = apptDate.toLocaleTimeString("th-TH", {
-          hour: "2-digit", minute: "2-digit",
-        });
-        const noteLines = scheduledNote ? [`📝 หมายเหตุ: ${scheduledNote}`] : [];
-        lineMsg = [
-          `📅 นัดหมายเข้าซ่อมแล้วค่ะ!`,
-          `━━━━━━━━━━━━━━━━━━━━`,
-          `🏠 ห้อง ${roomNumber}`,
-          `📌 เรื่อง: ${reqTitle}`,
-          `━━━━━━━━━━━━━━━━━━━━`,
-          `📅 วันที่: ${dateStr}`,
-          `⏰ เวลา: ${timeStr} น.`,
-          ...noteLines,
-          `━━━━━━━━━━━━━━━━━━━━`,
-          `⚠️ กรุณาเตรียมพร้อมและเปิดห้องรับช่างด้วยนะคะ 🙏`,
-        ].join("\n");
-      } else if (status === "IN_PROGRESS") {
-        // รับเรื่องแต่ยังไม่นัดวัน
-        lineMsg = [
-          `🔧 อัปเดตเรื่องแจ้งซ่อมของคุณ`,
-          `━━━━━━━━━━━━━━━━━━━━`,
-          `🏠 ห้อง ${roomNumber}`,
-          `📌 เรื่อง: ${reqTitle}`,
-          `━━━━━━━━━━━━━━━━━━━━`,
-          `🔄 สถานะ: รับเรื่องแล้ว กำลังประสานงาน`,
-          `จะแจ้งวันนัดหมายให้ทราบอีกครั้งนะคะ 🙏`,
-        ].join("\n");
-      } else if (status === "COMPLETED") {
-        lineMsg = [
-          `✅ งานซ่อมเสร็จสิ้นแล้ว!`,
-          `━━━━━━━━━━━━━━━━━━━━`,
-          `🏠 ห้อง ${roomNumber}`,
-          `📌 เรื่อง: ${reqTitle}`,
-          `━━━━━━━━━━━━━━━━━━━━`,
-          `✨ ช่างซ่อมเรียบร้อยแล้วค่ะ`,
-          `หากมีปัญหาเพิ่มเติมหรืออยากแจ้งซ่อมอีกครั้ง`,
-          `สามารถแจ้งผ่านแอปได้เลยนะคะ 😊`,
-        ].join("\n");
-      }
+    if (lineMsg && owner.lineChannelAccessToken && tenant?.lineUserId) {
+      sendLineOAMessage(tenant.lineUserId, lineMsg, owner.lineChannelAccessToken)
+        .catch((err) => console.error("[LINE] maintenance status notify error:", err));
+    }
 
-      if (lineMsg) {
-        sendLineOAMessage(tenant.lineUserId, lineMsg, owner.lineChannelAccessToken)
-          .catch((err) => console.error("[LINE] maintenance status notify error:", err));
-      }
+    if (smsMsg && tenant?.phoneNumber && maintReq.room.property.ownerId) {
+      sendSmsWithAddon(maintReq.room.property.ownerId, tenant.phoneNumber, smsMsg)
+        .catch((err) => console.error("[SMS] maintenance status notify error:", err));
     }
 
     return NextResponse.json(request);

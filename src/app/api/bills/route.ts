@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getSecurePrisma } from "@/lib/prisma-secure";
 import { Prisma } from "@prisma/client";
 import { sendLineOAMessage } from "@/lib/line";
+import { sendSmsWithAddon } from "@/lib/sms";
 
 export async function POST(req: Request) {
   try {
@@ -115,26 +116,28 @@ export async function POST(req: Request) {
       }
     });
 
-    // แจ้ง LINE ผู้เช่า (ถ้ามี lineUserId)
+    // แจ้ง LINE + SMS ผู้เช่า (fire-and-forget)
     const tenant = await secureDb.tenant.findFirst({
       where: { roomId },
       select: { lineUserId: true, firstName: true, lastName: true, phoneNumber: true }
     });
 
+    const tenantName =
+      [tenant?.firstName, tenant?.lastName].filter(Boolean).join(" ") ||
+      tenant?.phoneNumber ||
+      "ผู้เช่า";
+    const yearBE = Number(year) + 543;
+    const appUrl =
+      process.env.NEXTAUTH_URL?.replace(/\/$/, "") || "https://jadhor.vercel.app";
+    const dueStr = new Date(dueDate).toLocaleDateString("th-TH", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+
+    // LINE notification
     if (room?.property?.owner?.lineChannelAccessToken && tenant?.lineUserId) {
-      const tenantName =
-        [tenant.firstName, tenant.lastName].filter(Boolean).join(" ") ||
-        tenant.phoneNumber ||
-        "ผู้เช่า";
-      const yearBE = Number(year) + 543;
-      const appUrl =
-        process.env.NEXTAUTH_URL?.replace(/\/$/, "") || "https://jadhor.vercel.app";
-      const dueStr = new Date(dueDate).toLocaleDateString("th-TH", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      });
-      await sendLineOAMessage(
+      sendLineOAMessage(
         tenant.lineUserId,
         [
           `🧾 บิลค่าเช่าใหม่มาแล้ว!`,
@@ -149,7 +152,14 @@ export async function POST(req: Request) {
           `${appUrl}/dashboard/my-bills`,
         ].join("\n"),
         room.property.owner.lineChannelAccessToken
-      );
+      ).catch((err) => console.error("[LINE] bill notify error:", err));
+    }
+
+    // SMS notification (ถ้า owner มี SMS addon และผู้เช่ามีเบอร์)
+    if (tenant?.phoneNumber && room?.property?.ownerId) {
+      const smsMsg = `[JadHor] บิลห้อง ${bill.room.number} เดือน ${month}/${yearBE} ยอด ฿${totalAmount.toLocaleString()} กำหนดชำระ ${dueStr} จ่ายได้ที่ ${appUrl}/dashboard/my-bills`;
+      sendSmsWithAddon(room.property.ownerId, tenant.phoneNumber, smsMsg)
+        .catch((err) => console.error("[SMS] bill notify error:", err));
     }
 
     return NextResponse.json(bill, { status: 201 });

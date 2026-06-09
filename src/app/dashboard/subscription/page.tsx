@@ -64,6 +64,17 @@ export default function SubscriptionPage() {
   const [smsLoading, setSmsLoading] = useState(false);
   const [slipUploading, setSlipUploading] = useState<string | null>(null);
 
+  // SMS Credentials state
+  const [smsApiKey, setSmsApiKey] = useState("");
+  const [smsApiSecret, setSmsApiSecret] = useState("");
+  const [smsSenderId, setSmsSenderId] = useState("JadHor");
+  const [smsTestPhone, setSmsTestPhone] = useState("");
+  const [smsCredSaving, setSmsCredSaving] = useState(false);
+  const [smsCredMsg, setSmsCredMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [smsTesting, setSmsTesting] = useState(false);
+  const [smsTestMsg, setSmsTestMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [smsHasKey, setSmsHasKey] = useState(false); // ตั้งค่า credentials แล้วหรือยัง
+
   // planTier comes from the DB via saas-status API (not from JWT — it's not in the session)
   const planTier = saasStatus?.planTier || "FREE_TRIAL";
 
@@ -73,10 +84,11 @@ export default function SubscriptionPage() {
 
   async function fetchData() {
     try {
-      const [invoicesRes, smsRes, saasRes] = await Promise.all([
+      const [invoicesRes, smsRes, saasRes, smsCredRes] = await Promise.all([
         fetch("/api/owner/bills"),
         fetch("/api/owner/sms-addon"),
         fetch("/api/owner/saas-status"),
+        fetch("/api/owner/sms-credentials"),
       ]);
       if (invoicesRes.ok) setInvoices(await invoicesRes.json());
       if (smsRes.ok) {
@@ -86,6 +98,14 @@ export default function SubscriptionPage() {
       if (saasRes.ok) {
         const data = await saasRes.json();
         setSaasStatus(data);
+      }
+      if (smsCredRes.ok) {
+        const cred = await smsCredRes.json();
+        if (cred) {
+          setSmsHasKey(cred.hasApiKey || false);
+          setSmsApiKey(cred.thaibulkApiKey || ""); // masked key for display
+          setSmsSenderId(cred.thaibulkSenderId || "JadHor");
+        }
       }
     } catch (e) {
       console.error(e);
@@ -110,6 +130,60 @@ export default function SubscriptionPage() {
       console.error(e);
     } finally {
       setSmsLoading(false);
+    }
+  }
+
+  async function handleSmsCredSave() {
+    if (!smsApiKey || !smsApiSecret) {
+      setSmsCredMsg({ ok: false, text: "กรุณากรอก API Key และ API Secret" });
+      return;
+    }
+    setSmsCredSaving(true);
+    setSmsCredMsg(null);
+    try {
+      const res = await fetch("/api/owner/sms-credentials", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: smsApiKey, apiSecret: smsApiSecret, senderId: smsSenderId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSmsHasKey(true);
+        setSmsCredMsg({ ok: true, text: "บันทึก API credentials สำเร็จแล้ว" });
+        setSmsApiSecret(""); // ล้าง secret ออกจาก UI หลัง save
+      } else {
+        setSmsCredMsg({ ok: false, text: data?.message || "เกิดข้อผิดพลาด" });
+      }
+    } catch {
+      setSmsCredMsg({ ok: false, text: "เกิดข้อผิดพลาดที่ไม่คาดคิด" });
+    } finally {
+      setSmsCredSaving(false);
+    }
+  }
+
+  async function handleSmsTest() {
+    if (!smsTestPhone) {
+      setSmsTestMsg({ ok: false, text: "กรุณาระบุเบอร์โทรทดสอบ" });
+      return;
+    }
+    setSmsTesting(true);
+    setSmsTestMsg(null);
+    try {
+      const res = await fetch("/api/owner/sms-credentials", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ testPhone: smsTestPhone }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSmsTestMsg({ ok: true, text: data.message || "ส่ง SMS ทดสอบสำเร็จ" });
+      } else {
+        setSmsTestMsg({ ok: false, text: data?.message || "ส่ง SMS ไม่สำเร็จ" });
+      }
+    } catch {
+      setSmsTestMsg({ ok: false, text: "เกิดข้อผิดพลาดที่ไม่คาดคิด" });
+    } finally {
+      setSmsTesting(false);
     }
   }
 
@@ -347,6 +421,133 @@ export default function SubscriptionPage() {
               </div>
             );
           })}
+        </div>
+      </section>
+
+      {/* ============================================= */}
+      {/* Section 2b: ตั้งค่า Thaibulksms API */}
+      {/* ============================================= */}
+      <section>
+        <h2 className="text-lg font-bold text-slate-700 mb-4 flex items-center gap-2">
+          <span className="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm">🔑</span>
+          ตั้งค่า Thaibulksms API
+          {smsHasKey && (
+            <span className="ml-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-600 border border-emerald-200">
+              ✓ ตั้งค่าแล้ว
+            </span>
+          )}
+        </h2>
+
+        <div className="bg-white rounded-[24px] border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] p-6 md:p-8 space-y-5">
+          {/* How-to link */}
+          <div className="flex items-start gap-3 p-4 rounded-2xl"
+            style={{ background: "linear-gradient(150deg, #f4f9ff 0%, #e3f0ff 100%)", border: "1px solid rgba(255,255,255,0.6)" }}>
+            <span className="text-xl">ℹ️</span>
+            <div className="text-sm text-blue-800">
+              <p className="font-semibold">วิธีรับ API Key</p>
+              <p className="mt-1 text-blue-700/80">
+                สมัครที่{" "}
+                <a href="https://www.thaibulksms.com" target="_blank" rel="noopener noreferrer"
+                  className="underline font-bold hover:text-blue-900 transition-colors">
+                  thaibulksms.com
+                </a>{" "}
+                → ไปที่ &ldquo;การตั้งค่า&rdquo; → &ldquo;API&rdquo; → คัดลอก API Key และ API Secret มาวางด้านล่าง
+              </p>
+            </div>
+          </div>
+
+          {/* Form */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="block text-sm font-semibold text-slate-700">
+                API Key {smsHasKey && <span className="text-xs text-slate-400 font-normal">(แสดง masked — กรอกใหม่เพื่ออัปเดต)</span>}
+              </label>
+              <input
+                type="text"
+                value={smsApiKey}
+                onChange={(e) => setSmsApiKey(e.target.value)}
+                placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                className="flex h-11 w-full rounded-xl border border-slate-200 bg-white/80 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-semibold text-slate-700">
+                API Secret <span className="text-xs text-red-400 font-normal">(จะไม่แสดงอีกหลังบันทึก)</span>
+              </label>
+              <input
+                type="password"
+                value={smsApiSecret}
+                onChange={(e) => setSmsApiSecret(e.target.value)}
+                placeholder="••••••••••••••••"
+                className="flex h-11 w-full rounded-xl border border-slate-200 bg-white/80 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="block text-sm font-semibold text-slate-700">
+                Sender ID <span className="text-xs text-slate-400 font-normal">(max 11 ตัวอักษร — แสดงเป็นชื่อผู้ส่ง SMS)</span>
+              </label>
+              <input
+                type="text"
+                value={smsSenderId}
+                onChange={(e) => setSmsSenderId(e.target.value.slice(0, 11))}
+                placeholder="JadHor"
+                maxLength={11}
+                className="flex h-11 w-full rounded-xl border border-slate-200 bg-white/80 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+              />
+            </div>
+          </div>
+
+          {/* Save button */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <button
+              onClick={handleSmsCredSave}
+              disabled={smsCredSaving}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-60 cursor-pointer"
+              style={{
+                background: "#5856d6",
+                boxShadow: "0 8px 18px -6px #5856d6",
+              }}
+            >
+              {smsCredSaving ? "กำลังบันทึก..." : "💾 บันทึก Credentials"}
+            </button>
+            {smsCredMsg && (
+              <span className={`text-sm font-semibold ${smsCredMsg.ok ? "text-emerald-600" : "text-red-500"}`}>
+                {smsCredMsg.ok ? "✓" : "✗"} {smsCredMsg.text}
+              </span>
+            )}
+          </div>
+
+          {/* Test SMS */}
+          {smsHasKey && (
+            <div className="border-t border-slate-100 pt-5 space-y-3">
+              <p className="text-sm font-semibold text-slate-700">ทดสอบส่ง SMS</p>
+              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                <input
+                  type="tel"
+                  value={smsTestPhone}
+                  onChange={(e) => setSmsTestPhone(e.target.value)}
+                  placeholder="0812345678"
+                  className="flex h-11 w-full sm:w-48 rounded-xl border border-slate-200 bg-white/80 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-400 transition-all"
+                />
+                <button
+                  onClick={handleSmsTest}
+                  disabled={smsTesting || !smsTestPhone}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-60 cursor-pointer shrink-0"
+                  style={{
+                    background: "#34c759",
+                    boxShadow: "0 8px 18px -6px #34c759",
+                  }}
+                >
+                  {smsTesting ? "กำลังส่ง..." : "📤 ส่ง SMS ทดสอบ"}
+                </button>
+                {smsTestMsg && (
+                  <span className={`text-sm font-semibold ${smsTestMsg.ok ? "text-emerald-600" : "text-red-500"}`}>
+                    {smsTestMsg.ok ? "✓" : "✗"} {smsTestMsg.text}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </section>
 

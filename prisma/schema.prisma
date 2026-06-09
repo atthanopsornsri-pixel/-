@@ -12,29 +12,29 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  username      String?   @unique // สำหรับลูกบ้านใช้ล็อกอินด้วยรหัสห้อง (เช่น AP-001)
-  emailVerified DateTime?
-  password      String?
-  name          String?
-  image         String?
+  id                     String    @id @default(cuid())
+  email                  String    @unique
+  username               String?   @unique // สำหรับลูกบ้านใช้ล็อกอินด้วยรหัสห้อง (เช่น AP-001)
+  emailVerified          DateTime?
+  password               String?
+  name                   String?
+  image                  String?
   lineChannelAccessToken String? // สำหรับเก็บ Channel Access Token ของ LINE OA บอต
   lineUserId             String? // สำหรับเก็บ LINE User ID ส่วนบุคคลของผู้ใช้งานเพื่อรับแจ้งเตือน
   lineBindingCode        String? // สำหรับรหัสผูกบัญชีชั่วคราว (เช่น JAD-1234)
-  role          Role      @default(TENANT)
-  pdpaAcceptedAt DateTime? // เก็บวันที่กดยอมรับ PDPA
-  planTier      PlanTier  @default(FREE_TRIAL)
-  planExpiresAt DateTime? // วันหมดอายุแพ็กเกจ (ถ้าหมดแล้วอาจจะใช้งานต่อไม่ได้ถ้าไม่ต่ออายุ)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  role                   Role      @default(TENANT)
+  pdpaAcceptedAt         DateTime? // เก็บวันที่กดยอมรับ PDPA
+  planTier               PlanTier  @default(FREE_TRIAL)
+  planExpiresAt          DateTime? // วันหมดอายุแพ็กเกจ (ถ้าหมดแล้วอาจจะใช้งานต่อไม่ได้ถ้าไม่ต่ออายุ)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
-  properties    Property[] // สำหรับ Owner
-  tenantProfile Tenant?    // สำหรับ Tenant
-  accounts      Account[]
-  sessions      Session[]
-  invoices          Invoice[]          // ใบแจ้งหนี้ค่าบริการ SaaS (สำหรับ Owner)
-  smsAddon          SmsAddon?          // แพ็กเกจเสริม SMS (สำหรับ Owner)
+  properties        Property[] // สำหรับ Owner
+  tenantProfile     Tenant? // สำหรับ Tenant
+  accounts          Account[]
+  sessions          Session[]
+  invoices          Invoice[] // ใบแจ้งหนี้ค่าบริการ SaaS (สำหรับ Owner)
+  smsAddon          SmsAddon? // แพ็กเกจเสริม SMS (สำหรับ Owner)
   registrationCodes RegistrationCode[] // โค้ดที่ User คนนี้สร้าง หรือใช้งาน
 }
 
@@ -52,24 +52,24 @@ enum PlanTier {
 }
 
 model Property {
-  id            String   @id @default(cuid())
+  id            String  @id @default(cuid())
   name          String
   address       String
-  imageUrl      String?  // ภาพปกของหอพัก
-  leaseTemplate String?  // ข้อความ/เงื่อนไขสัญญาเช่าที่ปรับแต่งได้
-  
+  imageUrl      String? // ภาพปกของหอพัก
+  leaseTemplate String? // ข้อความ/เงื่อนไขสัญญาเช่าที่ปรับแต่งได้
+
   // Billing & Legal Settings
-  taxId         String?  // เลขประจำตัวผู้เสียภาษี
-  companyName   String?  // ชื่อบริษัท/ชื่อจดทะเบียน
-  promptPayNo   String?  // เบอร์พร้อมเพย์
-  promptPayName String?  // ชื่อบัญชีพร้อมเพย์
-  signatureUrl  String?  // ลายเซ็นผู้รับเงิน (Base64 หรือ URL)
+  taxId         String? // เลขประจำตัวผู้เสียภาษี
+  companyName   String? // ชื่อบริษัท/ชื่อจดทะเบียน
+  promptPayNo   String? // เบอร์พร้อมเพย์
+  promptPayName String? // ชื่อบัญชีพร้อมเพย์
+  signatureUrl  String? // ลายเซ็นผู้รับเงิน (Base64 หรือ URL)
 
   // Utility Rates & Default Fees
-  electricRate      Float?  // ค่าไฟต่อหน่วย
-  waterRate         Float?  // ค่าน้ำต่อหน่วย (หรือเหมาจ่าย)
-  defaultCommonFee  Float?  // ค่าส่วนกลาง (Default)
-  defaultParkingFee Float?  // ค่าที่จอดรถ (Default)
+  electricRate       Float? // ค่าไฟต่อหน่วย
+  waterRate          Float? // ค่าน้ำต่อหน่วย (หรือเหมาจ่าย)
+  defaultCommonFee   Float? // ค่าส่วนกลาง (Default)
+  defaultParkingFee  Float? // ค่าที่จอดรถ (Default)
   defaultInternetFee Float? // ค่าอินเทอร์เน็ต (Default)
 
   // ── ค่าเริ่มต้นสำหรับ "บิลเข้าอยู่" (Check-in) ──
@@ -79,44 +79,44 @@ model Property {
   defaultCarFee          Float? // ค่าลงทะเบียน/ที่จอด รถยนต์ (0 = ฟรี)
   defaultMotorcycleFee   Float? // ค่าลงทะเบียน/ที่จอด มอเตอร์ไซค์ (0 = ฟรี)
 
-  ownerId       String
-  owner         User     @relation(fields: [ownerId], references: [id])
-  rooms         Room[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  isDeleted     Boolean  @default(false)
+  ownerId   String
+  owner     User     @relation(fields: [ownerId], references: [id])
+  rooms     Room[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
 }
 
 model Room {
-  id          String   @id @default(cuid())
-  number      String
-  floor       String?
+  id            String               @id @default(cuid())
+  number        String
+  floor         String?
   rentPrice     Float
-  imageMain     String?  // ภาพรวมห้องนอน/ห้องนั่งเล่น
-  imageBathroom String?  // ภาพห้องน้ำ
-  imageBalcony  String?  // ภาพระเบียง/วิว
-  imageFacility String?  // ภาพสิ่งอำนวยความสะดวก
-  inviteCode    String?  @unique // รหัสสำหรับให้ลูกบ้านใช้สมัครสมาชิกเข้าห้องนี้
-  propertyId  String
-  property    Property @relation(fields: [propertyId], references: [id])
-  tenants     Tenant[]
-  bills       Bill[]
-  maintenance MaintenanceRequest[]
-  parcels     Parcel[]
-  status      RoomStatus @default(AVAILABLE)
-  
+  imageMain     String? // ภาพรวมห้องนอน/ห้องนั่งเล่น
+  imageBathroom String? // ภาพห้องน้ำ
+  imageBalcony  String? // ภาพระเบียง/วิว
+  imageFacility String? // ภาพสิ่งอำนวยความสะดวก
+  inviteCode    String?              @unique // รหัสสำหรับให้ลูกบ้านใช้สมัครสมาชิกเข้าห้องนี้
+  propertyId    String
+  property      Property             @relation(fields: [propertyId], references: [id])
+  tenants       Tenant[]
+  bills         Bill[]
+  maintenance   MaintenanceRequest[]
+  parcels       Parcel[]
+  status        RoomStatus           @default(AVAILABLE)
+
   // Amenities
-  hasAircon          Boolean    @default(false)
-  hasFan             Boolean    @default(false)
-  hasFurniture       Boolean    @default(false)
+  hasAircon    Boolean @default(false)
+  hasFan       Boolean @default(false)
+  hasFurniture Boolean @default(false)
 
   // Meters
-  waterMeterStart    Float?     @default(0) // เลขมิเตอร์น้ำตั้งต้นตอนย้ายเข้า
-  electricMeterStart Float?     @default(0) // เลขมิเตอร์ไฟตั้งต้นตอนย้ายเข้า
+  waterMeterStart    Float? @default(0) // เลขมิเตอร์น้ำตั้งต้นตอนย้ายเข้า
+  electricMeterStart Float? @default(0) // เลขมิเตอร์ไฟตั้งต้นตอนย้ายเข้า
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  isDeleted   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
 
   @@unique([propertyId, number])
 }
@@ -139,17 +139,17 @@ model Tenant {
   lineUserId    String?   @unique
 
   // ── ข้อมูลส่วนตัวตามกฎหมาย ──
-  firstName        String?           // ชื่อจริง (ภาษาไทย)
-  lastName         String?           // นามสกุล (ภาษาไทย)
-  idCardNumber     String?           // เลขบัตรประชาชน 13 หลัก
-  phoneNumber      String?  @unique   // เบอร์โทร
-  address          String?  @db.Text // ที่อยู่ตามทะเบียนบ้าน
-  emergencyContact String?           // ชื่อผู้ติดต่อฉุกเฉิน
-  emergencyPhone   String?           // เบอร์ผู้ติดต่อฉุกเฉิน
-  moveInDate       DateTime?         // วันย้ายเข้าจริง
-  profileCompleted Boolean  @default(false) // กรอกข้อมูลครบแล้วหรือยัง
+  firstName        String? // ชื่อจริง (ภาษาไทย)
+  lastName         String? // นามสกุล (ภาษาไทย)
+  idCardNumber     String? // เลขบัตรประชาชน 13 หลัก
+  phoneNumber      String?   @unique // เบอร์โทร
+  address          String?   @db.Text // ที่อยู่ตามทะเบียนบ้าน
+  emergencyContact String? // ชื่อผู้ติดต่อฉุกเฉิน
+  emergencyPhone   String? // เบอร์ผู้ติดต่อฉุกเฉิน
+  moveInDate       DateTime? // วันย้ายเข้าจริง
+  profileCompleted Boolean   @default(false) // กรอกข้อมูลครบแล้วหรือยัง
 
-  vehicles         Vehicle[]         // ยานพาหนะที่ลงทะเบียน
+  vehicles Vehicle[] // ยานพาหนะที่ลงทะเบียน
 
   // E-Contract Fields
   signatureUrl      String?   @db.Text
@@ -158,18 +158,18 @@ model Tenant {
   contractUserAgent String?
   contractPdfUrl    String?   @db.Text // สำหรับเก็บไฟล์ PDF สัญญา หรือสลิปสัญญาที่อัปโหลด
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  isDeleted     Boolean   @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
 }
 
 model Vehicle {
   id           String      @id @default(cuid())
   tenantId     String
   tenant       Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  licensePlate String      // ทะเบียนรถ เช่น กก 1234
-  brand        String?     // ยี่ห้อ เช่น Honda, Toyota
-  color        String?     // สี
+  licensePlate String // ทะเบียนรถ เช่น กก 1234
+  brand        String? // ยี่ห้อ เช่น Honda, Toyota
+  color        String? // สี
   type         VehicleType @default(MOTORCYCLE)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
@@ -182,41 +182,41 @@ enum VehicleType {
 }
 
 model Bill {
-  id             String    @id @default(cuid())
-  type           BillType  @default(MONTHLY) // MONTHLY = บิลรายเดือน, CHECKIN = บิลเข้าอยู่
-  month          Int
-  year           Int
-  roomId         String
-  room           Room      @relation(fields: [roomId], references: [id])
-  rentAmount     Float
-  waterAmount    Float
-  waterUnits     Float?
-  waterReading   Float?
-  electricAmount Float
-  electricUnits  Float?
+  id              String   @id @default(cuid())
+  type            BillType @default(MONTHLY) // MONTHLY = บิลรายเดือน, CHECKIN = บิลเข้าอยู่
+  month           Int
+  year            Int
+  roomId          String
+  room            Room     @relation(fields: [roomId], references: [id])
+  rentAmount      Float
+  waterAmount     Float
+  waterUnits      Float?
+  waterReading    Float?
+  electricAmount  Float
+  electricUnits   Float?
   electricReading Float?
-  commonFee      Float     @default(0)
-  parkingFee     Float     @default(0)
-  internetFee    Float     @default(0)
-  otherFee       Float     @default(0)
+  commonFee       Float    @default(0)
+  parkingFee      Float    @default(0)
+  internetFee     Float    @default(0)
+  otherFee        Float    @default(0)
 
   // ── ฟิลด์เฉพาะบิลเข้าอยู่ (Check-in) ──
-  securityDeposit Float    @default(0) // เงินประกันห้อง (คืนได้ตอนย้ายออก)
-  advanceRent     Float    @default(0) // ค่าเช่าล่วงหน้า
-  keyDeposit      Float    @default(0) // ค่ามัดจำกุญแจ/คีย์การ์ด
-  vehicleFee      Float    @default(0) // ค่าลงทะเบียน/ที่จอดรถ
+  securityDeposit Float @default(0) // เงินประกันห้อง (คืนได้ตอนย้ายออก)
+  advanceRent     Float @default(0) // ค่าเช่าล่วงหน้า
+  keyDeposit      Float @default(0) // ค่ามัดจำกุญแจ/คีย์การ์ด
+  vehicleFee      Float @default(0) // ค่าลงทะเบียน/ที่จอดรถ
 
-  balanceForward Float     @default(0) // ยอดค้างชำระยกมา
+  balanceForward Float      @default(0) // ยอดค้างชำระยกมา
   totalAmount    Float
-  paidAmount     Float     @default(0) // ยอดที่ชำระแล้ว
+  paidAmount     Float      @default(0) // ยอดที่ชำระแล้ว
   status         BillStatus @default(UNPAID)
   dueDate        DateTime
-  slipUrl        String?    // ลิงก์/รูปสลิปโอนเงิน
-  paymentDate    DateTime?  // วันที่ผู้เช่าส่งสลิป
+  slipUrl        String? // ลิงก์/รูปสลิปโอนเงิน
+  paymentDate    DateTime? // วันที่ผู้เช่าส่งสลิป
   payments       Payment[]
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  isDeleted      Boolean   @default(false)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  isDeleted      Boolean    @default(false)
 
   @@unique([roomId, month, year, type])
 }
@@ -228,22 +228,22 @@ enum BillType {
 
 enum BillStatus {
   UNPAID
-  PENDING   // รอตรวจสอบสลิป
-  PARTIAL   // จ่ายไม่ครบ
+  PENDING // รอตรวจสอบสลิป
+  PARTIAL // จ่ายไม่ครบ
   PAID
   OVERDUE
 }
 
 model Payment {
-  id           String    @id @default(cuid())
-  billId       String
-  bill         Bill      @relation(fields: [billId], references: [id])
-  amount       Float
-  slipUrl      String?
-  status       PaymentStatus @default(PENDING)
-  verifiedAt   DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id         String        @id @default(cuid())
+  billId     String
+  bill       Bill          @relation(fields: [billId], references: [id])
+  amount     Float
+  slipUrl    String?
+  status     PaymentStatus @default(PENDING)
+  verifiedAt DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 }
 
 enum PaymentStatus {
@@ -253,19 +253,19 @@ enum PaymentStatus {
 }
 
 model MaintenanceRequest {
-  id            String    @id @default(cuid())
+  id            String            @id @default(cuid())
   roomId        String
-  room          Room      @relation(fields: [roomId], references: [id])
+  room          Room              @relation(fields: [roomId], references: [id])
   title         String
   description   String
   imageUrl      String?
   status        MaintenanceStatus @default(PENDING)
   preferredAt   DateTime? // วันเวลาที่ผู้เช่าสะดวกรับช่าง (แจ้งตอน submit)
   scheduledAt   DateTime? // วันเวลานัดหมายยืนยันโดยเจ้าของ
-  scheduledNote String?   // หมายเหตุการนัดหมาย
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  isDeleted     Boolean   @default(false)
+  scheduledNote String? // หมายเหตุการนัดหมาย
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  isDeleted     Boolean           @default(false)
 }
 
 enum MaintenanceStatus {
@@ -275,15 +275,15 @@ enum MaintenanceStatus {
 }
 
 model Parcel {
-  id              String       @id @default(cuid())
-  trackingNumber  String?
-  recipientName   String?
-  roomId          String
-  room            Room         @relation(fields: [roomId], references: [id])
-  status          ParcelStatus @default(PENDING)
-  receivedAt      DateTime     @default(now())
-  pickedUpAt      DateTime?
-  isDeleted       Boolean      @default(false)
+  id             String       @id @default(cuid())
+  trackingNumber String?
+  recipientName  String?
+  roomId         String
+  room           Room         @relation(fields: [roomId], references: [id])
+  status         ParcelStatus @default(PENDING)
+  receivedAt     DateTime     @default(now())
+  pickedUpAt     DateTime?
+  isDeleted      Boolean      @default(false)
 }
 
 enum ParcelStatus {
@@ -292,18 +292,18 @@ enum ParcelStatus {
 }
 
 model Account {
-  id                 String  @id @default(cuid())
-  userId             String
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?  @db.Text
-  access_token       String?  @db.Text
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?  @db.Text
-  session_state      String?
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -345,18 +345,18 @@ model SystemSettings {
 /// ใบแจ้งหนี้รายเดือนสำหรับเรียกเก็บค่าบริการ JadHor OS จากเจ้าของหอพัก
 model Invoice {
   id            String        @id @default(cuid())
-  invoiceNumber String        @unique  // เลขที่ใบแจ้งหนี้ เช่น INV-202606-0001
+  invoiceNumber String        @unique // เลขที่ใบแจ้งหนี้ เช่น INV-202606-0001
   ownerId       String
   owner         User          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  month         Int           // เดือนที่เรียกเก็บ
-  year          Int           // ปีที่เรียกเก็บ
+  month         Int // เดือนที่เรียกเก็บ
+  year          Int // ปีที่เรียกเก็บ
   items         InvoiceItem[] // รายการย่อยทั้งหมดในบิลใบนี้
-  totalAmount   Float         // ยอดรวมสุทธิ (คำนวณจาก items)
+  totalAmount   Float // ยอดรวมสุทธิ (คำนวณจาก items)
   status        BillStatus    @default(UNPAID)
-  slipUrl       String?       // URL สลิปโอนเงินที่เจ้าของหอแนบมา
-  paidAt        DateTime?     // วันเวลาที่ Admin อนุมัติ
-  dueDate       DateTime?     // วันครบกำหนดชำระ
-  note          String?       // หมายเหตุจาก Admin
+  slipUrl       String? // URL สลิปโอนเงินที่เจ้าของหอแนบมา
+  paidAt        DateTime? // วันเวลาที่ Admin อนุมัติ
+  dueDate       DateTime? // วันครบกำหนดชำระ
+  note          String? // หมายเหตุจาก Admin
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
@@ -369,48 +369,54 @@ model InvoiceItem {
   invoiceId   String
   invoice     Invoice         @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   type        InvoiceItemType // ประเภทรายการ
-  description String          // คำอธิบายภาษาไทย
+  description String // คำอธิบายภาษาไทย
   quantity    Int             @default(1)
-  unitPrice   Float           // ราคาต่อหน่วย
-  amount      Float           // ยอดรวม (quantity × unitPrice)
+  unitPrice   Float // ราคาต่อหน่วย
+  amount      Float // ยอดรวม (quantity × unitPrice)
   createdAt   DateTime        @default(now())
 }
 
 enum InvoiceItemType {
-  PLATFORM_FEE    // ค่าบริการระบบหลัก
-  SMS_ADDON       // แพ็กเกจเสริม SMS
-  DISCOUNT        // ส่วนลด
-  OTHER           // อื่นๆ
+  PLATFORM_FEE // ค่าบริการระบบหลัก
+  SMS_ADDON // แพ็กเกจเสริม SMS
+  DISCOUNT // ส่วนลด
+  OTHER // อื่นๆ
 }
 
 /// แพ็กเกจเสริม SMS ที่เจ้าของหอพักสมัครใช้งาน
 model SmsAddon {
-  id          String      @id @default(cuid())
-  ownerId     String      @unique  // 1 Owner → 1 SmsAddon record
-  owner       User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  tier        SmsTier     @default(SIZE_S)
-  quota       Int         // โควตาข้อความต่อเดือน (50/120/250)
-  used        Int         @default(0) // จำนวนข้อความที่ใช้ไปแล้วในเดือนนี้
-  resetMonth  Int         // เดือนที่จะ reset used เป็น 0
-  resetYear   Int         // ปีที่จะ reset used เป็น 0
-  isActive    Boolean     @default(true)
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+  id         String   @id @default(cuid())
+  ownerId    String   @unique // 1 Owner → 1 SmsAddon record
+  owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  tier       SmsTier  @default(SIZE_S)
+  quota      Int // โควตาข้อความต่อเดือน (50/120/250)
+  used       Int      @default(0) // จำนวนข้อความที่ใช้ไปแล้วในเดือนนี้
+  resetMonth Int // เดือนที่จะ reset used เป็น 0
+  resetYear  Int // ปีที่จะ reset used เป็น 0
+  isActive   Boolean  @default(true)
+
+  // Thaibulksms API credentials (เก็บ per-owner)
+  thaibulkApiKey    String? // API Key จาก Thaibulksms
+  thaibulkApiSecret String? // API Secret จาก Thaibulksms
+  thaibulkSenderId  String? @default("JadHor") // Sender name บน SMS (max 11 chars)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum SmsTier {
-  SIZE_S    // 50 ข้อความ/เดือน — 99 บาท
-  SIZE_M    // 120 ข้อความ/เดือน — 199 บาท
-  SIZE_L    // 250 ข้อความ/เดือน — 349 บาท
+  SIZE_S // 50 ข้อความ/เดือน — 99 บาท
+  SIZE_M // 120 ข้อความ/เดือน — 199 บาท
+  SIZE_L // 250 ข้อความ/เดือน — 349 บาท
 }
 
 model RegistrationCode {
-  id          String   @id @default(cuid())
-  code        String   @unique
-  months      Int      @default(1) // ระยะเวลาที่ใช้งานได้ (เดือน)
-  isUsed      Boolean  @default(false)
-  usedById    String?
-  usedBy      User?    @relation(fields: [usedById], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  code      String   @unique
+  months    Int      @default(1) // ระยะเวลาที่ใช้งานได้ (เดือน)
+  isUsed    Boolean  @default(false)
+  usedById  String?
+  usedBy    User?    @relation(fields: [usedById], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

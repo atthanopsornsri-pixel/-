@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendLineOAMessage } from "@/lib/line";
+import { sendSmsWithAddon } from "@/lib/sms";
 
 export async function POST(req: Request) {
   try {
@@ -44,19 +45,25 @@ export async function POST(req: Request) {
       }
     });
 
-    // Notify Tenant if they have lineUserId setup
+    // Notify Tenant via LINE + SMS (fire-and-forget)
     const tenant = await prisma.tenant.findFirst({
       where: { roomId },
-      select: { lineUserId: true }
+      select: { lineUserId: true, phoneNumber: true }
     });
 
+    const parcelMsg = `มีพัสดุมาส่ง! ห้อง ${parcel.room.number} | ผู้รับ: ${recipientName || "-"} | เลขพัสดุ: ${trackingNumber || "-"}`;
+
     if (room?.property?.owner?.lineChannelAccessToken && tenant?.lineUserId) {
-      // fire-and-forget — ไม่ await เพื่อให้ response เร็ว
       sendLineOAMessage(
         tenant.lineUserId,
-        `📦 มีพัสดุมาส่งถึงคุณ!\nชื่อผู้รับ: ${recipientName || "-"}\nห้อง: ${parcel.room.number}\nเลขพัสดุ: ${trackingNumber || "-"}`,
+        `📦 ${parcelMsg}`,
         room.property.owner.lineChannelAccessToken
       ).catch((err) => console.error("[LINE] parcel notify error:", err));
+    }
+
+    if (tenant?.phoneNumber && room?.property?.ownerId) {
+      sendSmsWithAddon(room.property.ownerId, tenant.phoneNumber, `[JadHor] ${parcelMsg}`)
+        .catch((err) => console.error("[SMS] parcel notify error:", err));
     }
 
     return NextResponse.json(parcel, { status: 201 });
