@@ -41,9 +41,17 @@ export default async function ApprovalsDashboardPage() {
   });
 
   // 2. Secure Images: Generate Signed URLs directly in the Server Component
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  // สร้าง client แบบป้องกัน — ถ้า env หายหรือสร้างไม่ได้ จะไม่ทำให้ทั้งหน้าพัง
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  let supabase: ReturnType<typeof createClient> | null = null;
+  if (supabaseUrl && supabaseServiceKey) {
+    try {
+      supabase = createClient(supabaseUrl, supabaseServiceKey);
+    } catch (e) {
+      console.error("[APPROVALS] supabase client init failed:", e);
+    }
+  }
 
   const initialBills: ApprovalBill[] = await Promise.all(
     pendingBills.map(async (bill) => {
@@ -55,7 +63,7 @@ export default async function ApprovalsDashboardPage() {
         if (urlType === "inline") {
           // base64 Data URL หรือ HTTPS URL ใช้ตรง ๆ ได้เลย
           signedSlipUrl = bill.slipUrl;
-        } else {
+        } else if (supabase) {
           // Supabase Storage path → ต้องสร้าง Signed URL ก่อน
           try {
             const { data } = await supabase.storage
