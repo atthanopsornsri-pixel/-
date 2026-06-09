@@ -77,17 +77,17 @@ export async function sendThaibulkSms(
 
 /**
  * แปลงเบอร์โทรไทยให้เป็น format ที่ Thaibulksms รับ (66xxxxxxxxx)
- * รับ: 0812345678, 812345678, 66812345678, +66812345678
+ * รับ: 0812345678, 812345678, 66812345678, +66812345678, +660812345678
  * คืน: 66812345678 หรือ null ถ้าไม่ถูกต้อง
  */
 export function normalizeThaiPhone(phone: string): string | null {
   if (!phone) return null;
-  const cleaned = phone.replace(/[\s\-().]/g, "");
+  const cleaned = phone.replace(/[\s\-().+]/g, "");
 
-  if (/^\+66\d{9}$/.test(cleaned)) return cleaned.slice(1); // +66... → 66...
-  if (/^66\d{9}$/.test(cleaned)) return cleaned;             // 66... → keep
-  if (/^0\d{9}$/.test(cleaned)) return "66" + cleaned.slice(1); // 0x → 66x
-  if (/^\d{9}$/.test(cleaned)) return "66" + cleaned;        // 9-digit → 66+9
+  if (/^660\d{9}$/.test(cleaned)) return "66" + cleaned.slice(3); // 660x... → 66x (ตัด 0 ออก)
+  if (/^66\d{9}$/.test(cleaned)) return cleaned;                   // 66x... → keep
+  if (/^0\d{9}$/.test(cleaned)) return "66" + cleaned.slice(1);    // 0x → 66x
+  if (/^\d{9}$/.test(cleaned)) return "66" + cleaned;              // 9-digit → 66+9
 
   return null; // invalid
 }
