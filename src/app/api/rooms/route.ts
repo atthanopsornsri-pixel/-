@@ -50,7 +50,7 @@ export async function POST(req: Request) {
 
     if (totalRooms >= roomLimit) {
       return NextResponse.json({ 
-        message: "Room limit reached. Please upgrade your plan.", 
+        message: `ถึงขีดจำกัดจำนวนห้องของแพ็กเกจแล้ว (${totalRooms}/${roomLimit} ห้อง) กรุณาอัปเกรดแพ็กเกจเพื่อเพิ่มห้องได้มากขึ้น`,
         code: "LIMIT_REACHED",
         currentTotal: totalRooms,
         limit: roomLimit,

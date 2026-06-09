@@ -114,16 +114,18 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
-      // 3. Periodic refresh every 5 minutes
+      // 3. Periodic refresh every 5 minutes (role + plan info)
       const FIVE_MIN = 5 * 60 * 1000;
       const lastChecked = (token.roleCheckedAt as number) ?? 0;
       if (Date.now() - lastChecked > FIVE_MIN && token.id) {
         const fresh = await prisma.user.findUnique({
           where: { id: token.id as string },
-          select: { role: true },
+          select: { role: true, planTier: true, planExpiresAt: true },
         });
         if (fresh) {
           token.role = fresh.role;
+          token.planTier = fresh.planTier;
+          token.planExpiresAt = fresh.planExpiresAt?.toISOString() ?? null;
           token.roleCheckedAt = Date.now();
         }
       }
@@ -155,6 +157,8 @@ export const authOptions: NextAuthOptions = {
       if (token && session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as string;
+        session.user.planTier = token.planTier as string | undefined;
+        session.user.planExpiresAt = token.planExpiresAt as string | null | undefined;
         session.user.lineUserId = token.lineUserId as string | undefined;
         session.user.tenantId = token.tenantId as string | undefined;
         session.user.roomId = token.roomId as string | undefined;

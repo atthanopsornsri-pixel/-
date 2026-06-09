@@ -40,10 +40,11 @@ export default async function DashboardLayout({
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
 
-  // >>> TRIAL EXPIRATION LOGIC >>>
+  // >>> PLAN EXPIRATION LOGIC >>>
   let isExpired = false;
-  let daysLeft = 0;
+  let daysLeft = 999;
   let isFreeTrial = false;
+  let planTierLabel = "";
 
   if (session.user.role === "OWNER") {
     const dbUser = await prisma.user.findUnique({
@@ -53,18 +54,22 @@ export default async function DashboardLayout({
 
     if (dbUser) {
       const now = new Date();
-      const expiresAt = dbUser.planExpiresAt ? new Date(dbUser.planExpiresAt) : now;
       isFreeTrial = dbUser.planTier === "FREE_TRIAL";
-      isExpired = isFreeTrial && now > expiresAt;
-      daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      planTierLabel = dbUser.planTier ?? "FREE_TRIAL";
 
-      // Redirect if expired AND NOT on the billing page already to prevent loop
+      if (dbUser.planExpiresAt) {
+        const expiresAt = new Date(dbUser.planExpiresAt);
+        isExpired = now > expiresAt;
+        daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      }
+
+      // Redirect if plan expired AND NOT already on the subscription page (prevent loop)
       if (isExpired && pathname !== "/dashboard/subscription") {
         redirect("/dashboard/subscription?expired=true");
       }
     }
   }
-  // <<< END TRIAL EXPIRATION LOGIC <<<
+  // <<< END PLAN EXPIRATION LOGIC <<<
 
   // Check for unpaid SaaS bills (Deferred to AsyncNotificationBell)
 
@@ -121,12 +126,28 @@ export default async function DashboardLayout({
           </div>
         </header>
 
-        {/* 🟡 แถบแบนเนอร์กดดันจิตวิทยา (โชว์เฉพาะคนที่ยังไม่หมดเวลาและใช้ฟรีอยู่) */}
-        {isFreeTrial && daysLeft > 0 && (
-          <div className="bg-amber-50 px-4 py-2.5 text-center text-sm font-medium text-amber-800 border-b border-amber-200 shadow-sm z-40 relative flex flex-col sm:flex-row items-center justify-center gap-2">
-            <span>คุณกำลังอยู่ในช่วงทดลองใช้ฟรี (เหลือเวลาอีก <strong className="text-amber-900">{daysLeft} วัน</strong>)</span>
-            <Link href="/dashboard/subscription" className="inline-flex items-center gap-1 font-bold bg-amber-100 hover:bg-amber-200 text-amber-900 px-3 py-1 rounded-full transition-colors text-xs">
-              ดูแพ็กเกจอัปเกรด <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+        {/* 🟡 แถบแจ้งเตือนแพ็กเกจ — แสดงเมื่อเหลือเวลา ≤ 7 วัน (ทุก plan tier) */}
+        {daysLeft > 0 && daysLeft <= 7 && (
+          <div
+            className="px-4 py-2.5 text-center text-sm font-medium border-b shadow-sm z-40 relative flex flex-col sm:flex-row items-center justify-center gap-2"
+            style={isFreeTrial
+              ? { background: "#fffbeb", color: "#92400e", borderColor: "#fde68a" }
+              : { background: "#fff5f4", color: "#991b1b", borderColor: "#fecaca" }}
+          >
+            <span>
+              {isFreeTrial
+                ? <>ช่วงทดลองใช้ฟรีเหลืออีก <strong>{daysLeft} วัน</strong></>
+                : <>แพ็กเกจ <strong>{planTierLabel}</strong> หมดอายุในอีก <strong>{daysLeft} วัน</strong></>}
+            </span>
+            <Link
+              href="/dashboard/subscription"
+              className="inline-flex items-center gap-1 font-bold px-3 py-1 rounded-full transition-colors text-xs"
+              style={isFreeTrial
+                ? { background: "#fef3c7", color: "#92400e" }
+                : { background: "#fee2e2", color: "#991b1b" }}
+            >
+              {isFreeTrial ? "ดูแพ็กเกจอัปเกรด" : "ต่ออายุแพ็กเกจ"}
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </Link>
           </div>
         )}

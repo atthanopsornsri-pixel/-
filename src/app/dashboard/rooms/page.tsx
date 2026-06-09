@@ -106,14 +106,19 @@ export default function RoomsPage() {
         setNumber("");
         setFloor("");
         setRentPrice("");
-        
+
         fetchRooms(propertyId);
       } else {
-        toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+        const errData = await res.json().catch(() => ({}));
+        if (errData?.code === "LIMIT_REACHED") {
+          toast.error(errData.message || "ถึงขีดจำกัดห้องของแพ็กเกจแล้ว กรุณาอัปเกรดแพ็กเกจ");
+        } else {
+          toast.error(errData?.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+        }
       }
     } catch (error) {
       console.error(error);
-      toast.error("Error saving room");
+      toast.error("เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่");
     } finally {
       setIsUploading(false);
     }
