@@ -7,6 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/componen
 import { QRCodeSVG } from "qrcode.react";
 import generatePayload from "promptpay-qr";
 import { submitPaymentSlip } from "@/app/actions/tenant-payment";
+import { PageHeader } from "@/components/PageHeader";
+import { Receipt } from "lucide-react";
 
 export default function MyBillsPage() {
   const [bills, setBills] = useState<any[]>([]);
@@ -66,7 +68,12 @@ export default function MyBillsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">บิลค่าเช่าของฉัน</h1>
+      <PageHeader
+        icon={Receipt}
+        tone="green"
+        title="บิลค่าเช่าของฉัน"
+        subtitle="ดูรายละเอียดค่าใช้จ่ายและชำระเงินผ่าน QR ได้ทันที"
+      />
 
       {isPaying && selectedBill ? (
         <Card className="max-w-md mx-auto">

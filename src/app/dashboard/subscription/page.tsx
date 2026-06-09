@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { PLAN_PRICES, SMS_PRICES, JADHOR_PROMPTPAY } from "@/lib/pricing";
 import { QRCodeSVG } from "qrcode.react";
 import generatePayload from "promptpay-qr";
+import { CreditCard } from "lucide-react";
 
 // =============================================
 // Types
@@ -191,13 +192,21 @@ export default function SubscriptionPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       {/* Page Header */}
-      <div>
-        <h1 className="text-3xl md:text-4xl font-extrabold text-slate-800 tracking-tight">
-          การสมัครใช้บริการ
-        </h1>
-        <p className="text-sm md:text-base font-medium text-slate-500 mt-2">
-          จัดการแพ็กเกจ JadHor OS, บริการเสริม SMS และประวัติใบแจ้งหนี้ของคุณ
-        </p>
+      <div className="flex items-center gap-3">
+        <div
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--jh-radius-md)]"
+          style={{ background: "#ff3b30", color: "#fff", boxShadow: "0 10px 22px -8px #ff3b30" }}
+        >
+          <CreditCard className="h-[22px] w-[22px]" strokeWidth={2} />
+        </div>
+        <div>
+          <h1 className="text-2xl md:text-[28px] font-bold text-[var(--jh-ink)] tracking-[-0.02em]">
+            การสมัครใช้บริการ
+          </h1>
+          <p className="text-sm md:text-base font-medium text-slate-500 mt-0.5">
+            จัดการแพ็กเกจ JadHor OS, บริการเสริม SMS และประวัติใบแจ้งหนี้ของคุณ
+          </p>
+        </div>
       </div>
 
       {/* ============================================= */}

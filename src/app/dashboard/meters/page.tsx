@@ -141,8 +141,11 @@ export default function MeterEntryPage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
-            <span className="w-10 h-10 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg shadow-sm">⚡</span>
+          <h1 className="text-2xl md:text-[28px] font-bold text-[var(--jh-ink)] tracking-[-0.02em] flex items-center gap-3">
+            <span
+              className="flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)] text-lg"
+              style={{ background: "#007aff", color: "#fff", boxShadow: "0 10px 22px -8px #007aff" }}
+            >⚡</span>
             จดบันทึกมิเตอร์ด่วน
           </h1>
           <p className="text-sm font-medium text-slate-500 mt-2">

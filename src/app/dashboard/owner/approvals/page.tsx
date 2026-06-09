@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getSecurePrisma } from "@/lib/prisma-secure";
 import { ApprovalCards, ApprovalBill } from "@/components/ApprovalCards";
 import { createClient } from "@supabase/supabase-js";
+import { ClipboardCheck } from "lucide-react";
 
 /**
  * ตรวจสอบว่า slipUrl เป็น URL ที่ใช้ตรง ๆ ได้เลย (base64 / http)
@@ -84,8 +85,15 @@ export default async function ApprovalsDashboardPage() {
     <div className="p-6 md:p-10 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       
       {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
+      <div className="mb-8 flex items-center gap-3">
+        <div
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--jh-radius-md)]"
+          style={{ background: "#ff9500", color: "#fff", boxShadow: "0 10px 22px -8px #ff9500" }}
+        >
+          <ClipboardCheck className="h-[22px] w-[22px]" strokeWidth={2} />
+        </div>
+        <div>
+        <h1 className="text-2xl md:text-[28px] font-bold text-[var(--jh-ink)] tracking-[-0.02em] flex items-center gap-3">
           ตรวจสลิปโอนเงิน
           {initialBills.length > 0 && (
             <span className="bg-amber-100 text-amber-700 text-sm font-bold px-3 py-1 rounded-full">
@@ -93,9 +101,10 @@ export default async function ApprovalsDashboardPage() {
             </span>
           )}
         </h1>
-        <p className="text-slate-500 mt-2 font-medium">
+        <p className="text-slate-500 mt-0.5 font-medium">
           ระบบตรวจสอบสลิปโอนเงินความเร็วสูง อนุมัติทันใจในคลิกเดียว (รูประบบ Signed URL ปลอดภัย 100%)
         </p>
+        </div>
       </div>
 
       {/* Interactive Client Component */}

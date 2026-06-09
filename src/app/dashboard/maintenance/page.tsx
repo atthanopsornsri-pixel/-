@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSession } from "next-auth/react";
+import { PageHeader } from "@/components/PageHeader";
+import { Wrench } from "lucide-react";
 
 export default function MaintenancePage() {
   const { data: session } = useSession();
@@ -95,7 +97,12 @@ export default function MaintenancePage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">ระบบแจ้งซ่อม</h1>
+      <PageHeader
+        icon={Wrench}
+        tone="cyan"
+        title="ระบบแจ้งซ่อม"
+        subtitle={role === "TENANT" ? "แจ้งปัญหาในห้องพักให้ช่างเข้าตรวจสอบ" : "ติดตามและอัปเดตสถานะงานซ่อมทั้งหมด"}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {role === "TENANT" && (
@@ -121,7 +128,7 @@ export default function MaintenancePage() {
                     <Label>แนบรูปภาพ (ถ้ามี)</Label>
                     <Input type="file" accept="image/*" onChange={e => setImageFile(e.target.files?.[0] || null)} />
                   </div>
-                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full rounded-full bg-[#30b0c7] hover:brightness-105 text-white font-semibold shadow-[0_8px_18px_-6px_#30b0c7] transition-all hover:-translate-y-0.5" disabled={isSubmitting}>
                     {isSubmitting ? "กำลังส่ง..." : "ส่งเรื่องแจ้งซ่อม"}
                   </Button>
                 </form>
@@ -158,7 +165,7 @@ export default function MaintenancePage() {
                       {req.status === "PENDING" && (
                         <Button size="sm" variant="outline" className="w-full" onClick={() => handleUpdateStatus(req.id, "IN_PROGRESS")}>รับเรื่อง/กำลังซ่อม</Button>
                       )}
-                      <Button size="sm" className="w-full bg-green-600 hover:bg-green-700" onClick={() => handleUpdateStatus(req.id, "COMPLETED")}>ซ่อมเสร็จสิ้น</Button>
+                      <Button size="sm" className="w-full rounded-full bg-[#34c759] hover:brightness-105 text-white font-semibold shadow-[0_8px_18px_-6px_#34c759] transition-all" onClick={() => handleUpdateStatus(req.id, "COMPLETED")}>ซ่อมเสร็จสิ้น</Button>
                     </div>
                   )}
                 </CardContent>

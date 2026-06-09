@@ -5,6 +5,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Receipt } from "lucide-react";
 
 export default function BillingPage() {
   const [bills, setBills] = useState<any[]>([]);
@@ -302,8 +303,18 @@ export default function BillingPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-semibold tracking-[-0.02em] text-[var(--jh-ink)] mb-2">ออกบิล & ค่าน้ำไฟ</h1>
-      <p className="text-[15px] text-[var(--jh-ink-secondary)] mb-8">จดเลขมิเตอร์ ระบบคำนวณยอดและสร้างใบแจ้งหนี้ให้อัตโนมัติ</p>
+      <div className="mb-8 flex items-center gap-3">
+        <div
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--jh-radius-md)]"
+          style={{ background: "#ff3b30", color: "#fff", boxShadow: "0 10px 22px -8px #ff3b30" }}
+        >
+          <Receipt className="h-[22px] w-[22px]" strokeWidth={2} />
+        </div>
+        <div>
+          <h1 className="text-2xl md:text-[28px] font-bold tracking-[-0.02em] text-[var(--jh-ink)]">ออกบิล & ค่าน้ำไฟ</h1>
+          <p className="text-[15px] text-[var(--jh-ink-secondary)] mt-0.5">จดเลขมิเตอร์ ระบบคำนวณยอดและสร้างใบแจ้งหนี้ให้อัตโนมัติ</p>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
         {/* Create Bill Form */}

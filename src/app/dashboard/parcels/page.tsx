@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSession } from "next-auth/react";
+import { PageHeader } from "@/components/PageHeader";
+import { Package } from "lucide-react";
 
 export default function ParcelsPage() {
   const { data: session } = useSession();
@@ -99,7 +101,12 @@ export default function ParcelsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-800 mb-6">ระบบจัดการพัสดุ</h1>
+      <PageHeader
+        icon={Package}
+        tone="orange"
+        title="ระบบจัดการพัสดุ"
+        subtitle={role === "OWNER" ? "บันทึกพัสดุที่เข้ามาและแจ้งลูกบ้านมารับ" : "ติดตามพัสดุของคุณที่หอพักรับไว้"}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {role === "OWNER" && (
@@ -138,7 +145,7 @@ export default function ParcelsPage() {
                     <Label>เลขพัสดุ (Tracking No.)</Label>
                     <Input value={trackingNumber} onChange={e => setTrackingNumber(e.target.value)} placeholder="เช่น TH123456789" />
                   </div>
-                  <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full rounded-full bg-[#ff9500] hover:brightness-105 text-white font-semibold shadow-[0_8px_18px_-6px_#ff9500] transition-all hover:-translate-y-0.5" disabled={isSubmitting}>
                     {isSubmitting ? "กำลังบันทึก..." : "บันทึกข้อมูลพัสดุ"}
                   </Button>
                 </form>

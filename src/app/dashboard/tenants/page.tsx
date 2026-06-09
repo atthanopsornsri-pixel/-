@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getBuildingsWithTenants } from "@/app/actions/tenants";
+import { Users } from "lucide-react";
 
 function TenantsDashboardContent() {
   const router = useRouter();
@@ -128,25 +129,35 @@ function TenantsDashboardContent() {
               </>
             )}
           </div>
-          <h1 className="text-2xl font-bold text-slate-800">จัดการรายชื่อผู้เช่า (ลูกบ้าน)</h1>
-          <p className="text-slate-500 text-sm mt-0.5">
-            {selectedBuildingId && activeBuilding 
-              ? `รายชื่อลูกบ้านในอาคาร: ${activeBuilding.name}` 
-              : "สรุปข้อมูลการเข้าพักและจำนวนลูกบ้านแยกตามอาคาร/หอพัก"}
-          </p>
+          <div className="flex items-center gap-3">
+            <div
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--jh-radius-md)]"
+              style={{ background: "#ff9500", color: "#fff", boxShadow: "0 10px 22px -8px #ff9500" }}
+            >
+              <Users className="h-[21px] w-[21px]" strokeWidth={2} />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-[-0.02em] text-[var(--jh-ink)]">จัดการรายชื่อผู้เช่า</h1>
+              <p className="text-slate-500 text-sm mt-0.5">
+                {selectedBuildingId && activeBuilding
+                  ? `รายชื่อลูกบ้านในอาคาร: ${activeBuilding.name}`
+                  : "สรุปข้อมูลการเข้าพักและจำนวนลูกบ้านแยกตามอาคาร/หอพัก"}
+              </p>
+            </div>
+          </div>
         </div>
-        
+
         <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
           {selectedBuildingId && (
-            <Button 
-              variant="outline" 
-              onClick={() => setSelectedBuildingId(null)} 
-              className="rounded-xl border-slate-200 hover:bg-slate-50"
+            <Button
+              variant="outline"
+              onClick={() => setSelectedBuildingId(null)}
+              className="rounded-full border-slate-200 hover:bg-slate-50"
             >
               ⬅️ ดูตึกทั้งหมด
             </Button>
           )}
-          <Button onClick={() => setIsModalOpen(true)} className="bg-amber-600 hover:bg-amber-700 text-white rounded-xl shadow-sm">
+          <Button onClick={() => setIsModalOpen(true)} className="rounded-full bg-[#ff9500] hover:brightness-105 text-white font-semibold shadow-[0_8px_18px_-6px_#ff9500] transition-all hover:-translate-y-0.5">
             + เพิ่มลูกบ้านใหม่
           </Button>
         </div>

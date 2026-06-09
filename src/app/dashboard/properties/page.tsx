@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
+import { Building2 } from "lucide-react";
 
 // Utility to compress image natively
 const compressImage = (file: File, maxWidth = 1000): Promise<string> => {
@@ -198,9 +199,17 @@ export default function PropertiesPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out relative">
       <div className="flex justify-between items-center mb-2">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-[#1D1D1F] tracking-tight">
-          จัดการหอพักและอพาร์ตเม้นท์
-        </h1>
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--jh-radius-md)]"
+            style={{ background: "#af52de", color: "#fff", boxShadow: "0 10px 22px -8px #af52de" }}
+          >
+            <Building2 className="h-[22px] w-[22px]" strokeWidth={2} />
+          </div>
+          <h1 className="text-2xl md:text-[28px] font-bold text-[var(--jh-ink)] tracking-[-0.02em]">
+            จัดการหอพักและอพาร์ตเม้นท์
+          </h1>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

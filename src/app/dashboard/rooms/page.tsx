@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Wind, RotateCw, LayoutGrid, UserPlus } from "lucide-react";
+import { Wind, RotateCw, LayoutGrid, UserPlus, BedDouble } from "lucide-react";
 
 
 
@@ -193,10 +193,18 @@ export default function RoomsPage() {
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out relative">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
-        <h1 className="text-3xl md:text-4xl font-extrabold text-[#1D1D1F] tracking-tight">
-          จัดการห้องพัก
-        </h1>
-        
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--jh-radius-md)]"
+            style={{ background: "#34c759", color: "#fff", boxShadow: "0 10px 22px -8px #34c759" }}
+          >
+            <BedDouble className="h-[22px] w-[22px]" strokeWidth={2} />
+          </div>
+          <h1 className="text-2xl md:text-[28px] font-bold text-[var(--jh-ink)] tracking-[-0.02em]">
+            จัดการห้องพัก
+          </h1>
+        </div>
+
         {/* Select Property Filter */}
         <div className="w-full sm:w-auto bg-white rounded-full px-4 py-2 shadow-[0_2px_10px_rgb(0,0,0,0.04)] border border-slate-100">
           <select 
