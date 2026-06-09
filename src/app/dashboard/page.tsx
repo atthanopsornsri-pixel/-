@@ -21,13 +21,14 @@ import {
 
 type Tone = "blue" | "green" | "orange" | "indigo" | "purple" | "red";
 
-const TONES: Record<Tone, { tint: string; color: string }> = {
-  blue: { tint: "var(--jh-blue-tint)", color: "var(--jh-blue)" },
-  green: { tint: "var(--jh-green-tint)", color: "var(--jh-green-ink)" },
-  orange: { tint: "var(--jh-orange-tint)", color: "var(--jh-orange-ink)" },
-  indigo: { tint: "var(--jh-indigo-tint)", color: "var(--jh-indigo)" },
-  purple: { tint: "var(--jh-purple-tint)", color: "var(--jh-purple)" },
-  red: { tint: "var(--jh-red-tint)", color: "var(--jh-red)" },
+// solid = สีสดสำหรับชิปไอคอน, grad = ไล่เฉดอ่อนๆ บนพื้นการ์ด, ink = สีตัวเลข
+const TONES: Record<Tone, { solid: string; gradFrom: string; gradTo: string; ink: string }> = {
+  blue: { solid: "#007aff", gradFrom: "#f4f9ff", gradTo: "#e3f0ff", ink: "var(--jh-blue)" },
+  green: { solid: "#34c759", gradFrom: "#f3fcf6", gradTo: "#e0f7e9", ink: "var(--jh-green-ink)" },
+  orange: { solid: "#ff9500", gradFrom: "#fff9f2", gradTo: "#ffeed9", ink: "var(--jh-orange-ink)" },
+  indigo: { solid: "#5856d6", gradFrom: "#f6f6ff", gradTo: "#e8e7fb", ink: "var(--jh-indigo)" },
+  purple: { solid: "#af52de", gradFrom: "#fbf5fe", gradTo: "#f3e3fb", ink: "var(--jh-purple)" },
+  red: { solid: "#ff3b30", gradFrom: "#fff5f4", gradTo: "#ffe5e3", ink: "var(--jh-red)" },
 };
 
 function StatCard({
@@ -45,15 +46,21 @@ function StatCard({
 }) {
   const t = TONES[tone];
   return (
-    <div className="rounded-[var(--jh-radius-2xl)] border border-black/[0.06] bg-white p-6 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]">
+    <div
+      className="group rounded-[var(--jh-radius-2xl)] border border-white/60 p-6 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
+      style={{ background: `linear-gradient(150deg, ${t.gradFrom} 0%, ${t.gradTo} 100%)` }}
+    >
       <div
-        className="mb-4 flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)]"
-        style={{ background: t.tint, color: t.color }}
+        className="mb-4 flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+        style={{ background: t.solid, color: "#fff", boxShadow: `0 10px 22px -8px ${t.solid}` }}
       >
-        <Icon className="h-[22px] w-[22px]" strokeWidth={1.75} />
+        <Icon className="h-[22px] w-[22px]" strokeWidth={2} />
       </div>
       <div className="text-[13px] font-medium text-[var(--jh-ink-secondary)]">{label}</div>
-      <div className="mt-1.5 text-[34px] font-semibold tracking-[-0.02em] tabular-nums leading-none text-[var(--jh-ink)]">
+      <div
+        className="mt-1.5 text-[34px] font-bold tracking-[-0.02em] tabular-nums leading-none"
+        style={{ color: t.ink }}
+      >
         {value}
       </div>
       <div className="mt-2 text-xs text-[var(--jh-ink-tertiary)]">{sublabel}</div>
@@ -164,9 +171,15 @@ export default async function DashboardPage() {
 
           {/* Quick actions */}
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <div className="rounded-[var(--jh-radius-2xl)] border border-black/[0.06] bg-white p-8 shadow-[var(--jh-shadow-card)]">
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)] bg-[var(--jh-blue-tint)] text-[var(--jh-blue)]">
-                <Settings2 className="h-[22px] w-[22px]" strokeWidth={1.75} />
+            <div
+              className="group rounded-[var(--jh-radius-2xl)] border border-white/60 p-8 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
+              style={{ background: "linear-gradient(150deg, #f4f9ff 0%, #e3f0ff 100%)" }}
+            >
+              <div
+                className="mb-5 flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                style={{ background: "#007aff", color: "#fff", boxShadow: "0 10px 22px -8px #007aff" }}
+              >
+                <Settings2 className="h-[22px] w-[22px]" strokeWidth={2} />
               </div>
               <h2 className="text-lg font-semibold text-[var(--jh-ink)]">เริ่มต้นการตั้งค่าระบบ</h2>
               <p className="mt-2 mb-6 text-sm leading-relaxed text-[var(--jh-ink-secondary)]">
@@ -175,22 +188,28 @@ export default async function DashboardPage() {
               <div className="flex gap-3">
                 <Link
                   href="/dashboard/rooms"
-                  className="rounded-full bg-[var(--jh-blue-tint)] px-4 py-2 text-sm font-semibold text-[var(--jh-blue)] transition-colors hover:bg-[#dbeafe]"
+                  className="rounded-full bg-[var(--jh-blue)] px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_18px_-6px_#007aff] transition-all hover:bg-[var(--jh-blue-dark)] hover:-translate-y-0.5"
                 >
                   จัดการห้องพัก →
                 </Link>
                 <Link
                   href="/dashboard/tenants"
-                  className="rounded-full bg-[var(--jh-surface)] px-4 py-2 text-sm font-semibold text-[var(--jh-ink-secondary)] transition-colors hover:bg-[var(--jh-surface-hover)]"
+                  className="rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-[var(--jh-ink-secondary)] transition-colors hover:bg-white"
                 >
                   ดูรายชื่อผู้เช่า
                 </Link>
               </div>
             </div>
 
-            <div className="rounded-[var(--jh-radius-2xl)] border border-black/[0.06] bg-white p-8 shadow-[var(--jh-shadow-card)]">
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)] bg-[var(--jh-green-tint)] text-[var(--jh-green-ink)]">
-                <Receipt className="h-[22px] w-[22px]" strokeWidth={1.75} />
+            <div
+              className="group rounded-[var(--jh-radius-2xl)] border border-white/60 p-8 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
+              style={{ background: "linear-gradient(150deg, #f3fcf6 0%, #e0f7e9 100%)" }}
+            >
+              <div
+                className="mb-5 flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                style={{ background: "#34c759", color: "#fff", boxShadow: "0 10px 22px -8px #34c759" }}
+              >
+                <Receipt className="h-[22px] w-[22px]" strokeWidth={2} />
               </div>
               <h2 className="text-lg font-semibold text-[var(--jh-ink)]">ออกบิลอัตโนมัติ</h2>
               <p className="mt-2 mb-6 text-sm leading-relaxed text-[var(--jh-ink-secondary)]">
@@ -198,7 +217,7 @@ export default async function DashboardPage() {
               </p>
               <Link
                 href="/dashboard/billing"
-                className="inline-block rounded-full bg-[var(--jh-green-tint)] px-4 py-2 text-sm font-semibold text-[var(--jh-green-ink)] transition-colors hover:bg-[#d5f3e1]"
+                className="inline-block rounded-full bg-[#34c759] px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_18px_-6px_#34c759] transition-all hover:brightness-105 hover:-translate-y-0.5"
               >
                 ออกบิลเดือนนี้ →
               </Link>
@@ -208,9 +227,15 @@ export default async function DashboardPage() {
       ) : (
         /* Tenant dashboard */
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-          <div className="rounded-[var(--jh-radius-2xl)] border border-black/[0.06] bg-white p-8 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]">
-            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)] bg-[var(--jh-indigo-tint)] text-[var(--jh-indigo)]">
-              <FileText className="h-[22px] w-[22px]" strokeWidth={1.75} />
+          <div
+            className="group rounded-[var(--jh-radius-2xl)] border border-white/60 p-8 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
+            style={{ background: "linear-gradient(150deg, #f6f6ff 0%, #e8e7fb 100%)" }}
+          >
+            <div
+              className="mb-5 flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+              style={{ background: "#5856d6", color: "#fff", boxShadow: "0 10px 22px -8px #5856d6" }}
+            >
+              <FileText className="h-[22px] w-[22px]" strokeWidth={2} />
             </div>
             <h2 className="text-xl font-semibold text-[var(--jh-ink)]">บิลค่าเช่าของฉัน</h2>
             <p className="mt-2 mb-6 text-sm leading-relaxed text-[var(--jh-ink-secondary)]">
@@ -223,9 +248,15 @@ export default async function DashboardPage() {
             </Link>
           </div>
 
-          <div className="rounded-[var(--jh-radius-2xl)] border border-black/[0.06] bg-white p-8 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]">
-            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)] bg-[var(--jh-orange-tint)] text-[var(--jh-orange-ink)]">
-              <Wrench className="h-[22px] w-[22px]" strokeWidth={1.75} />
+          <div
+            className="group rounded-[var(--jh-radius-2xl)] border border-white/60 p-8 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
+            style={{ background: "linear-gradient(150deg, #fff9f2 0%, #ffeed9 100%)" }}
+          >
+            <div
+              className="mb-5 flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+              style={{ background: "#ff9500", color: "#fff", boxShadow: "0 10px 22px -8px #ff9500" }}
+            >
+              <Wrench className="h-[22px] w-[22px]" strokeWidth={2} />
             </div>
             <h2 className="text-xl font-semibold text-[var(--jh-ink)]">บริการแจ้งซ่อม</h2>
             <p className="mt-2 mb-6 text-sm leading-relaxed text-[var(--jh-ink-secondary)]">

@@ -84,7 +84,7 @@ export default async function Home() {
     <div className="min-h-screen overflow-x-hidden bg-white font-sans text-[var(--jh-ink)] selection:bg-[rgba(0,122,255,0.18)] antialiased">
       {/* ---------------- Header (iCloud glass toolbar) ---------------- */}
       <header className="sticky top-0 z-50 border-b border-black/[0.06] bg-[var(--jh-glass-bg)] backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-[var(--jh-glass-bg)]">
-        <div className="mx-auto flex h-14 max-w-[1120px] items-center justify-between px-6">
+        <div className="flex h-14 w-full items-center justify-between px-6 md:px-10 lg:px-14">
           <Link href="/" className="flex items-center gap-2.5 text-[18px] font-bold tracking-[-0.02em]">
             <Image src="/images/logo.png" alt="JadHor OS" width={30} height={30} className="h-[30px] w-[30px] object-contain" />
             JadHor OS
