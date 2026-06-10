@@ -80,8 +80,7 @@ export default function SidebarNav({ role }: SidebarNavProps) {
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname.startsWith("/dashboard/analytics") ? "bg-violet-100 text-violet-600" : "bg-violet-50 text-violet-500 group-hover:bg-violet-100"}`}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10l2 2 4-4" /></svg>
             </div>
-            <span className="flex-1">วิเคราะห์รายได้ AI</span>
-            <span className="text-[9px] font-black px-1.5 py-0.5 rounded-full bg-violet-100 text-violet-600">AI</span>
+            <span className="flex-1">วิเคราะห์รายได้</span>
           </Link>
 
           <div className="pt-6 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">การเงิน & แจ้งซ่อม</div>

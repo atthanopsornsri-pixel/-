@@ -38,7 +38,7 @@ export default async function AnalyticsPage() {
           <BarChart3 className="h-[22px] w-[22px]" strokeWidth={2} />
         </div>
         <div>
-          <h1 className="text-2xl font-bold tracking-[-0.02em] text-[var(--jh-ink)]">วิเคราะห์รายได้ AI</h1>
+          <h1 className="text-2xl font-bold tracking-[-0.02em] text-[var(--jh-ink)]">วิเคราะห์รายได้</h1>
           <p className="text-[15px] text-[var(--jh-ink-secondary)] mt-0.5">สรุปรายได้ย้อนหลัง 6 เดือน พร้อมคาดการณ์เดือนถัดไป</p>
         </div>
       </div>
@@ -99,7 +99,7 @@ export default async function AnalyticsPage() {
           <div className="mt-1.5 text-[28px] font-bold tabular-nums tracking-[-0.02em]" style={{ color: "var(--jh-green-ink)" }}>
             {fmt(prediction)}
           </div>
-          <div className="mt-1 text-xs text-[var(--jh-ink-tertiary)]">ประมาณการจาก weighted trend</div>
+          <div className="mt-1 text-xs text-[var(--jh-ink-tertiary)]">ประมาณการจากแนวโน้มย้อนหลัง</div>
         </div>
       </div>
 
@@ -167,7 +167,7 @@ export default async function AnalyticsPage() {
                 </span>
               </div>
             </div>
-            <span className="text-[10px] font-medium text-[var(--jh-green-ink)] shrink-0">✨ AI</span>
+            <span className="text-[10px] font-medium text-[var(--jh-green-ink)] shrink-0">✨ คาดการณ์</span>
           </div>
         </div>
       </div>
