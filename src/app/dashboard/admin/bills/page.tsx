@@ -1,16 +1,23 @@
 "use client";
 import { toast } from "sonner";
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { jsonFetcher } from "@/lib/fetcher";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function AdminBillsPage() {
-  const [bills, setBills] = useState<any[]>([]);
-  const [owners, setOwners] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
+  // ── SWR ─────────────────────────────────────────────────────────────────
+  const { data: bills = [], isLoading: billsLoading, mutate: mutateBills } = useSWR<any[]>(
+    "/api/admin/bills", jsonFetcher
+  );
+  const { data: owners = [], isLoading: ownersLoading, mutate: mutateOwners } = useSWR<any[]>(
+    "/api/admin/owners", jsonFetcher
+  );
+  const isLoading = billsLoading || ownersLoading;
+  const mutateData = () => { mutateBills(); mutateOwners(); };
+
   // Create Bill Form
   const [isCreating, setIsCreating] = useState(false);
   const [formData, setFormData] = useState({
@@ -19,22 +26,6 @@ export default function AdminBillsPage() {
     year: new Date().getFullYear(),
     amount: 500,
   });
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  async function fetchData() {
-    setIsLoading(true);
-    const [billsRes, ownersRes] = await Promise.all([
-      fetch("/api/admin/bills"),
-      fetch("/api/admin/owners")
-    ]);
-    
-    if (billsRes.ok) setBills(await billsRes.json());
-    if (ownersRes.ok) setOwners(await ownersRes.json());
-    setIsLoading(false);
-  };
 
   const handleCreateBill = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +39,7 @@ export default function AdminBillsPage() {
 
     if (res.ok) {
       toast.success("ออกบิลสำเร็จ");
-      fetchData(); // Refresh list
+      mutateData();
     } else {
       toast.error("เกิดข้อผิดพลาดในการออกบิล");
     }
@@ -65,7 +56,7 @@ export default function AdminBillsPage() {
     });
 
     if (res.ok) {
-      fetchData();
+      mutateData();
     }
   };
 
@@ -79,7 +70,7 @@ export default function AdminBillsPage() {
     });
 
     if (res.ok) {
-      fetchData();
+      mutateData();
     }
   };
 

@@ -1,26 +1,13 @@
 /* eslint-disable */
 "use client";
 
-import { useState, useEffect } from "react";
+import useSWR from "swr";
+import { jsonFetcher } from "@/lib/fetcher";
 import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function AdminOwnersPage() {
-  const [owners, setOwners] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    fetchOwners();
-  }, []);
-
-  async function fetchOwners() {
-    const res = await fetch("/api/admin/owners");
-    if (res.ok) {
-      const data = await res.json();
-      setOwners(data);
-    }
-    setIsLoading(false);
-  };
+  const { data: owners = [], isLoading } = useSWR<any[]>("/api/admin/owners", jsonFetcher);
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -73,13 +60,15 @@ export default function AdminOwnersPage() {
                 </td>
               </tr>
             )}
-            {isLoading && (
-              <tr>
-                <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
-                  กำลังโหลดข้อมูล...
-                </td>
+            {isLoading && Array.from({ length: 4 }).map((_, i) => (
+              <tr key={i} className="animate-pulse border-b border-slate-50">
+                {[1,2,3,4,5].map(j => (
+                  <td key={j} className="px-6 py-4">
+                    <div className="h-4 bg-slate-100 rounded w-3/4" />
+                  </td>
+                ))}
               </tr>
-            )}
+            ))}
           </tbody>
         </table>
       </div>

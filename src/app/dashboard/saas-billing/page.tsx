@@ -1,17 +1,24 @@
 "use client";
 import { toast } from "sonner";
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { jsonFetcher } from "@/lib/fetcher";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Check, Star, Zap, Server } from "lucide-react";
 
 export default function OwnerBillingPage() {
-  const [bills, setBills] = useState<any[]>([]);
-  const [status, setStatus] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  
+  // ── SWR: bills + saas status ─────────────────────────────────────────────
+  const { data: bills = [], isLoading: billsLoading, mutate: mutateBills } = useSWR<any[]>(
+    "/api/owner/bills", jsonFetcher
+  );
+  const { data: status = null, isLoading: statusLoading, mutate: mutateStatus } = useSWR(
+    "/api/owner/saas-status", jsonFetcher
+  );
+  const isLoading = billsLoading || statusLoading;
+  const mutateData = () => { mutateBills(); mutateStatus(); };
+
   // Payment Modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBill, setSelectedBill] = useState<any>(null);
@@ -24,23 +31,6 @@ export default function OwnerBillingPage() {
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [confirmPlan, setConfirmPlan] = useState<{ planTier: string, cycle: string, priceText: string } | null>(null);
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  async function fetchData() {
-    setIsLoading(true);
-    const [billsRes, statusRes] = await Promise.all([
-      fetch("/api/owner/bills"),
-      fetch("/api/owner/saas-status")
-    ]);
-    
-    if (billsRes.ok) setBills(await billsRes.json());
-    if (statusRes.ok) setStatus(await statusRes.json());
-    
-    setIsLoading(false);
-  }
 
   const openPaymentModal = (bill: any) => {
     setSelectedBill(bill);
@@ -94,7 +84,7 @@ export default function OwnerBillingPage() {
     if (res.ok) {
       toast.success("ส่งหลักฐานการโอนเงินเรียบร้อย รอผู้ดูแลระบบตรวจสอบ");
       setIsModalOpen(false);
-      fetchData();
+      mutateData();
     } else {
       toast.error("เกิดข้อผิดพลาด");
     }
@@ -112,7 +102,7 @@ export default function OwnerBillingPage() {
     if (res.ok) {
       toast.success("สร้างบิลแจ้งชำระเงินเรียบร้อย กรุณาแนบสลิปในรายการบิลด้านล่าง");
       setIsUpgradeOpen(false);
-      fetchData();
+      mutateData();
     } else {
       toast.error("เกิดข้อผิดพลาด");
     }

@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { jsonFetcher } from "@/lib/fetcher";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,33 +10,19 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { toast } from "sonner";
 
 export default function MyAccountPage() {
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  const [hasPassword, setHasPassword] = useState(false);
-  const [phoneNumber, setPhoneNumber] = useState("");      // เบอร์ที่ระบบมีอยู่
   const [phoneInput, setPhoneInput] = useState("");        // กรณียังไม่มีเบอร์ ต้องกรอกเอง
-
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/tenant/password");
-        if (res.ok) {
-          const data = await res.json();
-          setHasPassword(data.hasPassword);
-          setPhoneNumber(data.phoneNumber || "");
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+  // ── SWR: account info ────────────────────────────────────────────────────
+  const { data: accountData, isLoading: loading, mutate: mutateAccount } = useSWR(
+    "/api/tenant/password",
+    jsonFetcher
+  );
+  const hasPassword: boolean = accountData?.hasPassword ?? false;
+  const phoneNumber: string = accountData?.phoneNumber ?? "";
 
   const effectivePhone = phoneNumber || phoneInput;
 
@@ -71,8 +59,7 @@ export default function MyAccountPage() {
       if (!res.ok) throw new Error(data.message || "บันทึกไม่สำเร็จ");
 
       toast.success("ตั้งรหัสผ่านสำเร็จ! ล็อกอินด้วยเบอร์โทร + รหัสผ่านได้เลย");
-      setHasPassword(true);
-      if (data.username) setPhoneNumber(data.username);
+      mutateAccount(); // revalidate SWR cache
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -86,8 +73,14 @@ export default function MyAccountPage() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center text-slate-400">
-        กำลังโหลด...
+      <div className="max-w-lg mx-auto py-8 px-4 space-y-6 animate-pulse">
+        <div className="h-7 bg-slate-100 rounded-xl w-1/2" />
+        <div className="h-4 bg-slate-100 rounded-lg w-3/4" />
+        <div className="h-12 bg-slate-100 rounded-2xl" />
+        <div className="bg-white rounded-3xl border border-slate-100 p-6 space-y-4">
+          {[1,2,3,4].map(i => <div key={i} className="h-11 bg-slate-100 rounded-xl" />)}
+          <div className="h-12 bg-slate-100 rounded-full" />
+        </div>
       </div>
     );
   }

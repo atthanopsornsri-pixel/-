@@ -1,33 +1,17 @@
 "use client";
 import { toast } from "sonner";
-
 import { useState, useRef, useEffect } from "react";
+import useSWR from "swr";
+import { jsonFetcher } from "@/lib/fetcher";
 import { Button } from "@/components/ui/button";
 
 export default function TenantContractPage() {
-  const [contractData, setContractData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSigning, setIsSigning] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const res = await fetch("/api/tenant/contract");
-        if (res.ok) {
-          const data = await res.json();
-          setContractData(data);
-        }
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchData();
-  }, []);
+  // ── SWR: contract data ───────────────────────────────────────────────────
+  const { data: contractData, isLoading } = useSWR("/api/tenant/contract", jsonFetcher);
 
   // Simple signature canvas drawing logic
   useEffect(() => {
@@ -149,7 +133,18 @@ export default function TenantContractPage() {
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center">กำลังโหลดสัญญา...</div>;
+    return (
+      <div className="max-w-3xl mx-auto space-y-6 animate-pulse px-4 py-8">
+        <div className="h-8 bg-slate-100 rounded-xl w-1/3" />
+        <div className="bg-white rounded-3xl border border-slate-100 p-8 space-y-4">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className={`h-4 bg-slate-100 rounded-lg ${i % 3 === 2 ? "w-2/3" : "w-full"}`} />
+          ))}
+          <div className="h-4 bg-slate-100 rounded-lg w-1/2 mt-4" />
+        </div>
+        <div className="h-12 bg-slate-100 rounded-full w-48 mx-auto" />
+      </div>
+    );
   }
 
   if (!contractData) {

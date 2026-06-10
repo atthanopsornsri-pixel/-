@@ -1,6 +1,8 @@
 "use client";
 import { toast } from "sonner";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
+import useSWR from "swr";
+import { jsonFetcher } from "@/lib/fetcher";
 import { QRCodeSVG } from "qrcode.react";
 import generatePayload from "promptpay-qr";
 import { submitPaymentSlip } from "@/app/actions/tenant-payment";
@@ -63,8 +65,11 @@ function thb(n: number) {
 }
 
 export default function MyBillsPage() {
-  const [bills, setBills] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  // ── SWR: bills ───────────────────────────────────────────────────────────
+  const { data: bills = [], isLoading: loading, mutate: mutateBills } = useSWR<any[]>(
+    "/api/bills",
+    jsonFetcher
+  );
 
   // ── Payment modal state ──────────────────────────────────────────────────
   const [payBill, setPayBill] = useState<any | null>(null);
@@ -72,17 +77,6 @@ export default function MyBillsPage() {
   const [slipPreview, setSlipPreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    fetchBills();
-  }, []);
-
-  async function fetchBills() {
-    setLoading(true);
-    const res = await fetch("/api/bills");
-    if (res.ok) setBills(await res.json());
-    setLoading(false);
-  }
 
   function openPayModal(bill: any) {
     setPayBill(bill);
@@ -119,7 +113,7 @@ export default function MyBillsPage() {
       if (result.success) {
         toast.success(result.message || "ส่งสลิปสำเร็จ! รอเจ้าของหอตรวจสอบ 🎉");
         closePayModal();
-        fetchBills();
+        mutateBills();
       } else {
         toast.error(result.error || "เกิดข้อผิดพลาด");
       }

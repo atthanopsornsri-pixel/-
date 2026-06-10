@@ -1,31 +1,24 @@
 "use client";
 import { toast } from "sonner";
-
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { jsonFetcher } from "@/lib/fetcher";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function AdminCodesPage() {
-  const [codes, setCodes] = useState<any[]>([]);
   const [months, setMonths] = useState("1");
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchCodes();
-  }, []);
-
-  async function fetchCodes() {
-    const res = await fetch("/api/admin/codes");
-    if (res.ok) {
-      const data = await res.json();
-      setCodes(data);
-    }
-  };
+  // ── SWR: codes ───────────────────────────────────────────────────────────
+  const { data: codes = [], isLoading, mutate: mutateCodes } = useSWR<any[]>(
+    "/api/admin/codes", jsonFetcher
+  );
 
   const generateCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    setIsSubmitting(true);
     const res = await fetch("/api/admin/codes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -34,11 +27,11 @@ export default function AdminCodesPage() {
 
     if (res.ok) {
       toast.success("สร้างโค้ดสำเร็จ");
-      fetchCodes();
+      mutateCodes();
     } else {
       toast.error("เกิดข้อผิดพลาดในการสร้างโค้ด");
     }
-    setIsLoading(false);
+    setIsSubmitting(false);
   };
 
   return (
@@ -60,8 +53,8 @@ export default function AdminCodesPage() {
               className="h-12 rounded-xl"
             />
           </div>
-          <Button type="submit" disabled={isLoading} className="h-12 px-8 rounded-xl bg-indigo-600 hover:bg-indigo-700">
-            {isLoading ? "กำลังสร้าง..." : "+ สร้างโค้ดใหม่"}
+          <Button type="submit" disabled={isSubmitting} className="h-12 px-8 rounded-xl bg-indigo-600 hover:bg-indigo-700">
+            {isSubmitting ? "กำลังสร้าง..." : "+ สร้างโค้ดใหม่"}
           </Button>
         </form>
       </div>
