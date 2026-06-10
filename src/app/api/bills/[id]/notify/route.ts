@@ -63,6 +63,7 @@ export async function POST(
 
     const tenant = bill.room.tenants[0];
     const ownerUser = bill.room.property.owner;
+    const propertyName = bill.room.property.name;
 
     const token = ownerUser?.lineChannelAccessToken;
     const targetLineId = tenant?.lineUserId;
@@ -115,10 +116,11 @@ export async function POST(
 
     // 6. ร่างข้อความแบบโปร
     const messageText = [
-      `🧾 ใบแจ้งหนี้ค่าเช่าห้อง ${bill.room.number}`,
+      `🧾 ใบแจ้งหนี้ค่าเช่า — ${propertyName}`,
       `สวัสดีคุณ${tenantName} 🙏`,
       `━━━━━━━━━━━━━━━━━━━━`,
-      `🏠 ห้อง ${bill.room.number}  |  ประจำเดือน ${bill.month}/${yearBE}`,
+      `🏠 ${propertyName}`,
+      `🚪 ห้อง ${bill.room.number}  |  ประจำเดือน ${bill.month}/${yearBE}`,
       `━━━━━━━━━━━━━━━━━━━━`,
       ...lines,
       `━━━━━━━━━━━━━━━━━━━━`,
