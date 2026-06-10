@@ -16,6 +16,7 @@ import {
   ReceiptText,
   Calculator,
   AlarmClock,
+  CheckCircle2,
 } from "lucide-react";
 import DashboardButton from "@/components/DashboardButton";
 import PricingPlans from "@/components/marketing/PricingPlans";
@@ -87,6 +88,14 @@ const PROBLEMS = [
     title: "ลูกบ้านลืมจ่าย ตามเก็บยาก",
     body: "ต้องไล่ทักทีละคนในแชต ไม่รู้ใครจ่ายแล้วใครยังค้าง สิ้นเดือนปวดหัวกับการตามเงิน",
   },
+];
+
+const LINE_BENEFITS = [
+  "รับใบแจ้งหนี้อัตโนมัติทุกเดือน พร้อมยอดแยกค่าน้ำ–ค่าไฟ",
+  "กดลิงก์ในแชต สแกน QR พร้อมเพย์จ่ายได้ทันที",
+  "แนบสลิปยืนยันการโอนกลับมาในระบบได้เลย",
+  "แจ้งเตือนทันทีเมื่อมีพัสดุมาส่งถึงหน้าหอ",
+  "พิมพ์ถามยอดบิล–สถานะห้องกับระบบได้ตลอด 24 ชม.",
 ];
 
 const STEPS = [
@@ -295,8 +304,81 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* ---------------- LINE Mockup (เพียงแค่..รับบิลผ่าน LINE) ---------------- */}
+        <section className="overflow-hidden px-6 py-24">
+          <div className="mx-auto grid max-w-[1120px] items-center gap-14 md:grid-cols-2">
+            {/* Phone mockup (CSS only) */}
+            <div className="flex justify-center md:justify-start">
+              <div className="relative w-[290px]">
+                {/* glow behind phone */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -inset-6 -z-10 opacity-60 blur-[50px]"
+                  style={{
+                    background:
+                      "radial-gradient(50% 50% at 50% 35%, rgba(0,122,255,.30), transparent 70%), radial-gradient(45% 45% at 60% 80%, rgba(52,199,89,.28), transparent 72%)",
+                  }}
+                />
+                {/* phone frame */}
+                <div className="rounded-[44px] border-[10px] border-[var(--jh-gray-900)] bg-[var(--jh-gray-900)] shadow-[var(--jh-shadow-lg)]">
+                  <div className="overflow-hidden rounded-[34px] bg-[#8ab4e8]">
+                    {/* LINE chat header */}
+                    <div className="flex items-center gap-2.5 bg-[var(--jh-gray-900)] px-4 py-3 text-white">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-[15px]">🏠</div>
+                      <div className="leading-tight">
+                        <div className="text-[13px] font-semibold">JadHor แจ้งบิล</div>
+                        <div className="text-[10px] text-white/60">ออนไลน์</div>
+                      </div>
+                    </div>
+                    {/* chat body */}
+                    <div className="space-y-2 px-3 py-4">
+                      <div className="ml-1 max-w-[88%] rounded-2xl rounded-tl-md bg-white px-3.5 py-3 text-[11px] leading-[1.55] text-[var(--jh-ink)] shadow-sm">
+                        <div className="font-bold">🧾 ใบแจ้งหนี้ค่าเช่า — อนา เพลส</div>
+                        <div className="text-[var(--jh-ink-secondary)]">สวัสดีคุณลัดดาวัลย์ 🙏</div>
+                        <div className="my-1.5 border-t border-dashed border-black/10" />
+                        <div>🏠 อนา เพลส</div>
+                        <div>🚪 ห้อง 001 · ประจำเดือน 6/2569</div>
+                        <div className="my-1.5 border-t border-dashed border-black/10" />
+                        <div>• ค่าเช่าห้อง: ฿3,500</div>
+                        <div>• ค่าน้ำ (36 หน่วย): ฿612</div>
+                        <div>• ค่าไฟ (149.9 หน่วย): ฿1,049.3</div>
+                        <div className="my-1.5 border-t border-dashed border-black/10" />
+                        <div className="font-bold text-[var(--jh-ink)]">💰 ยอดรวม: ฿5,161.3</div>
+                        <div className="text-[var(--jh-ink-secondary)]">📅 ครบกำหนด: 5 ก.ค. 2569</div>
+                      </div>
+                      <div className="ml-1 max-w-[88%] rounded-2xl rounded-tl-md bg-[var(--jh-blue)] px-3.5 py-2.5 text-[11px] font-semibold text-white shadow-sm">
+                        👉 แตะเพื่อชำระเงินและแนบสลิป
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Text + checklist */}
+            <div>
+              <h2 className="text-[32px] font-semibold leading-[1.12] tracking-[-0.02em] md:text-[42px]">
+                เพียงแค่..ออกบิล
+                <br />
+                ที่เหลือส่งเข้า LINE ให้เอง
+              </h2>
+              <p className="mt-4 text-[17px] leading-[1.6] text-[var(--jh-ink-secondary)]">
+                ลูกบ้านไม่ต้องโหลดแอปอะไรเพิ่ม รับทุกอย่างผ่าน LINE ที่ใช้อยู่ทุกวัน
+              </p>
+              <ul className="mt-7 space-y-3.5">
+                {LINE_BENEFITS.map((b) => (
+                  <li key={b} className="flex items-start gap-3">
+                    <CheckCircle2 className="mt-0.5 h-[22px] w-[22px] shrink-0 text-[var(--jh-green-ink)]" strokeWidth={2} />
+                    <span className="text-[15px] leading-[1.5] text-[var(--jh-ink)]">{b}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
+
         {/* ---------------- Pricing ---------------- */}
-        <section id="pricing" className="px-6 py-24">
+        <section id="pricing" className="bg-[var(--jh-surface)] px-6 py-24">
           <div className="mx-auto max-w-[1120px]">
             <div className="mx-auto max-w-[640px] text-center">
               <h2 className="text-[32px] font-semibold tracking-[-0.02em] md:text-[40px]">
