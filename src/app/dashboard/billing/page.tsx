@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Receipt } from "lucide-react";
+import { Receipt, Send } from "lucide-react";
 
 export default function BillingPage() {
   const [bills, setBills] = useState<any[]>([]);
@@ -41,6 +41,31 @@ export default function BillingPage() {
   const [isBillsLoading, setIsBillsLoading] = useState(true);
   const [selectedSlip, setSelectedSlip] = useState<any>(null);
   const [isSendingLineMap, setIsSendingLineMap] = useState<Record<string, boolean>>({});
+  const [isSendingAll, setIsSendingAll] = useState(false);
+
+  const handleSendAllLine = async () => {
+    const lineableBills = bills.filter(b => b.room?.tenants?.[0]?.lineUserId);
+    if (lineableBills.length === 0) {
+      toast.info("ไม่มีผู้เช่าที่ผูก LINE ในรายการบิลนี้");
+      return;
+    }
+    setIsSendingAll(true);
+    const results = await Promise.allSettled(
+      lineableBills.map(b =>
+        fetch(`/api/bills/${b.id}/notify`, { method: "POST" }).then(r => ({ ok: r.ok }))
+      )
+    );
+    const success = results.filter(r => r.status === "fulfilled" && (r as any).value.ok).length;
+    const failed = results.length - success;
+    if (failed === 0) {
+      toast.success(`ส่ง LINE สำเร็จทั้งหมด ${success} ห้อง 🎉`);
+    } else if (success > 0) {
+      toast.warning(`ส่งสำเร็จ ${success} ห้อง · ล้มเหลว ${failed} ห้อง`);
+    } else {
+      toast.error(`ส่งล้มเหลวทั้งหมด ${failed} ห้อง — ตรวจสอบการตั้งค่า LINE`);
+    }
+    setIsSendingAll(false);
+  };
 
   const handleSendLineNotify = async (billId: string) => {
     setIsSendingLineMap(prev => ({ ...prev, [billId]: true }));
@@ -507,6 +532,23 @@ export default function BillingPage() {
           <div className="rounded-[var(--jh-radius-2xl)] border border-black/[0.06] bg-white shadow-[var(--jh-shadow-card)] overflow-hidden">
             <div className="flex items-center justify-between px-6 py-5 border-b border-black/[0.06]">
               <h2 className="text-lg font-semibold text-[var(--jh-ink)]">รายการบิลทั้งหมด</h2>
+              {bills.filter(b => b.room?.tenants?.[0]?.lineUserId).length > 0 && (
+                <Button
+                  size="sm"
+                  className="rounded-full h-9 px-4 gap-2 text-white font-semibold text-xs transition-all hover:-translate-y-0.5"
+                  style={{
+                    background: "#34c759",
+                    boxShadow: "0 8px 18px -6px #34c759",
+                  }}
+                  onClick={handleSendAllLine}
+                  disabled={isSendingAll}
+                >
+                  <Send className="w-3.5 h-3.5" strokeWidth={2} />
+                  {isSendingAll
+                    ? "กำลังส่ง..."
+                    : `ส่ง LINE ทั้งหมด (${bills.filter(b => b.room?.tenants?.[0]?.lineUserId).length} ห้อง)`}
+                </Button>
+              )}
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">
