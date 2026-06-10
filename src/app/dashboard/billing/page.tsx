@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Receipt, Send } from "lucide-react";
+import { Receipt, Send, BellRing } from "lucide-react";
 
 export default function BillingPage() {
   const [bills, setBills] = useState<any[]>([]);
@@ -42,6 +42,36 @@ export default function BillingPage() {
   const [selectedSlip, setSelectedSlip] = useState<any>(null);
   const [isSendingLineMap, setIsSendingLineMap] = useState<Record<string, boolean>>({});
   const [isSendingAll, setIsSendingAll] = useState(false);
+  const [isSendingAlert, setIsSendingAlert] = useState(false);
+  const [alertCount, setAlertCount] = useState<number | null>(null);
+
+  // โหลดจำนวนบิลที่ต้องแจ้งเตือน
+  useEffect(() => {
+    fetch("/api/bills/smart-alert")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.count !== undefined) setAlertCount(d.count); })
+      .catch(() => {});
+  }, [bills]);
+
+  const handleSmartAlert = async () => {
+    setIsSendingAlert(true);
+    try {
+      const res = await fetch("/api/bills/smart-alert", { method: "POST" });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        if (data.sent === 0) toast.info(data.message || "ไม่มีบิลที่ต้องแจ้งเตือน");
+        else if (data.failed === 0) toast.success(`✅ ${data.message}`);
+        else toast.warning(`⚠️ ${data.message}`);
+        setAlertCount(0);
+      } else {
+        toast.error(data.error || "เกิดข้อผิดพลาด");
+      }
+    } catch {
+      toast.error("ไม่สามารถเชื่อมต่อได้");
+    } finally {
+      setIsSendingAlert(false);
+    }
+  };
 
   const handleSendAllLine = async () => {
     const lineableBills = bills.filter(b => b.room?.tenants?.[0]?.lineUserId);
@@ -532,6 +562,23 @@ export default function BillingPage() {
           <div className="rounded-[var(--jh-radius-2xl)] border border-black/[0.06] bg-white shadow-[var(--jh-shadow-card)] overflow-hidden">
             <div className="flex items-center justify-between px-6 py-5 border-b border-black/[0.06]">
               <h2 className="text-lg font-semibold text-[var(--jh-ink)]">รายการบิลทั้งหมด</h2>
+              <div className="flex items-center gap-2">
+              {/* Smart Alert button */}
+              {alertCount !== null && alertCount > 0 && (
+                <Button
+                  size="sm"
+                  className="relative rounded-full h-9 px-4 gap-2 text-white font-semibold text-xs transition-all hover:-translate-y-0.5"
+                  style={{ background: "#ff9500", boxShadow: "0 8px 18px -6px #ff9500" }}
+                  onClick={handleSmartAlert}
+                  disabled={isSendingAlert}
+                >
+                  <BellRing className="w-3.5 h-3.5" strokeWidth={2} />
+                  {isSendingAlert ? "กำลังส่ง..." : `Smart Alert (${alertCount} ห้อง)`}
+                  <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white">
+                    {alertCount}
+                  </span>
+                </Button>
+              )}
               {bills.filter(b => b.room?.tenants?.[0]?.lineUserId).length > 0 && (
                 <Button
                   size="sm"
@@ -549,6 +596,7 @@ export default function BillingPage() {
                     : `ส่ง LINE ทั้งหมด (${bills.filter(b => b.room?.tenants?.[0]?.lineUserId).length} ห้อง)`}
                 </Button>
               )}
+              </div>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm text-left">

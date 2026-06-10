@@ -3,16 +3,9 @@ import { prisma } from "@/lib/prisma";
 import { sendLineOAMessage } from "@/lib/line";
 import crypto from "crypto";
 
-/**
- * Verify that the request is genuinely from LINE.
- * LINE signs each webhook request with HMAC-SHA256 using the Channel Secret.
- * https://developers.line.biz/en/docs/messaging-api/receiving-messages/#verifying-signatures
- */
 function verifyLineSignature(rawBody: string, signature: string | null): boolean {
   const secret = process.env.LINE_CHANNEL_SECRET;
   if (!secret) {
-    // If the env var is not set we skip verification (dev/test mode only).
-    // Log a warning so operators know the webhook is unprotected.
     console.warn("[LINE Webhook] LINE_CHANNEL_SECRET is not set — skipping signature verification");
     return true;
   }
@@ -24,9 +17,113 @@ function verifyLineSignature(rawBody: string, signature: string | null): boolean
   return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
 }
 
+// ── Chatbot: ตอบกลับผู้เช่าที่รู้จัก ──────────────────────────────────────────
+async function handleTenantChat(lineUserId: string, text: string) {
+  const msg = text.toLowerCase().trim();
+
+  const tenant = await prisma.tenant.findFirst({
+    where: { lineUserId },
+    include: {
+      room: {
+        include: {
+          property: { include: { owner: true } },
+          bills: {
+            where: { status: { in: ["UNPAID", "OVERDUE", "PENDING"] } },
+            orderBy: [{ year: "desc" }, { month: "desc" }],
+            take: 5,
+          },
+        },
+      },
+    },
+  });
+
+  // ไม่รู้จักผู้ใช้ → แนะนำผูกบัญชี
+  if (!tenant?.room?.property?.owner?.lineChannelAccessToken) {
+    return; // ไม่มี token → ตอบไม่ได้
+  }
+
+  const token = tenant.room.property.owner.lineChannelAccessToken;
+  const roomNo = tenant.room.number;
+  const baseUrl = process.env.NEXTAUTH_URL || "https://jadhor.vercel.app";
+
+  // ── keyword: บิล / ยอด / ค่าเช่า ──
+  if (
+    msg.includes("บิล") || msg.includes("ยอด") || msg.includes("ค่าเช่า") ||
+    msg.includes("เท่าไหร่") || msg.includes("เดือนนี้") || msg.includes("invoice")
+  ) {
+    const unpaid = tenant.room.bills[0];
+    if (unpaid) {
+      const due = new Date(unpaid.dueDate).toLocaleDateString("th-TH", {
+        day: "numeric", month: "short", year: "numeric",
+      });
+      const statusLabel = unpaid.status === "UNPAID"
+        ? "⏳ รอชำระ" : unpaid.status === "PENDING"
+        ? "🔍 รอตรวจสอบ" : "⚠️ เกินกำหนด";
+      await sendLineOAMessage(
+        lineUserId,
+        `📋 บิลล่าสุด — ห้อง ${roomNo}\n\n📅 รอบ: ${unpaid.month}/${unpaid.year + 543}\n💰 ยอด: ฿${unpaid.totalAmount.toLocaleString()}\n📌 ครบกำหนด: ${due}\n📊 สถานะ: ${statusLabel}\n\n👉 ชำระออนไลน์: ${baseUrl}/pay/${unpaid.id}`,
+        token
+      );
+    } else {
+      await sendLineOAMessage(lineUserId, `✅ ไม่มีบิลค้างชำระ — บัญชีของคุณเรียบร้อยดีค่ะ 🎉`, token);
+    }
+    return;
+  }
+
+  // ── keyword: ยอดค้าง / ค้างชำระ / ทั้งหมด ──
+  if (msg.includes("ค้าง") || msg.includes("ทั้งหมด") || msg.includes("รายการ")) {
+    const allBills = tenant.room.bills;
+    if (allBills.length === 0) {
+      await sendLineOAMessage(lineUserId, `✅ ไม่มียอดค้างชำระค่ะ`, token);
+    } else {
+      const lines = allBills
+        .map(b => `• ${b.month}/${b.year + 543} — ฿${b.totalAmount.toLocaleString()} (${b.status === "UNPAID" ? "รอชำระ" : b.status === "PENDING" ? "รอตรวจสอบ" : "เกินกำหนด"})`)
+        .join("\n");
+      await sendLineOAMessage(
+        lineUserId,
+        `📊 บิลค้างชำระทั้งหมด — ห้อง ${roomNo}\n\n${lines}\n\n💡 พิมพ์ "บิล" เพื่อดูบิลล่าสุดค่ะ`,
+        token
+      );
+    }
+    return;
+  }
+
+  // ── keyword: ห้อง / ข้อมูล ──
+  if (msg.includes("ห้อง") || msg.includes("ข้อมูล") || msg.includes("ฉัน")) {
+    const leaseEnd = tenant.leaseEnd
+      ? new Date(tenant.leaseEnd).toLocaleDateString("th-TH", { day: "numeric", month: "short", year: "numeric" })
+      : "ไม่ระบุ";
+    await sendLineOAMessage(
+      lineUserId,
+      `🏠 ข้อมูลห้องพักของคุณ\n\n📍 หอพัก: ${tenant.room.property.name}\n🚪 ห้อง: ${roomNo}\n💰 ค่าเช่า: ฿${tenant.room.rentPrice.toLocaleString()}/เดือน\n📅 สัญญาถึง: ${leaseEnd}`,
+      token
+    );
+    return;
+  }
+
+  // ── keyword: ช่วยเหลือ / help / คำสั่ง ──
+  if (
+    msg.includes("ช่วย") || msg.includes("help") ||
+    msg.includes("คำสั่ง") || msg.includes("วิธี") || msg.includes("สวัสดี")
+  ) {
+    await sendLineOAMessage(
+      lineUserId,
+      `🤖 JadHor Bot — คำสั่งที่ใช้ได้\n\n💰 "บิล" — ดูบิลล่าสุด\n📊 "ยอดค้าง" — ดูบิลค้างทั้งหมด\n🏠 "ห้องฉัน" — ข้อมูลห้องพัก\n❓ "ช่วยเหลือ" — เมนูนี้\n\n🏡 ${tenant.room.property.name} — ห้อง ${roomNo}`,
+      token
+    );
+    return;
+  }
+
+  // ── default ──
+  await sendLineOAMessage(
+    lineUserId,
+    `สวัสดีค่ะ 👋 พิมพ์ "ช่วยเหลือ" เพื่อดูคำสั่ง หรือ "บิล" เพื่อดูบิลล่าสุดได้เลยค่ะ`,
+    token
+  );
+}
+
 export async function POST(req: Request) {
   try {
-    // Read raw body first so we can verify the signature before parsing JSON
     const rawBody = await req.text();
     const signature = req.headers.get("x-line-signature");
 
@@ -39,71 +136,59 @@ export async function POST(req: Request) {
     const events = body.events || [];
 
     for (const event of events) {
-      // 1. Check if it's a text message
       if (event.type === "message" && event.message.type === "text") {
-        const receivedText = event.message.text.trim().toUpperCase(); // e.g. "JAD-1234"
-        const lineUserId = event.source.userId; // Scoped LINE User ID
+        const receivedText = event.message.text.trim();
+        const lineUserId = event.source.userId;
 
-        // 2. Find the user with the matching binding code
-        if (receivedText.startsWith("JAD-")) {
+        // ── Case 1: รหัสผูกบัญชี JAD-XXXX ──
+        if (receivedText.toUpperCase().startsWith("JAD-")) {
+          const bindCode = receivedText.toUpperCase();
           const user = await prisma.user.findFirst({
-            where: { lineBindingCode: receivedText }
+            where: { lineBindingCode: bindCode },
           });
 
           if (user) {
-            // 3. Bind the user's lineUserId, clear the temporary binding code
             await prisma.user.update({
               where: { id: user.id },
-              data: {
-                lineUserId: lineUserId,
-                lineBindingCode: null
-              }
+              data: { lineUserId, lineBindingCode: null },
             });
 
-            // If the user is a tenant, also update Tenant.lineUserId
             if (user.role === "TENANT") {
               await prisma.tenant.updateMany({
                 where: { userId: user.id },
-                data: { lineUserId: lineUserId }
+                data: { lineUserId },
               });
             }
 
-            console.log(`[LINE Webhook] Bound lineUserId successfully for user: ${user.name || user.email}`);
+            console.log(`[LINE Webhook] Bound lineUserId for user: ${user.name || user.email}`);
 
-            // Send confirmation message back to user via their LINE OA
-            if (user.lineChannelAccessToken) {
-              await sendLineOAMessage(
-                lineUserId,
-                `✅ JadHor OS: เชื่อมต่อบัญชีสำเร็จแล้ว!\n• บัญชีของคุณ: ${user.name || user.email}\n• LINE User ID: ${lineUserId}\n\nระบบตั้งค่าแจ้งเตือนเสร็จสิ้นเรียบร้อยแล้วค่ะ`,
-                user.lineChannelAccessToken
-              );
-            } else {
-              // If it's a tenant, we need the owner's token!
-              // Let's find the property owner's token for this tenant
+            // หา access token
+            let accessToken = user.lineChannelAccessToken;
+            let confirmMsg = `✅ JadHor OS: เชื่อมต่อบัญชีสำเร็จ!\n• บัญชี: ${user.name || user.email}\n\nระบบตั้งค่าแจ้งเตือนเสร็จสิ้นค่ะ`;
+
+            if (!accessToken && user.role === "TENANT") {
               const tenant = await prisma.tenant.findUnique({
                 where: { userId: user.id },
                 include: {
                   room: {
-                    include: {
-                      property: {
-                        include: {
-                          owner: true
-                        }
-                      }
-                    }
-                  }
-                }
+                    include: { property: { include: { owner: true } } },
+                  },
+                },
               });
-
-              if (tenant?.room?.property?.owner?.lineChannelAccessToken) {
-                await sendLineOAMessage(
-                  lineUserId,
-                  `✅ JadHor OS: เชื่อมต่อบัญชีสำเร็จแล้ว!\n• หอพัก: ${tenant.room.property.name}\n• ห้อง: ${tenant.room.number}\n• LINE User ID: ${lineUserId}\n\nระบบตั้งค่ารับแจ้งเตือนบิลเสร็จสิ้นเรียบร้อยแล้วค่ะ`,
-                  tenant.room.property.owner.lineChannelAccessToken
-                );
+              accessToken = tenant?.room?.property?.owner?.lineChannelAccessToken ?? null;
+              if (tenant?.room) {
+                confirmMsg = `✅ JadHor OS: เชื่อมต่อสำเร็จ!\n• หอพัก: ${tenant.room.property.name}\n• ห้อง: ${tenant.room.number}\n\nพิมพ์ "ช่วยเหลือ" เพื่อดูคำสั่งที่ใช้ได้ค่ะ 🎉`;
               }
             }
+
+            if (accessToken) {
+              await sendLineOAMessage(lineUserId, confirmMsg, accessToken);
+            }
           }
+        }
+        // ── Case 2: ข้อความทั่วไป → chatbot ──
+        else {
+          await handleTenantChat(lineUserId, receivedText);
         }
       }
     }
