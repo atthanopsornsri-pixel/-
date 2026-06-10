@@ -463,14 +463,33 @@ export default function MeterEntryPage() {
                         )}
                       </td>
 
-                      {/* ── Total ── */}
-                      <td className="px-5 py-3.5 text-right font-mono font-extrabold text-base">
+                      {/* ── Total (breakdown) ── */}
+                      <td className="px-5 py-3.5 text-right">
                         {hasAnyValue ? (
-                          <span className="text-slate-800">
-                            ฿{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                          </span>
+                          <div className="flex flex-col items-end gap-0.5">
+                            {e && !e.invalid && (
+                              <div className="flex items-center gap-1 font-mono text-[11px] font-semibold text-blue-500">
+                                <Zap className="w-3 h-3 shrink-0" strokeWidth={2.5} />
+                                ฿{e.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </div>
+                            )}
+                            {w && !w.invalid && (
+                              <div className="flex items-center gap-1 font-mono text-[11px] font-semibold text-emerald-500">
+                                <Droplet className="w-3 h-3 shrink-0" strokeWidth={2.5} />
+                                ฿{w.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </div>
+                            )}
+                            {/* แสดงยอดรวมเฉพาะเมื่อมีทั้งค่าไฟ + ค่าน้ำ */}
+                            {e && !e.invalid && w && !w.invalid && (
+                              <div className="w-full border-t border-slate-200 pt-1 mt-0.5">
+                                <span className="font-mono font-extrabold text-base text-slate-800">
+                                  ฿{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         ) : (
-                          <span className="text-slate-300">฿0.00</span>
+                          <span className="text-slate-300 font-mono font-bold text-base">฿0.00</span>
                         )}
                       </td>
                     </tr>
