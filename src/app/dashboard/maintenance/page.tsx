@@ -1,6 +1,8 @@
 "use client";
 import { toast } from "sonner";
 import { useState, useEffect, useRef } from "react";
+import useSWR from "swr";
+import { jsonFetcher } from "@/lib/fetcher";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -56,11 +58,9 @@ interface AppointmentModal {
 
 export default function MaintenancePage() {
   const { data: session } = useSession();
-  const [requests, setRequests] = useState<any[]>([]);
   const [filter, setFilter] = useState<FilterKey>("ALL");
 
   // ── ฝั่งเจ้าของ: เลือกตึก ──
-  const [properties, setProperties] = useState<any[]>([]);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string>("");
 
   // ── ฟอร์มผู้เช่า ──
@@ -71,7 +71,6 @@ export default function MaintenancePage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -91,32 +90,25 @@ export default function MaintenancePage() {
 
   const role = session?.user?.role;
 
-  // โหลดรายชื่อตึก (OWNER เท่านั้น)
-  useEffect(() => {
-    if (role !== "OWNER") return;
-    fetch("/api/properties")
-      .then((r) => r.json())
-      .then((data: any[]) => {
-        setProperties(data || []);
-        // ถ้ามีหลายตึก เริ่มต้นเลือก "ทั้งหมด" (selectedPropertyId = "")
-      })
-      .catch(() => {});
-  }, [role]);
+  // ── SWR: properties (OWNER only, cached) ─────────────────────────
+  const { data: properties = [] } = useSWR<any[]>(
+    role === "OWNER" ? "/api/properties" : null,
+    jsonFetcher
+  );
 
-  useEffect(() => {
-    fetchRequests();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedPropertyId]);
+  // ── SWR: maintenance requests (re-fetches on filter change) ───────
+  const maintenanceKey = selectedPropertyId
+    ? `/api/maintenance?propertyId=${selectedPropertyId}`
+    : "/api/maintenance";
 
-  async function fetchRequests() {
-    setIsLoading(true);
-    const url = selectedPropertyId
-      ? `/api/maintenance?propertyId=${selectedPropertyId}`
-      : "/api/maintenance";
-    const res = await fetch(url);
-    if (res.ok) setRequests(await res.json());
-    setIsLoading(false);
-  }
+  const {
+    data: requests = [],
+    isLoading,
+    mutate: mutateRequests,
+  } = useSWR<any[]>(maintenanceKey, jsonFetcher, {
+    refreshInterval: 0,
+    revalidateOnFocus: false,
+  });
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0] || null;
@@ -153,7 +145,7 @@ export default function MaintenancePage() {
       if (res.ok) {
         setTitle(""); setDescription(""); clearImage();
         setPreferredDate(""); setPreferredTime("09:00");
-        await fetchRequests();
+        mutateRequests();
         toast.success("ส่งเรื่องแจ้งซ่อมสำเร็จ เจ้าของหอพักได้รับแจ้งแล้ว 🔧");
       } else {
         const data = await res.json();
@@ -172,7 +164,7 @@ export default function MaintenancePage() {
         body: JSON.stringify({ id, status, ...extra }),
       });
       if (res.ok) {
-        await fetchRequests();
+        mutateRequests();
         if (status === "COMPLETED") {
           setSuccessPopup({ open: true, title: "ซ่อมเสร็จสิ้น! ✅", message: "แจ้งเตือนผู้เช่าทาง LINE เรียบร้อยแล้ว" });
         } else if (extra?.scheduledAt) {

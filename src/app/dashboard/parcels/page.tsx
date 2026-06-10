@@ -3,6 +3,7 @@
 import { toast } from "sonner";
 
 import { useState, useEffect } from "react";
+import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,15 +12,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "next-auth/react";
 import { PageHeader } from "@/components/PageHeader";
 import { Package } from "lucide-react";
+import { jsonFetcher } from "@/lib/fetcher";
 
 export default function ParcelsPage() {
   const { data: session } = useSession();
   const role = session?.user?.role;
-  
-  const [parcels, setParcels] = useState<any[]>([]);
-  const [properties, setProperties] = useState<any[]>([]);
-  const [rooms, setRooms] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   
   // Form State
   const [selectedPropertyId, setSelectedPropertyId] = useState("");
@@ -28,43 +25,30 @@ export default function ParcelsPage() {
   const [recipientName, setRecipientName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // ── SWR: parcels (cached, instant on revisit) ─────────────────────
+  const { data: parcels = [], isLoading, mutate: mutateParcels } = useSWR<any[]>(
+    "/api/parcels",
+    jsonFetcher
+  );
+
+  // ── SWR: properties (OWNER only) ──────────────────────────────────
+  const { data: properties = [] } = useSWR<any[]>(
+    role === "OWNER" ? "/api/properties" : null,
+    jsonFetcher
+  );
+
+  // ── SWR: rooms for selected property ─────────────────────────────
+  const { data: rooms = [] } = useSWR<any[]>(
+    selectedPropertyId ? `/api/rooms?propertyId=${selectedPropertyId}` : null,
+    jsonFetcher
+  );
+
+  // Auto-select first property
   useEffect(() => {
-    fetchParcels();
-    if (role === "OWNER") {
-      fetchProperties();
+    if (!selectedPropertyId && properties.length > 0) {
+      setSelectedPropertyId(properties[0].id);
     }
-  }, [role]);
-
-  useEffect(() => {
-    if (selectedPropertyId) {
-      fetchRooms(selectedPropertyId);
-    } else {
-      setRooms([]);
-    }
-  }, [selectedPropertyId]);
-
-  async function fetchParcels() {
-    setIsLoading(true);
-    const res = await fetch("/api/parcels");
-    if (res.ok) setParcels(await res.json());
-    setIsLoading(false);
-  };
-
-  async function fetchProperties() {
-    const res = await fetch("/api/properties");
-    if (res.ok) {
-      const data = await res.json();
-      setProperties(data);
-      if (data.length > 0) setSelectedPropertyId(data[0].id);
-    }
-  };
-
-  async function fetchRooms(propId: string) {
-    const res = await fetch(`/api/rooms?propertyId=${propId}`);
-    if (res.ok) {
-      setRooms(await res.json());
-    }
-  };
+  }, [properties, selectedPropertyId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +65,7 @@ export default function ParcelsPage() {
       setTrackingNumber("");
       setRecipientName("");
       setRoomId("");
-      fetchParcels();
+      mutateParcels();
       toast.success("บันทึกพัสดุสำเร็จ");
     } else {
       toast.error("เกิดข้อผิดพลาด");
@@ -97,7 +81,7 @@ export default function ParcelsPage() {
     });
 
     if (res.ok) {
-      fetchParcels();
+      mutateParcels();
     }
   };
 

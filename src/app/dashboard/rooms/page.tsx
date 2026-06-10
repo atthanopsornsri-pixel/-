@@ -2,6 +2,8 @@
 import { toast } from "sonner";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import useSWR from "swr";
+import { jsonFetcher } from "@/lib/fetcher";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,15 +17,11 @@ export default function RoomsPage() {
   const router = useRouter();
   const propertyIdParam = searchParams.get("propertyId");
 
-  const [rooms, setRooms] = useState<any[]>([]);
-  const [properties, setProperties] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
   const [propertyId, setPropertyId] = useState(propertyIdParam || "");
   const [number, setNumber] = useState("");
   const [floor, setFloor] = useState("");
   const [rentPrice, setRentPrice] = useState("");
-  
+
   // Specific image fields removed
   const [isUploading, setIsUploading] = useState(false);
 
@@ -33,7 +31,7 @@ export default function RoomsPage() {
   const [editNumber, setEditNumber] = useState("");
   const [editFloor, setEditFloor] = useState("");
   const [editRentPrice, setEditRentPrice] = useState("");
-  
+
   // New MVP States
   const [editStatus, setEditStatus] = useState("AVAILABLE");
   const [editWaterMeter, setEditWaterMeter] = useState("");
@@ -41,49 +39,38 @@ export default function RoomsPage() {
   const [editHasAircon, setEditHasAircon] = useState(false);
   const [editHasFan, setEditHasFan] = useState(false);
   const [editHasFurniture, setEditHasFurniture] = useState(false);
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [copiedRoomId, setCopiedRoomId] = useState<string | null>(null);
 
+  // ── SWR: properties (cached, stale-while-revalidate) ──────────────
+  const { data: properties = [], mutate: mutateProperties } = useSWR<any[]>(
+    "/api/properties",
+    jsonFetcher
+  );
+
+  // ── SWR: rooms (re-fetches when propertyId changes) ───────────────
+  const roomsKey = propertyId
+    ? `/api/rooms?propertyId=${propertyId}`
+    : propertyIdParam
+    ? `/api/rooms?propertyId=${propertyIdParam}`
+    : "/api/rooms";
+
+  const { data: rooms = [], isLoading, mutate: mutateRooms } = useSWR<any[]>(
+    roomsKey,
+    jsonFetcher
+  );
+
+  // Auto-select first property on initial load
   useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      await fetchProperties();
-      await fetchRooms(propertyIdParam || undefined);
-      setIsLoading(false);
-    };
-    loadData();
-  }, [propertyIdParam]);
-
-  async function fetchProperties() {
-    const res = await fetch("/api/properties", { cache: "no-store" });
-    if (res.ok) {
-      const data = await res.json();
-      setProperties(data);
-      if (!propertyId && data.length > 0 && !propertyIdParam) {
-        setPropertyId(data[0].id);
-      }
+    if (!propertyId && !propertyIdParam && properties.length > 0) {
+      setPropertyId(properties[0].id);
     }
-  };
+  }, [properties, propertyId, propertyIdParam]);
 
-  async function fetchRooms(propId?: string) {
-    let url = "/api/rooms";
-    const targetPropId = propId || propertyId;
-    if (targetPropId) url += `?propertyId=${targetPropId}`;
-
-    const res = await fetch(url, { cache: "no-store" });
-    if (res.ok) {
-      const data = await res.json();
-      setRooms(data);
-    }
-  };
-
-  const handlePropertyChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newPropId = e.target.value;
-    setPropertyId(newPropId);
-    setIsLoading(true);
-    await fetchRooms(newPropId);
-    setIsLoading(false);
+  const handlePropertyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setPropertyId(e.target.value);
+    // SWR will automatically re-fetch when roomsKey changes
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -107,7 +94,7 @@ export default function RoomsPage() {
         setFloor("");
         setRentPrice("");
 
-        fetchRooms(propertyId);
+        mutateRooms();
       } else {
         const errData = await res.json().catch(() => ({}));
         if (errData?.code === "LIMIT_REACHED") {
@@ -128,7 +115,7 @@ export default function RoomsPage() {
     if (!confirm("ยืนยันการลบห้องพัก? หากมีผู้เช่าอยู่จะไม่สามารถลบได้")) return;
     try {
       const res = await fetch(`/api/rooms/${id}`, { method: "DELETE" });
-      if (res.ok) fetchRooms();
+      if (res.ok) mutateRooms();
       else toast.error("ไม่สามารถลบห้องได้ อาจมีผู้เช่าอยู่");
     } catch (error) {
       console.error(error);
@@ -171,7 +158,7 @@ export default function RoomsPage() {
 
       if (res.ok) {
         setIsEditModalOpen(false);
-        fetchRooms();
+        mutateRooms();
       } else {
         toast.error("เกิดข้อผิดพลาดในการแก้ไข");
       }

@@ -2,6 +2,8 @@
 
 import { toast } from "sonner";
 import { useState, useEffect, Suspense } from "react";
+import useSWR from "swr";
+import { jsonFetcher } from "@/lib/fetcher";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -16,10 +18,19 @@ function TenantsDashboardContent() {
   const actionParam = searchParams.get("action");
   const roomIdParam = searchParams.get("roomId");
 
-  const [buildingsData, setBuildingsData] = useState<any[]>([]);
-  const [availableRooms, setAvailableRooms] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  
+  // ── SWR: buildings+tenants (server action as async fetcher) ──────
+  const {
+    data: buildingsData = [],
+    isLoading,
+    mutate: mutateBuildings,
+  } = useSWR("buildings-with-tenants", getBuildingsWithTenants);
+
+  // ── SWR: available rooms ──────────────────────────────────────────
+  const { data: availableRooms = [], mutate: mutateAvailableRooms } = useSWR<any[]>(
+    "/api/rooms?status=AVAILABLE",
+    jsonFetcher
+  );
+
   const [selectedBuildingId, setSelectedBuildingId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,24 +53,6 @@ function TenantsDashboardContent() {
     password: "",
   });
 
-  const loadData = async () => {
-    setIsLoading(true);
-    try {
-      const data = await getBuildingsWithTenants();
-      setBuildingsData(data);
-      await fetchAvailableRooms();
-    } catch (error) {
-      console.error("โหลดข้อมูลลูกบ้านล้มเหลว:", error);
-      toast.error("ไม่สามารถโหลดข้อมูลลูกบ้านได้");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadData();
-  }, []);
-
   // Pre-select room if roomId query param is present
   useEffect(() => {
     if ((roomIdParam || actionParam === "create") && availableRooms.length > 0) {
@@ -77,14 +70,6 @@ function TenantsDashboardContent() {
     }
   }, [roomIdParam, actionParam, availableRooms]);
 
-  async function fetchAvailableRooms() {
-    const res = await fetch("/api/rooms?status=AVAILABLE", { cache: "no-store" });
-    if (res.ok) {
-      const data = await res.json();
-      setAvailableRooms(data);
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -98,7 +83,7 @@ function TenantsDashboardContent() {
       if (res.ok) {
         setIsModalOpen(false);
         setFormData({ roomId: "", name: "", username: "", password: "" });
-        await loadData();
+        mutateBuildings(); mutateAvailableRooms();
       } else {
         const errorData = await res.json();
         toast.error(errorData.message || "เกิดข้อผิดพลาดในการสร้างบัญชี");
@@ -494,7 +479,7 @@ function TenantsDashboardContent() {
                     const res = await fetch(`/api/owner/tenants/${evictTenantId}`, { method: 'DELETE' });
                     if (res.ok) {
                       toast.success("บันทึกการย้ายออกสำเร็จ!");
-                      await loadData();
+                      mutateBuildings(); mutateAvailableRooms();
                       setIsEvictModalOpen(false);
                       setEvictTenantId(null);
                     } else {
