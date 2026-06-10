@@ -271,10 +271,21 @@ export default function PropertiesPage() {
         <div className="lg:col-span-2">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {isLoading ? (
-              <div className="col-span-1 md:col-span-2 py-20 flex flex-col items-center justify-center">
-                <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                <p className="mt-4 text-slate-500">กำลังโหลดข้อมูลหอพัก...</p>
-              </div>
+              <>
+                {[1, 2].map((i) => (
+                  <div key={i} className="rounded-[var(--jh-radius-2xl)] border border-slate-100 overflow-hidden animate-pulse">
+                    <div className="h-40 bg-slate-100" />
+                    <div className="p-5 space-y-3">
+                      <div className="h-5 bg-slate-100 rounded w-2/3" />
+                      <div className="h-4 bg-slate-100 rounded w-full" />
+                      <div className="flex gap-2 pt-2">
+                        <div className="h-8 bg-slate-100 rounded-lg w-24" />
+                        <div className="h-8 bg-slate-100 rounded-lg w-24" />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </>
             ) : properties.length === 0 ? (
               <div className="col-span-1 md:col-span-2 text-center py-16 bg-white rounded-[32px] border border-dashed border-slate-300">
                 <div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">

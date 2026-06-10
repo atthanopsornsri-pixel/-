@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "next-auth/react";
 import { PageHeader } from "@/components/PageHeader";
 import {
@@ -69,6 +70,7 @@ export default function MaintenancePage() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -101,11 +103,13 @@ export default function MaintenancePage() {
   }, [selectedPropertyId]);
 
   async function fetchRequests() {
+    setIsLoading(true);
     const url = selectedPropertyId
       ? `/api/maintenance?propertyId=${selectedPropertyId}`
       : "/api/maintenance";
     const res = await fetch(url);
     if (res.ok) setRequests(await res.json());
+    setIsLoading(false);
   }
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -382,6 +386,24 @@ export default function MaintenancePage() {
 
         {/* ── Request cards ── */}
         <div className={role === "TENANT" ? "lg:col-span-2" : ""}>
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="rounded-[var(--jh-radius-2xl)] border border-slate-100 overflow-hidden">
+                  <Skeleton className="h-24 w-full rounded-none" />
+                  <div className="p-4 space-y-3">
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <div className="flex gap-2 pt-1">
+                      <Skeleton className="h-8 w-24 rounded-full" />
+                      <Skeleton className="h-8 w-24 rounded-full" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredRequests.map((req) => {
               const meta = STATUS_META[req.status as StatusKey] ?? STATUS_META.PENDING;
@@ -513,6 +535,7 @@ export default function MaintenancePage() {
               </div>
             )}
           </div>
+          )} {/* end isLoading */}
         </div>
       </div>
 

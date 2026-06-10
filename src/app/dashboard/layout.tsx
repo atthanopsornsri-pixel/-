@@ -10,6 +10,7 @@ import NotificationBell from "@/components/NotificationBell";
 import MobileNav from "@/components/MobileNav";
 import SignOutButton from "@/components/SignOutButton";
 import SidebarNav from "@/components/SidebarNav";
+import PageWrapper from "@/components/PageWrapper";
 import { Suspense } from "react";
 
 async function AsyncNotificationBell({ userId, role }: { userId: string, role: string }) {
@@ -154,7 +155,7 @@ export default async function DashboardLayout({
 
         {/* Page Content */}
         <main className="flex-1 p-4 md:p-10 overflow-auto w-full max-w-[100vw]">
-          {children}
+          <PageWrapper>{children}</PageWrapper>
         </main>
       </div>
     </div>

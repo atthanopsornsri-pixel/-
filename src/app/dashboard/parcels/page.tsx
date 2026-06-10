@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useSession } from "next-auth/react";
 import { PageHeader } from "@/components/PageHeader";
 import { Package } from "lucide-react";
@@ -18,6 +19,7 @@ export default function ParcelsPage() {
   const [parcels, setParcels] = useState<any[]>([]);
   const [properties, setProperties] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   // Form State
   const [selectedPropertyId, setSelectedPropertyId] = useState("");
@@ -42,10 +44,10 @@ export default function ParcelsPage() {
   }, [selectedPropertyId]);
 
   async function fetchParcels() {
+    setIsLoading(true);
     const res = await fetch("/api/parcels");
-    if (res.ok) {
-      setParcels(await res.json());
-    }
+    if (res.ok) setParcels(await res.json());
+    setIsLoading(false);
   };
 
   async function fetchProperties() {
@@ -173,7 +175,18 @@ export default function ParcelsPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {parcels.map(parcel => (
+                    {isLoading
+                      ? Array.from({ length: 4 }).map((_, i) => (
+                          <tr key={i} className="border-b animate-pulse">
+                            {role === "OWNER" && <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>}
+                            <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
+                            <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
+                            <td className="px-4 py-3"><Skeleton className="h-4 w-28" /></td>
+                            <td className="px-4 py-3"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                            {role === "OWNER" && <td className="px-4 py-3"><Skeleton className="h-8 w-20 ml-auto" /></td>}
+                          </tr>
+                        ))
+                      : parcels.map(parcel => (
                       <tr key={parcel.id} className="border-b hover:bg-slate-50">
                         {role === "OWNER" && (
                           <td className="px-4 py-3 font-bold text-slate-700">
@@ -204,7 +217,7 @@ export default function ParcelsPage() {
                         )}
                       </tr>
                     ))}
-                    {parcels.length === 0 && (
+                    {!isLoading && parcels.length === 0 && (
                       <tr>
                         <td colSpan={role === "OWNER" ? 6 : 4} className="px-4 py-8 text-center text-slate-500">
                           ไม่มีข้อมูลพัสดุ

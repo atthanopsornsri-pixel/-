@@ -265,9 +265,19 @@ export default function MeterEntryPage() {
       {/* Spreadsheet Grid */}
       <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_4px_25px_rgba(0,0,0,0.02)] overflow-hidden">
         {isLoading ? (
-          <div className="py-24 flex flex-col items-center justify-center gap-3">
-            <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
-            <span className="text-sm font-bold text-slate-400">กำลังดึงข้อมูลห้องพักและเลขมิเตอร์ล่าสุด...</span>
+          <div className="p-4">
+            <div className="animate-pulse space-y-3">
+              {/* Table header mock */}
+              <div className="grid grid-cols-6 gap-3 px-2 pb-2 border-b border-slate-100">
+                {[1,2,3,4,5,6].map(i => <div key={i} className="h-3 bg-slate-100 rounded w-full" />)}
+              </div>
+              {/* Table rows */}
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="grid grid-cols-6 gap-3 px-2 py-2">
+                  {[1,2,3,4,5,6].map(j => <div key={j} className="h-9 bg-slate-100 rounded-lg w-full" />)}
+                </div>
+              ))}
+            </div>
           </div>
         ) : meterRows.length === 0 ? (
           <div className="py-24 text-center">
