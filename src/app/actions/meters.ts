@@ -299,6 +299,93 @@ export async function getRoomsForMeterEntry(
   }
 }
 
+// ─────────────────────────────────────────────
+// NEW: โหลดมิเตอร์ไฟ + น้ำ พร้อมกันในแถวเดียว
+// ─────────────────────────────────────────────
+export async function getRoomsBothMeters(
+  propertyId: string,
+  month: number,
+  year: number
+) {
+  try {
+    const prisma = await getSecurePrisma();
+    const property = await prisma.property.findUnique({
+      where: { id: propertyId },
+      select: { electricRate: true, waterRate: true },
+    });
+    if (!property) return { success: false, error: "ไม่พบข้อมูลหอพัก" };
+
+    const rooms = await prisma.room.findMany({
+      where: { propertyId, status: "OCCUPIED", isDeleted: false },
+      orderBy: { number: "asc" },
+    });
+
+    const prevPeriod = getPreviousPeriod(month, year);
+
+    const rows = await Promise.all(
+      rooms.map(async (room) => {
+        const prevBill = await prisma.bill.findFirst({
+          where: { roomId: room.id, month: prevPeriod.month, year: prevPeriod.year, type: "MONTHLY", isDeleted: false },
+          select: { waterReading: true, electricReading: true },
+        });
+        const currBill = await prisma.bill.findFirst({
+          where: { roomId: room.id, month, year, type: "MONTHLY" },
+          select: { electricReading: true, waterReading: true },
+        });
+        return {
+          roomId: room.id,
+          roomNumber: room.number,
+          hasBill: !!currBill,
+          prevElectric: prevBill?.electricReading ?? room.electricMeterStart ?? 0,
+          electricInput: currBill?.electricReading != null ? String(currBill.electricReading) : "",
+          prevWater: prevBill?.waterReading ?? room.waterMeterStart ?? 0,
+          waterInput: currBill?.waterReading != null ? String(currBill.waterReading) : "",
+        };
+      })
+    );
+
+    return {
+      success: true,
+      rows,
+      electricRate: property.electricRate ?? 0,
+      waterRate: property.waterRate ?? 0,
+    };
+  } catch (error: any) {
+    console.error("getRoomsBothMeters error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
+// NEW: บันทึกมิเตอร์ทั้งไฟและน้ำในคราวเดียว
+export async function saveBothMeters(
+  propertyId: string,
+  month: number,
+  year: number,
+  updates: { roomId: string; electricReading?: number; waterReading?: number }[]
+) {
+  try {
+    const electricUpdates = updates.filter((u) => u.electricReading !== undefined);
+    const waterUpdates    = updates.filter((u) => u.waterReading    !== undefined);
+
+    if (electricUpdates.length > 0) {
+      await saveBulkMeterReadings(
+        propertyId, month, year, "ELECTRIC",
+        electricUpdates.map((u) => ({ roomId: u.roomId, currentReading: u.electricReading! }))
+      );
+    }
+    if (waterUpdates.length > 0) {
+      await saveBulkMeterReadings(
+        propertyId, month, year, "WATER",
+        waterUpdates.map((u) => ({ roomId: u.roomId, currentReading: u.waterReading! }))
+      );
+    }
+    return { success: true, message: "บันทึกมิเตอร์สำเร็จ!" };
+  } catch (error: any) {
+    console.error("saveBothMeters error:", error);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function saveBulkMeters(
   propertyId: string,
   month: number,

@@ -2,202 +2,219 @@
 
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Building, Zap, Droplet, Save, Loader2, Calendar, AlertCircle, RefreshCw } from "lucide-react";
-import { getRoomsForMeterEntry, saveBulkMeters } from "@/app/actions/meters";
+import {
+  Building,
+  Zap,
+  Droplet,
+  Save,
+  Loader2,
+  Calendar,
+  AlertCircle,
+  RefreshCw,
+} from "lucide-react";
+import { getRoomsBothMeters, saveBothMeters } from "@/app/actions/meters";
 
-interface RoomMeterRow {
+interface RoomMeterRowBoth {
   roomId: string;
   roomNumber: string;
-  previousReading: number;
-  currentReadingInput: string;
   hasBill: boolean;
+  prevElectric: number;
+  electricInput: string;
+  prevWater: number;
+  waterInput: string;
 }
+
+const thaiMonths = [
+  "มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
+  "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม",
+];
 
 export default function MeterEntryPage() {
   const [properties, setProperties] = useState<any[]>([]);
   const [propertyId, setPropertyId] = useState("");
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
-  const [meterType, setMeterType] = useState<"WATER" | "ELECTRIC">("ELECTRIC");
-  
-  const [ratePerUnit, setRatePerUnit] = useState(0);
-  const [meterRows, setMeterRows] = useState<RoomMeterRow[]>([]);
-  
+
+  const [electricRate, setElectricRate] = useState(0);
+  const [waterRate, setWaterRate] = useState(0);
+  const [rows, setRows] = useState<RoomMeterRowBoth[]>([]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Load properties on mount
+  // ─── Load properties ────────────────────────────────────────────
   useEffect(() => {
-    async function loadProperties() {
+    (async () => {
       try {
         const res = await fetch("/api/properties");
         if (res.ok) {
           const data = await res.json();
           setProperties(data);
-          if (data.length > 0) {
-            setPropertyId(data[0].id);
-          }
+          if (data.length > 0) setPropertyId(data[0].id);
         }
-      } catch (e) {
-        console.error(e);
+      } catch {
         toast.error("ไม่สามารถโหลดข้อมูลหอพักได้");
       }
-    }
-    loadProperties();
+    })();
   }, []);
 
-  // Fetch meter rows when property, date, or type changes
+  // ─── Reload rows when filters change ────────────────────────────
   useEffect(() => {
-    if (propertyId) {
-      fetchMeterRows();
-    } else {
-      setMeterRows([]);
-    }
-  }, [propertyId, month, year, meterType]);
+    if (propertyId) fetchRows();
+    else setRows([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [propertyId, month, year]);
 
-  async function fetchMeterRows() {
+  async function fetchRows() {
     setIsLoading(true);
     try {
-      const res = await getRoomsForMeterEntry(propertyId, month, year, meterType);
-      if (res.success) {
-        setRatePerUnit(res.ratePerUnit || 0);
-        setMeterRows(res.rows || []);
+      const res = await getRoomsBothMeters(propertyId, month, year);
+      if (res.success && res.rows) {
+        setElectricRate(res.electricRate ?? 0);
+        setWaterRate(res.waterRate ?? 0);
+        setRows(res.rows as RoomMeterRowBoth[]);
       } else {
-        toast.error(res.error || "เกิดข้อผิดพลาดในการดึงข้อมูล");
+        toast.error((res as any).error || "เกิดข้อผิดพลาดในการดึงข้อมูล");
       }
-    } catch (e) {
-      console.error(e);
+    } catch {
       toast.error("ระบบดึงข้อมูลขัดข้อง");
     } finally {
       setIsLoading(false);
     }
   }
 
-  const handleInputChange = (roomId: string, value: string) => {
-    setMeterRows((prevRows) =>
-      prevRows.map((row) =>
-        row.roomId === roomId ? { ...row, currentReadingInput: value } : row
-      )
-    );
-  };
+  // ─── Input helpers ───────────────────────────────────────────────
+  const updateElectric = (roomId: string, value: string) =>
+    setRows((prev) => prev.map((r) => r.roomId === roomId ? { ...r, electricInput: value } : r));
 
-  const handleSubmitMeters = async () => {
-    if (!propertyId) {
-      toast.error("กรุณาเลือกหอพัก");
-      return;
+  const updateWater = (roomId: string, value: string) =>
+    setRows((prev) => prev.map((r) => r.roomId === roomId ? { ...r, waterInput: value } : r));
+
+  // ─── Save ────────────────────────────────────────────────────────
+  async function handleSave() {
+    if (!propertyId) { toast.error("กรุณาเลือกหอพัก"); return; }
+
+    const updates: { roomId: string; electricReading?: number; waterReading?: number }[] = [];
+
+    for (const row of rows) {
+      if (!row.hasBill) continue;
+
+      const eVal = row.electricInput.trim();
+      const wVal = row.waterInput.trim();
+
+      const entry: { roomId: string; electricReading?: number; waterReading?: number } = { roomId: row.roomId };
+
+      if (eVal !== "") {
+        const n = parseFloat(eVal);
+        if (isNaN(n) || n < 0) { toast.error(`ห้อง ${row.roomNumber}: เลขไฟฟ้าไม่ถูกต้อง`); return; }
+        if (n < row.prevElectric) { toast.error(`ห้อง ${row.roomNumber}: เลขไฟฟ้าห้ามน้อยกว่าเดือนก่อน (${row.prevElectric})`); return; }
+        entry.electricReading = n;
+      }
+
+      if (wVal !== "") {
+        const n = parseFloat(wVal);
+        if (isNaN(n) || n < 0) { toast.error(`ห้อง ${row.roomNumber}: เลขน้ำไม่ถูกต้อง`); return; }
+        if (n < row.prevWater) { toast.error(`ห้อง ${row.roomNumber}: เลขน้ำห้ามน้อยกว่าเดือนก่อน (${row.prevWater})`); return; }
+        entry.waterReading = n;
+      }
+
+      if (entry.electricReading !== undefined || entry.waterReading !== undefined) {
+        updates.push(entry);
+      }
     }
 
-    // Only allow updating rooms that have base bills
-    const filledRows = meterRows.filter((row) => row.currentReadingInput.trim() !== "" && row.hasBill);
-    if (filledRows.length === 0) {
-      toast.error("กรุณากรอกเลขมิเตอร์ห้องที่เปิดบิลแล้วอย่างน้อย 1 ห้อง");
+    if (updates.length === 0) {
+      toast.error("กรุณากรอกเลขมิเตอร์อย่างน้อย 1 ช่อง");
       return;
-    }
-
-    const updates: { roomId: string; currentReading: number }[] = [];
-    for (const row of filledRows) {
-      const current = parseFloat(row.currentReadingInput);
-      if (isNaN(current) || current < 0) {
-        toast.error(`ห้อง ${row.roomNumber}: เลขมิเตอร์ห้ามเป็นค่าว่างหรือติดลบ`);
-        return;
-      }
-      if (current < row.previousReading) {
-        toast.error(`ห้อง ${row.roomNumber}: เลขมิเตอร์ห้ามมีค่าน้อยกว่าเดือนก่อนหน้า (${row.previousReading})`);
-        return;
-      }
-      updates.push({
-        roomId: row.roomId,
-        currentReading: current,
-      });
     }
 
     setIsSaving(true);
     try {
-      const res = await saveBulkMeters(propertyId, month, year, meterType, updates);
+      const res = await saveBothMeters(propertyId, month, year, updates);
       if (res.success) {
-        toast.success(res.message || "บันทึกมิเตอร์สำเร็จเรียบร้อยแล้ว!");
-        fetchMeterRows();
+        toast.success(res.message || "บันทึกมิเตอร์สำเร็จ!");
+        fetchRows();
       } else {
-        toast.error(res.error || "บันทึกข้อมูลล้มเหลว");
+        toast.error(res.error || "บันทึกล้มเหลว");
       }
     } catch (e: any) {
-      console.error(e);
-      toast.error(e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์");
+      toast.error(e.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ");
     } finally {
       setIsSaving(false);
     }
-  };
+  }
 
-  const thaiMonths = [
-    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
-    "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
-  ];
+  // ─── Computed helpers ────────────────────────────────────────────
+  function calcElectric(row: RoomMeterRowBoth) {
+    const n = parseFloat(row.electricInput);
+    if (isNaN(n)) return null;
+    const units = n - row.prevElectric;
+    return { units, amount: units * electricRate, invalid: units < 0 };
+  }
+  function calcWater(row: RoomMeterRowBoth) {
+    const n = parseFloat(row.waterInput);
+    if (isNaN(n)) return null;
+    const units = n - row.prevWater;
+    return { units, amount: units * waterRate, invalid: units < 0 };
+  }
 
-  const roomsWithoutBills = meterRows.filter((r) => !r.hasBill);
-  const hasMissingBills = roomsWithoutBills.length > 0;
+  const roomsWithoutBills = rows.filter((r) => !r.hasBill);
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
-      {/* Header Section */}
+    <div className="max-w-[1400px] mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
+
+      {/* ── Header ── */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-2xl md:text-[28px] font-bold text-[var(--jh-ink)] tracking-[-0.02em] flex items-center gap-3">
             <span
-              className="flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)] text-lg"
+              className="flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)]"
               style={{ background: "#007aff", color: "#fff", boxShadow: "0 10px 22px -8px #007aff" }}
-            >⚡</span>
+            >
+              <Zap className="w-6 h-6" strokeWidth={2} />
+            </span>
             จดบันทึกมิเตอร์ด่วน
           </h1>
           <p className="text-sm font-medium text-slate-500 mt-2">
-            บันทึกและตรวจสอบเลขมิเตอร์สาธารณูปโภคของห้องพักแบบ Bulk ในชีตเดียวอย่างรวดเร็ว
+            บันทึกมิเตอร์ไฟฟ้า + ประปาพร้อมกันทุกห้องในชีตเดียว — คำนวณยอดบิลอัตโนมัติ
           </p>
         </div>
 
-        {/* Meter Type Switch Tabs (Apple Style) */}
-        <div className="inline-flex rounded-2xl bg-slate-100 p-1 border border-slate-200/50 self-start shadow-inner">
-          <button
-            onClick={() => setMeterType("ELECTRIC")}
-            className={`flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-              meterType === "ELECTRIC"
-                ? "bg-white text-blue-600 shadow-[0_2px_8px_rgba(0,0,0,0.05)] border border-slate-200/20"
-                : "text-slate-500 hover:text-slate-800"
-            }`}
-          >
-            <Zap className={`w-3.5 h-3.5 ${meterType === "ELECTRIC" ? "text-blue-500 fill-blue-100" : ""}`} />
-            ไฟฟ้า (฿{meterType === "ELECTRIC" ? ratePerUnit : "—"} / หน่วย)
-          </button>
-          <button
-            onClick={() => setMeterType("WATER")}
-            className={`flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-              meterType === "WATER"
-                ? "bg-white text-emerald-600 shadow-[0_2px_8px_rgba(0,0,0,0.05)] border border-slate-200/20"
-                : "text-slate-500 hover:text-slate-800"
-            }`}
-          >
-            <Droplet className={`w-3.5 h-3.5 ${meterType === "WATER" ? "text-emerald-500 fill-emerald-100" : ""}`} />
-            ประปา (฿{meterType === "WATER" ? ratePerUnit : "—"} / หน่วย)
-          </button>
+        {/* Rate chips */}
+        <div className="flex items-center gap-2 self-start">
+          <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold border border-blue-100 bg-blue-50 text-blue-700">
+            <Zap className="w-3.5 h-3.5 fill-blue-200 text-blue-500" strokeWidth={2} />
+            ไฟฟ้า ฿{electricRate} / หน่วย
+          </span>
+          <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold border border-emerald-100 bg-emerald-50 text-emerald-700">
+            <Droplet className="w-3.5 h-3.5 fill-emerald-200 text-emerald-500" strokeWidth={2} />
+            ประปา ฿{waterRate} / หน่วย
+          </span>
         </div>
       </div>
 
-      {/* Warning Card for Missing Base Bills */}
-      {hasMissingBills && (
-        <div className="bg-amber-50 border border-amber-200/55 rounded-3xl p-5 flex items-start gap-4 text-amber-800 animate-in fade-in slide-in-from-top-4 duration-300">
-          <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" />
+      {/* ── Warning: rooms missing base bill ── */}
+      {roomsWithoutBills.length > 0 && (
+        <div className="bg-amber-50 border border-amber-200/55 rounded-3xl p-5 flex items-start gap-4 text-amber-800 animate-in fade-in duration-300">
+          <AlertCircle className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" />
           <div>
-            <h4 className="font-bold text-sm">ตรวจพบห้องพักบางห้องยังไม่ได้เปิดรอบบิลตั้งต้นในรอบเดือนนี้</h4>
-            <p className="text-xs text-amber-700/90 mt-1.5 leading-relaxed">
-              มีจำนวน {roomsWithoutBills.length} ห้องที่ยังไม่มีบิลตั้งต้นในระบบดึงข้อมูลมาจดมิเตอร์ ระบบได้ทำการบล็อกช่องกรอกข้อมูลไว้เพื่อความถูกต้องของข้อมูลตามหลักบัญชีหอพักและป้องกันปัญหาระบบออกใบแจ้งหนี้ผี (Ghost Invoices) <br />
-              <span className="inline-block mt-1">กรุณาไปที่เมนู <a href="/dashboard/billing" className="font-bold underline hover:text-amber-950">ออกบิล & ค่าน้ำไฟ</a> เพื่อทำรายการ <strong>&quot;สร้างบิลตั้งต้น&quot;</strong> สำหรับหอพักและรอบเดือนนี้ก่อนดำเนินการจดบันทึก</span>
+            <h4 className="font-bold text-sm">
+              {roomsWithoutBills.length} ห้องยังไม่ได้เปิดรอบบิลตั้งต้นในรอบเดือนนี้
+            </h4>
+            <p className="text-xs text-amber-700/90 mt-1 leading-relaxed">
+              ระบบบล็อกช่องกรอกไว้เพื่อป้องกัน Ghost Invoices — กรุณาไปที่{" "}
+              <a href="/dashboard/billing" className="font-bold underline hover:text-amber-950">
+                ออกบิล & ค่าน้ำไฟ
+              </a>{" "}
+              เพื่อสร้างบิลตั้งต้นก่อน
             </p>
           </div>
         </div>
       )}
 
-      {/* Settings Grid Filter */}
+      {/* ── Filters ── */}
       <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] p-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Select Property */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
               <Building className="w-3.5 h-3.5 text-slate-400" />
@@ -208,18 +225,13 @@ export default function MeterEntryPage() {
               value={propertyId}
               onChange={(e) => setPropertyId(e.target.value)}
             >
-              <option value="" disabled>
-                เลือกหอพัก
-              </option>
+              <option value="" disabled>เลือกหอพัก</option>
               {properties.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
+                <option key={p.id} value={p.id}>{p.name}</option>
               ))}
             </select>
           </div>
 
-          {/* Select Month */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-slate-400" />
@@ -231,14 +243,11 @@ export default function MeterEntryPage() {
               onChange={(e) => setMonth(Number(e.target.value))}
             >
               {thaiMonths.map((name, i) => (
-                <option key={i} value={i + 1}>
-                  {name}
-                </option>
+                <option key={i} value={i + 1}>{name}</option>
               ))}
             </select>
           </div>
 
-          {/* Select Year */}
           <div className="space-y-2">
             <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-slate-400" />
@@ -251,126 +260,214 @@ export default function MeterEntryPage() {
             >
               {Array.from({ length: 5 }, (_, i) => {
                 const y = new Date().getFullYear() - 2 + i;
-                return (
-                  <option key={y} value={y}>
-                    {y + 543}
-                  </option>
-                );
+                return <option key={y} value={y}>{y + 543}</option>;
               })}
             </select>
           </div>
         </div>
       </div>
 
-      {/* Spreadsheet Grid */}
+      {/* ── Spreadsheet Grid ── */}
       <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_4px_25px_rgba(0,0,0,0.02)] overflow-hidden">
         {isLoading ? (
-          <div className="p-4">
-            <div className="animate-pulse space-y-3">
-              {/* Table header mock */}
-              <div className="grid grid-cols-6 gap-3 px-2 pb-2 border-b border-slate-100">
-                {[1,2,3,4,5,6].map(i => <div key={i} className="h-3 bg-slate-100 rounded w-full" />)}
-              </div>
-              {/* Table rows */}
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="grid grid-cols-6 gap-3 px-2 py-2">
-                  {[1,2,3,4,5,6].map(j => <div key={j} className="h-9 bg-slate-100 rounded-lg w-full" />)}
-                </div>
+          /* ─ Skeleton ─ */
+          <div className="p-4 animate-pulse">
+            <div className="grid grid-cols-8 gap-2 px-2 pb-3 border-b border-slate-100 mb-2">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="h-3 bg-slate-100 rounded w-full" />
               ))}
             </div>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="grid grid-cols-8 gap-2 px-2 py-2">
+                {Array.from({ length: 8 }).map((_, j) => (
+                  <div key={j} className="h-9 bg-slate-100 rounded-lg w-full" />
+                ))}
+              </div>
+            ))}
           </div>
-        ) : meterRows.length === 0 ? (
+        ) : rows.length === 0 ? (
+          /* ─ Empty state ─ */
           <div className="py-24 text-center">
             <div className="w-16 h-16 mx-auto bg-slate-50 rounded-2xl flex items-center justify-center text-2xl border border-slate-100 mb-4">
               🛏️
             </div>
             <p className="text-slate-500 font-bold">ไม่พบห้องพักที่มีผู้เช่า (OCCUPIED)</p>
             <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto leading-relaxed">
-              ระบบ Bulk Meter Entry จะรองรับเฉพาะห้องพักที่มีสถานะย้ายเข้าและมีผู้เช่าพักอาศัยจริงในหอพักนี้เท่านั้น
+              ระบบจะรองรับเฉพาะห้องพักที่มีสถานะย้ายเข้าและมีผู้เช่าพักอาศัยจริงเท่านั้น
             </p>
           </div>
         ) : (
+          /* ─ Excel grid ─ */
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            <table className="w-full text-left border-collapse text-sm">
+              {/* Section header row */}
               <thead>
-                <tr className="bg-slate-50/70 border-b border-slate-100 text-slate-500 font-bold text-xs uppercase tracking-wider">
-                  <th className="px-8 py-4 w-32">ห้องพัก</th>
-                  <th className="px-8 py-4 w-48">มิเตอร์เดือนก่อนหน้า</th>
-                  <th className="px-8 py-4 w-72">มิเตอร์อ่านได้ล่าสุด (กรอกที่นี่)</th>
-                  <th className="px-8 py-4 text-center w-36">หน่วยที่ใช้</th>
-                  <th className="px-8 py-4 text-right pr-8">คำนวณยอดเงิน (บาท)</th>
+                <tr className="border-b border-slate-100">
+                  {/* Room column */}
+                  <th
+                    rowSpan={2}
+                    className="px-5 py-3 w-24 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50/70 border-r border-slate-100 align-middle"
+                  >
+                    ห้องพัก
+                  </th>
+                  {/* Electric section header */}
+                  <th
+                    colSpan={3}
+                    className="px-5 py-2.5 text-xs font-extrabold uppercase tracking-wider text-center border-r border-slate-100"
+                    style={{ background: "#f4f9ff", color: "#007aff" }}
+                  >
+                    <span className="inline-flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 fill-blue-200" strokeWidth={2} />
+                      ไฟฟ้า
+                    </span>
+                  </th>
+                  {/* Water section header */}
+                  <th
+                    colSpan={3}
+                    className="px-5 py-2.5 text-xs font-extrabold uppercase tracking-wider text-center border-r border-slate-100"
+                    style={{ background: "#f3fcf6", color: "#34c759" }}
+                  >
+                    <span className="inline-flex items-center gap-1.5">
+                      <Droplet className="w-3.5 h-3.5 fill-emerald-200" strokeWidth={2} />
+                      ประปา
+                    </span>
+                  </th>
+                  {/* Total */}
+                  <th
+                    rowSpan={2}
+                    className="px-5 py-3 text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50/70 text-right align-middle"
+                  >
+                    ยอดรวม
+                  </th>
+                </tr>
+
+                {/* Sub-header row */}
+                <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                  {/* Electric sub-headers */}
+                  <th className="px-4 py-2.5 border-l border-slate-100" style={{ background: "#f4f9ff" }}>มิเตอร์ก่อนหน้า</th>
+                  <th className="px-4 py-2.5 w-44" style={{ background: "#e3f0ff" }}>
+                    <span className="text-blue-600">กรอกมิเตอร์ปัจจุบัน</span>
+                  </th>
+                  <th className="px-4 py-2.5 text-center border-r border-slate-100" style={{ background: "#f4f9ff" }}>หน่วย</th>
+                  {/* Water sub-headers */}
+                  <th className="px-4 py-2.5" style={{ background: "#f3fcf6" }}>มิเตอร์ก่อนหน้า</th>
+                  <th className="px-4 py-2.5 w-44" style={{ background: "#e0f7e9" }}>
+                    <span className="text-emerald-600">กรอกมิเตอร์ปัจจุบัน</span>
+                  </th>
+                  <th className="px-4 py-2.5 text-center border-r border-slate-100" style={{ background: "#f3fcf6" }}>หน่วย</th>
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-slate-50">
-                {meterRows.map((row) => {
-                  const currentVal = parseFloat(row.currentReadingInput) || 0;
-                  const hasInput = row.currentReadingInput.trim() !== "" && row.hasBill;
-                  const unitsUsed = hasInput ? currentVal - row.previousReading : 0;
-                  const isInvalid = hasInput && unitsUsed < 0;
+                {rows.map((row) => {
+                  const e = calcElectric(row);
+                  const w = calcWater(row);
+                  const totalAmount = (e && !e.invalid ? e.amount : 0) + (w && !w.invalid ? w.amount : 0);
+                  const hasAnyValue = (e !== null && !e.invalid) || (w !== null && !w.invalid);
 
                   return (
                     <tr key={row.roomId} className="hover:bg-slate-50/30 transition-colors group">
-                      {/* Room Number */}
-                      <td className="px-8 py-4 font-mono font-bold text-slate-800 text-lg">
+
+                      {/* ── Room ── */}
+                      <td className="px-5 py-3.5 font-mono font-bold text-slate-800 text-base border-r border-slate-100">
                         {row.roomNumber}
                       </td>
 
-                      {/* Previous Meter Value */}
-                      <td className="px-8 py-4 font-mono text-slate-400 font-bold text-base">
-                        {row.previousReading.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                      {/* ── Electric: prev ── */}
+                      <td className="px-4 py-3.5 font-mono text-slate-400 font-semibold" style={{ background: "#fafcff" }}>
+                        {row.prevElectric.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                       </td>
 
-                      {/* Meter Input Field */}
-                      <td className="px-8 py-4">
+                      {/* ── Electric: input ── */}
+                      <td className="px-3 py-3" style={{ background: "#f7f9ff" }}>
                         {row.hasBill ? (
-                          <div className="relative max-w-[220px]">
+                          <div className="relative">
                             <input
                               type="number"
                               step="any"
-                              placeholder="กรอกเลขมิเตอร์..."
-                              value={row.currentReadingInput}
-                              onChange={(e) => handleInputChange(row.roomId, e.target.value)}
-                              className={`w-full font-mono text-base px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 transition-all ${
-                                isInvalid
-                                  ? "border-rose-300 bg-rose-50/50 text-rose-900 focus:ring-rose-500/20"
-                                  : "border-slate-200 focus:border-blue-500 focus:ring-blue-500/10 hover:border-slate-350"
+                              placeholder="เลขมิเตอร์ไฟ"
+                              value={row.electricInput}
+                              onChange={(ev) => updateElectric(row.roomId, ev.target.value)}
+                              className={`w-full font-mono text-sm px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 transition-all min-w-[130px] ${
+                                e?.invalid
+                                  ? "border-rose-300 bg-rose-50 text-rose-900 focus:ring-rose-400/20"
+                                  : "border-blue-200/60 bg-white focus:border-blue-400 focus:ring-blue-400/15 hover:border-blue-300"
                               }`}
                             />
-                            {isInvalid && (
-                              <span className="absolute left-1 -bottom-5 text-[10px] text-rose-500 font-bold flex items-center gap-1 animate-in fade-in duration-200">
-                                <AlertCircle className="w-3.5 h-3.5" /> ห้ามกรอกน้อยกว่าเดือนก่อนหน้า
+                            {e?.invalid && (
+                              <span className="absolute left-1 -bottom-4 text-[9px] text-rose-500 font-bold flex items-center gap-1">
+                                <AlertCircle className="w-2.5 h-2.5" /> น้อยกว่าเดือนก่อน
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200/50 shadow-sm">
-                            <AlertCircle className="w-3.5 h-3.5 text-amber-500" /> ยังไม่สร้างรอบบิลตั้งต้น
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/50">
+                            <AlertCircle className="w-3 h-3" /> ยังไม่มีรอบบิล
                           </span>
                         )}
                       </td>
 
-                      {/* Units Used Column */}
-                      <td className="px-8 py-4 text-center">
-                        {row.hasBill && hasInput && !isInvalid ? (
-                          <span
-                            className={`inline-flex items-center font-mono font-black px-3 py-1 rounded-full text-xs border ${
-                              meterType === "ELECTRIC"
-                                ? "bg-blue-50 text-blue-700 border-blue-100"
-                                : "bg-emerald-50 text-emerald-700 border-emerald-100"
-                            }`}
-                          >
-                            {unitsUsed.toLocaleString(undefined, { maximumFractionDigits: 2 })} หน่วย
+                      {/* ── Electric: units ── */}
+                      <td className="px-4 py-3.5 text-center border-r border-slate-100" style={{ background: "#fafcff" }}>
+                        {e && !e.invalid ? (
+                          <span className="inline-flex items-center font-mono font-black text-[11px] px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                            {e.units.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                           </span>
                         ) : (
-                          <span className="text-slate-300 font-mono font-bold">—</span>
+                          <span className="text-slate-300 font-mono font-bold text-xs">—</span>
                         )}
                       </td>
 
-                      {/* Cost Column */}
-                      <td className="px-8 py-4 text-right pr-8 font-mono font-extrabold text-lg text-slate-800">
-                        {row.hasBill && hasInput && !isInvalid ? (
-                          <span className={meterType === "ELECTRIC" ? "text-blue-600" : "text-emerald-600"}>
-                            ฿{(unitsUsed * ratePerUnit).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {/* ── Water: prev ── */}
+                      <td className="px-4 py-3.5 font-mono text-slate-400 font-semibold" style={{ background: "#fafffe" }}>
+                        {row.prevWater.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                      </td>
+
+                      {/* ── Water: input ── */}
+                      <td className="px-3 py-3" style={{ background: "#f5fef8" }}>
+                        {row.hasBill ? (
+                          <div className="relative">
+                            <input
+                              type="number"
+                              step="any"
+                              placeholder="เลขมิเตอร์น้ำ"
+                              value={row.waterInput}
+                              onChange={(ev) => updateWater(row.roomId, ev.target.value)}
+                              className={`w-full font-mono text-sm px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 transition-all min-w-[130px] ${
+                                w?.invalid
+                                  ? "border-rose-300 bg-rose-50 text-rose-900 focus:ring-rose-400/20"
+                                  : "border-emerald-200/60 bg-white focus:border-emerald-400 focus:ring-emerald-400/15 hover:border-emerald-300"
+                              }`}
+                            />
+                            {w?.invalid && (
+                              <span className="absolute left-1 -bottom-4 text-[9px] text-rose-500 font-bold flex items-center gap-1">
+                                <AlertCircle className="w-2.5 h-2.5" /> น้อยกว่าเดือนก่อน
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/50">
+                            <AlertCircle className="w-3 h-3" /> ยังไม่มีรอบบิล
+                          </span>
+                        )}
+                      </td>
+
+                      {/* ── Water: units ── */}
+                      <td className="px-4 py-3.5 text-center border-r border-slate-100" style={{ background: "#fafffe" }}>
+                        {w && !w.invalid ? (
+                          <span className="inline-flex items-center font-mono font-black text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+                            {w.units.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                          </span>
+                        ) : (
+                          <span className="text-slate-300 font-mono font-bold text-xs">—</span>
+                        )}
+                      </td>
+
+                      {/* ── Total ── */}
+                      <td className="px-5 py-3.5 text-right font-mono font-extrabold text-base">
+                        {hasAnyValue ? (
+                          <span className="text-slate-800">
+                            ฿{totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
                         ) : (
                           <span className="text-slate-300">฿0.00</span>
@@ -385,19 +482,19 @@ export default function MeterEntryPage() {
         )}
       </div>
 
-      {/* Footer Controls */}
+      {/* ── Footer controls ── */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50 border border-slate-200/60 p-6 rounded-3xl">
         <div className="text-center sm:text-left">
           <p className="text-sm font-bold text-slate-800">
             คำนวณและสรุปบิลอัตโนมัติ
           </p>
           <p className="text-xs text-slate-500 mt-1">
-            เมื่อกดบันทึก ข้อมูลยูนิตจะอัปเดตเข้าไปในใบแจ้งหนี้เดือนนี้ของลูกบ้านโดยทันที
+            กดบันทึก — ยูนิตน้ำและไฟจะอัปเดตเข้าใบแจ้งหนี้ของลูกบ้านทันที
           </p>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
           <button
-            onClick={fetchMeterRows}
+            onClick={fetchRows}
             disabled={isLoading || isSaving}
             className="flex items-center justify-center gap-1.5 px-5 py-3 text-sm font-bold rounded-xl border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 transition-colors shadow-sm cursor-pointer disabled:opacity-50"
           >
@@ -405,9 +502,10 @@ export default function MeterEntryPage() {
             รีเฟรช
           </button>
           <button
-            onClick={handleSubmitMeters}
-            disabled={isLoading || isSaving || meterRows.length === 0}
-            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-6 py-3 text-sm font-black text-white bg-slate-800 hover:bg-slate-700 transition-all rounded-xl shadow-lg hover:shadow-xl active:scale-[0.98] cursor-pointer disabled:opacity-50"
+            onClick={handleSave}
+            disabled={isLoading || isSaving || rows.length === 0}
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-6 py-3 text-sm font-black text-white rounded-xl shadow-lg hover:shadow-xl active:scale-[0.98] cursor-pointer disabled:opacity-50 transition-all hover:-translate-y-0.5"
+            style={{ background: "#007aff", boxShadow: "0 8px 18px -6px #007aff" }}
           >
             {isSaving ? (
               <Loader2 className="w-4 h-4 animate-spin" />

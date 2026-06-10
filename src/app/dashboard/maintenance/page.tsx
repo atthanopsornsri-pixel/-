@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import SuccessPopup from "@/components/SuccessPopup";
 import { useSession } from "next-auth/react";
 import { PageHeader } from "@/components/PageHeader";
 import {
@@ -82,6 +83,11 @@ export default function MaintenancePage() {
   const [apptTime, setApptTime] = useState("09:00");
   const [apptNote, setApptNote] = useState("");
   const [isConfirmingAppt, setIsConfirmingAppt] = useState(false);
+
+  // Success popup state
+  const [successPopup, setSuccessPopup] = useState<{ open: boolean; title: string; message?: string }>({
+    open: false, title: "",
+  });
 
   const role = session?.user?.role;
 
@@ -167,9 +173,13 @@ export default function MaintenancePage() {
       });
       if (res.ok) {
         await fetchRequests();
-        if (status === "COMPLETED") toast.success("ซ่อมเสร็จสิ้น! แจ้งผู้เช่าทาง LINE แล้ว ✅");
-        else if (extra?.scheduledAt) toast.success("นัดหมายสำเร็จ! แจ้ง LINE ผู้เช่าแล้ว 📅");
-        else toast.success("อัปเดตสถานะเรียบร้อย");
+        if (status === "COMPLETED") {
+          setSuccessPopup({ open: true, title: "ซ่อมเสร็จสิ้น! ✅", message: "แจ้งเตือนผู้เช่าทาง LINE เรียบร้อยแล้ว" });
+        } else if (extra?.scheduledAt) {
+          setSuccessPopup({ open: true, title: "นัดหมายสำเร็จ! 📅", message: "ส่งแจ้งเตือนทาง LINE ให้ผู้เช่าแล้ว" });
+        } else {
+          toast.success("อัปเดตสถานะเรียบร้อย");
+        }
       } else {
         toast.error("เกิดข้อผิดพลาดในการอัปเดต");
       }
@@ -538,6 +548,15 @@ export default function MaintenancePage() {
           )} {/* end isLoading */}
         </div>
       </div>
+
+      {/* ── Success Popup ── */}
+      <SuccessPopup
+        open={successPopup.open}
+        title={successPopup.title}
+        message={successPopup.message}
+        autoCloseMs={4000}
+        onClose={() => setSuccessPopup({ open: false, title: "" })}
+      />
 
       {/* ── Modal นัดหมายเข้าซ่อม ── */}
       {apptModal.open && (
