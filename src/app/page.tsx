@@ -13,6 +13,9 @@ import {
   FileText,
   Phone,
   Mail,
+  ReceiptText,
+  Calculator,
+  AlarmClock,
 } from "lucide-react";
 import DashboardButton from "@/components/DashboardButton";
 import PricingPlans from "@/components/marketing/PricingPlans";
@@ -59,6 +62,30 @@ const FEATURES = [
     color: "var(--jh-indigo)",
     title: "จัดการสัญญาเช่า",
     body: "ร่างสัญญาเช่า พร้อมพิมพ์เป็นไฟล์ PDF ให้ลูกบ้านเซ็นได้ทันที เก็บประวัติสัญญาได้ตลอดอายุการใช้งาน",
+  },
+];
+
+const PROBLEMS = [
+  {
+    icon: ReceiptText,
+    tint: "var(--jh-green-tint)",
+    color: "var(--jh-green-ink)",
+    title: "ทุกเดือนต้องตามเก็บบิล–ค่าน้ำไฟ",
+    body: "จดมิเตอร์ใส่กระดาษ คิดเลขในเครื่องคิดเลข แล้วพิมพ์บิลทีละห้อง เสียเวลาและพลาดง่าย",
+  },
+  {
+    icon: Calculator,
+    tint: "var(--jh-blue-tint)",
+    color: "var(--jh-blue)",
+    title: "คิดเลขมิเตอร์เองเสี่ยงผิดพลาด",
+    body: "คูณเรตผิดนิดเดียว ยอดบิลก็เพี้ยน ต้องมานั่งทวนซ้ำ ลูกบ้านทักท้วงเรื่องยอดบ่อยครั้ง",
+  },
+  {
+    icon: AlarmClock,
+    tint: "var(--jh-orange-tint)",
+    color: "var(--jh-orange-ink)",
+    title: "ลูกบ้านลืมจ่าย ตามเก็บยาก",
+    body: "ต้องไล่ทักทีละคนในแชต ไม่รู้ใครจ่ายแล้วใครยังค้าง สิ้นเดือนปวดหัวกับการตามเงิน",
   },
 ];
 
@@ -174,15 +201,50 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* ---------------- Problem (เล่าปัญหาก่อนเสนอทางแก้) ---------------- */}
+        <section className="bg-[var(--jh-surface)] px-6 py-24">
+          <div className="mx-auto max-w-[1120px]">
+            <div className="mx-auto mb-14 max-w-[680px] text-center">
+              <h2 className="text-[32px] font-semibold leading-[1.12] tracking-[-0.02em] md:text-[44px]">
+                หมดปัญหาจุกจิกเรื่องหอพัก!
+              </h2>
+              <p className="mt-4 text-[17px] leading-[1.6] text-[var(--jh-ink-secondary)] md:text-[19px]">
+                JadHor พร้อมช่วยเจ้าของหอพักและอพาร์ตเม้นท์ทุกขนาด
+              </p>
+            </div>
+
+            <div className="grid gap-5 md:grid-cols-3">
+              {PROBLEMS.map((p) => (
+                <div
+                  key={p.title}
+                  className="rounded-[var(--jh-radius-xl)] border border-black/[0.06] bg-white p-8 text-center shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
+                >
+                  <div
+                    className="mx-auto mb-5 flex h-[60px] w-[60px] items-center justify-center rounded-[var(--jh-radius-lg)]"
+                    style={{ background: p.tint, color: p.color }}
+                  >
+                    <p.icon className="h-7 w-7" strokeWidth={1.75} />
+                  </div>
+                  <h3 className="mb-2.5 text-[19px] font-semibold tracking-[-0.01em]">{p.title}</h3>
+                  <p className="mx-auto max-w-[280px] text-sm leading-[1.6] text-[var(--jh-ink-secondary)]">{p.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ---------------- Features ---------------- */}
         <section id="features" className="px-6 py-24">
           <div className="mx-auto max-w-[1120px]">
-            <div className="mx-auto mb-14 max-w-[640px] text-center">
+            <div className="mx-auto mb-14 max-w-[680px] text-center">
               <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--jh-blue)]">
                 Core Features
               </span>
               <h2 className="mt-3.5 mb-4 text-[32px] font-semibold leading-[1.15] tracking-[-0.02em] md:text-[40px]">
-                ทุกอย่างที่เจ้าของหอพักต้องการ ในที่เดียว
+                ที่เหลือ JadHor ทำงานให้อัตโนมัติ
+                <span className="mt-1.5 block bg-gradient-to-r from-[var(--jh-blue)] to-[var(--jh-indigo)] bg-clip-text text-transparent">
+                  นั่งรอเฉยๆ ก็ได้
+                </span>
               </h2>
               <p className="text-[17px] leading-[1.6] text-[var(--jh-ink-secondary)]">
                 ช่วยให้คุณประหยัดเวลา ลดความผิดพลาด และเพิ่มความพึงพอใจให้กับลูกบ้าน

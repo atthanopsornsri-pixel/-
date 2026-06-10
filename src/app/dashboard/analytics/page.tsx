@@ -1,6 +1,9 @@
 import { getRevenueAnalytics, getDashboardMetrics } from "@/app/actions/dashboard";
 import { TrendingUp, TrendingDown, Minus, BarChart3, Wallet, Calendar, Sparkles } from "lucide-react";
 
+// หน้านี้ต้องอ่าน session (headers) เสมอ — ปิด static prerender
+export const dynamic = "force-dynamic";
+
 export default async function AnalyticsPage() {
   const [analyticsResult, metricsResult] = await Promise.all([
     getRevenueAnalytics(),
