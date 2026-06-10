@@ -149,7 +149,10 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
     }
 
     // 5. Update the Database
-    await secureDb.bill.update({
+    //    NOTE: ใช้ base prisma ตรงๆ เพราะ TENANT RLS policy บล็อก `update` บน bill
+    //    (อนุญาตเฉพาะ read) — ownership ถูก verify แล้วตอน findUnique ผ่าน secureDb
+    //    ข้างบน (ถ้าบิลไม่ใช่ของห้องผู้เช่า bill จะเป็น null และ return error ไปก่อน)
+    await prisma.bill.update({
       where: { id: billId },
       data: {
         status: newStatus,
