@@ -7,8 +7,8 @@ import { Check, Sparkles } from "lucide-react";
 type Plan = {
   name: string;
   desc: string;
-  monthly: string;
-  yearly: string;
+  monthlyNum: number;
+  yearlyNum: number;
   features: string[];
   cta: string;
   href: string;
@@ -19,8 +19,8 @@ const PLANS: Plan[] = [
   {
     name: "Starter",
     desc: "เริ่มต้นอย่างโปร",
-    monthly: "฿199",
-    yearly: "฿1,990",
+    monthlyNum: 199,
+    yearlyNum: 1990,
     features: ["จัดการได้สูงสุด 30 ห้อง", "ระบบออกบิล & ส่ง LINE", "ระบบแจ้งซ่อม & พัสดุ"],
     cta: "ทดลองใช้ฟรี 14 วัน",
     href: "/register",
@@ -28,8 +28,8 @@ const PLANS: Plan[] = [
   {
     name: "Growth",
     desc: "สำหรับอพาร์ตเมนต์ที่กำลังขยาย",
-    monthly: "฿599",
-    yearly: "฿5,990",
+    monthlyNum: 599,
+    yearlyNum: 5990,
     features: ["จัดการได้สูงสุด 100 ห้อง", "ฟีเจอร์ทั้งหมดในแพ็กเกจ Starter", "ระบบตรวจสลิปอัตโนมัติ"],
     cta: "ทดลองใช้ฟรี 14 วัน",
     href: "/register",
@@ -38,13 +38,16 @@ const PLANS: Plan[] = [
   {
     name: "Enterprise",
     desc: "เสือนอนกิน โปรเจกต์ใหญ่",
-    monthly: "฿1,299",
-    yearly: "฿12,990",
+    monthlyNum: 1299,
+    yearlyNum: 12990,
     features: ["ไม่จำกัดจำนวนห้องพัก", "ฟีเจอร์ทั้งหมดในแพ็กเกจ Growth", "บริการ Support พิเศษ 24/7"],
     cta: "ติดต่อแอดมิน",
     href: "/register",
   },
 ];
+
+/** format เป็น ฿x,xxx */
+const baht = (n: number) => `฿${n.toLocaleString()}`;
 
 export default function PricingPlans() {
   const [mode, setMode] = useState<"monthly" | "yearly">("monthly");
@@ -117,8 +120,9 @@ export default function PricingPlans() {
       {/* Plans */}
       <div className="mt-12 grid items-stretch gap-5 md:grid-cols-3">
         {PLANS.map((plan) => {
-          const price = shownMode === "yearly" ? plan.yearly : plan.monthly;
-          const per = shownMode === "yearly" ? "/ ปี" : "/ เดือน";
+          const isYearly = shownMode === "yearly";
+          // รายปี → แสดงราคาเฉลี่ยต่อเดือน (จ่าย 10 เดือน ได้ใช้ 12 เดือน)
+          const bigPrice = isYearly ? Math.round(plan.yearlyNum / 12) : plan.monthlyNum;
           return (
             <div
               key={plan.name}
@@ -142,23 +146,43 @@ export default function PricingPlans() {
                 {plan.desc}
               </div>
 
-              <div className="mt-5 flex items-baseline gap-2">
-                <span
-                  className="text-[44px] font-semibold tracking-[-0.02em] tabular-nums leading-none transition-all duration-300"
-                  style={{
-                    transform: swap ? "translateY(10px)" : "translateY(0)",
-                    opacity: swap ? 0 : 1,
-                  }}
-                >
-                  {price}
-                </span>
-                <span
-                  className={`text-sm font-medium ${
+              <div
+                className="mt-5 transition-all duration-300"
+                style={{
+                  transform: swap ? "translateY(10px)" : "translateY(0)",
+                  opacity: swap ? 0 : 1,
+                }}
+              >
+                <div className="flex items-baseline gap-2">
+                  {/* ราคาเดิมขีดฆ่า (เฉพาะรายปี) */}
+                  {isYearly && (
+                    <span
+                      className={`text-[17px] font-medium tabular-nums line-through ${
+                        plan.featured ? "text-white/45" : "text-[var(--jh-ink-tertiary)]"
+                      }`}
+                    >
+                      {baht(plan.monthlyNum)}
+                    </span>
+                  )}
+                  <span className="text-[44px] font-semibold tracking-[-0.02em] tabular-nums leading-none">
+                    {baht(bigPrice)}
+                  </span>
+                  <span
+                    className={`text-sm font-medium ${
+                      plan.featured ? "text-white/70" : "text-[var(--jh-ink-tertiary)]"
+                    }`}
+                  >
+                    / เดือน
+                  </span>
+                </div>
+                {/* บรรทัดราคาเต็มต่อปี (เฉพาะรายปี) */}
+                <div
+                  className={`mt-1.5 text-[13px] font-medium ${
                     plan.featured ? "text-white/70" : "text-[var(--jh-ink-tertiary)]"
                   }`}
                 >
-                  {per}
-                </span>
+                  {isYearly ? `ชำระรายปี ${baht(plan.yearlyNum)} / ปี` : "ชำระแบบรายเดือน"}
+                </div>
               </div>
 
               <ul className="my-6 flex flex-1 flex-col gap-3.5">
