@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import DashboardButton from "@/components/DashboardButton";
 import PricingPlans from "@/components/marketing/PricingPlans";
+import FAQ from "@/components/marketing/FAQ";
 
 const FEATURES = [
   {
@@ -129,6 +130,7 @@ export default async function Home() {
             <a href="#features" className="hidden transition-colors hover:text-[var(--jh-ink)] sm:inline">ฟีเจอร์</a>
             <a href="#how-it-works" className="hidden transition-colors hover:text-[var(--jh-ink)] sm:inline">วิธีใช้งาน</a>
             <a href="#pricing" className="hidden transition-colors hover:text-[var(--jh-ink)] sm:inline">แพ็กเกจ</a>
+            <a href="#faq" className="hidden transition-colors hover:text-[var(--jh-ink)] sm:inline">คำถามที่พบบ่อย</a>
             {session ? (
               <DashboardButton className="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-full bg-[var(--jh-gray-900)] px-5 text-sm font-semibold text-white transition-transform hover:bg-[var(--jh-gray-800)] active:scale-[0.97]" />
             ) : (
@@ -389,6 +391,13 @@ export default async function Home() {
               </p>
             </div>
             <PricingPlans />
+          </div>
+        </section>
+
+        {/* ---------------- FAQ ---------------- */}
+        <section id="faq" className="px-6 py-24">
+          <div className="mx-auto max-w-[1120px]">
+            <FAQ />
           </div>
         </section>
 

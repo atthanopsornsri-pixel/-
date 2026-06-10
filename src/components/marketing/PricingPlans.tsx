@@ -110,7 +110,7 @@ export default function PricingPlans() {
           }`}
         >
           <Sparkles className="h-4 w-4" />
-          ประหยัด 2 เดือน
+          ประหยัด 17%
         </span>
       </div>
 
