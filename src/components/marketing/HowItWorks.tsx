@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import Image from "next/image";
 
 const STEPS = [
   {
@@ -10,9 +9,6 @@ const STEPS = [
     gradTo: "#e3f0ff",
     title: "ลงทะเบียน & สร้างหอพัก",
     body: "สร้างบัญชีเจ้าของ ระบุจำนวนห้องพัก ตั้งค่าราคาและสิ่งอำนวยความสะดวก พร้อมตั้งค่าอัตราค่าน้ำ–ค่าไฟ",
-    mascot: "/images/mascot/attract.png",
-    mascotW: 462,
-    mascotH: 362,
   },
   {
     num: 2,
@@ -21,9 +17,6 @@ const STEPS = [
     gradTo: "#e0f7e9",
     title: "เพิ่มผู้เช่าเข้าห้อง",
     body: "ลงทะเบียนผู้เช่าใหม่ ออกสัญญาเช่า และเชิญผู้เช่าเข้าสู่ระบบ เพื่อรับบิลและชำระเงินออนไลน์ได้ทันที",
-    mascot: "/images/mascot/record.png",
-    mascotW: 935,
-    mascotH: 780,
   },
   {
     num: 3,
@@ -32,9 +25,6 @@ const STEPS = [
     gradTo: "#ffeed9",
     title: "จดมิเตอร์ ออกบิลอัตโนมัติ",
     body: "สิ้นเดือนกรอกแค่มิเตอร์น้ำ–ไฟ ระบบคำนวณยอด สร้างใบแจ้งหนี้ และส่งเข้า LINE ลูกบ้านทันที",
-    mascot: "/images/mascot/invoice.png",
-    mascotW: 924,
-    mascotH: 808,
   },
   {
     num: 4,
@@ -43,9 +33,6 @@ const STEPS = [
     gradTo: "#e8e7fb",
     title: "รับเงิน & ตรวจสลิปออนไลน์",
     body: "ลูกบ้านสแกน QR PromptPay จ่าย แนบสลิปกลับมา ระบบตรวจสอบและอัปเดตสถานะให้อัตโนมัติ",
-    mascot: "/images/mascot/payment.png",
-    mascotW: 935,
-    mascotH: 780,
   },
 ];
 
@@ -71,45 +58,58 @@ export default function HowItWorks() {
 
         {/* 2-col layout */}
         <div className="grid items-center gap-12 md:grid-cols-2 md:gap-16">
-          {/* ── Left: visual card ── */}
-          <div className="relative mx-auto w-full max-w-[440px]">
-            {/* Tonal card background */}
-            <div
-              className="relative overflow-hidden rounded-[var(--jh-radius-2xl)] border border-white/60 shadow-[var(--jh-shadow-card)] transition-all duration-500"
-              style={{
-                background: `linear-gradient(150deg, ${step.gradFrom} 0%, ${step.gradTo} 100%)`,
-              }}
-            >
-              {/* Dashboard mockup */}
-              <div className="overflow-hidden rounded-[var(--jh-radius-xl)] m-6 border border-black/[0.06] shadow-[var(--jh-shadow-md)]">
-                <Image
-                  src="/images/dashboard-mockup.png"
-                  alt="JadHor OS Dashboard"
-                  width={1400}
-                  height={900}
-                  className="block h-auto w-full"
-                />
+
+          {/* ── Left: LINE phone mockup ── */}
+          <div className="flex justify-center">
+            <div className="relative">
+              {/* Step number badge */}
+              <div
+                className="absolute -right-4 -top-4 z-10 flex h-14 w-14 items-center justify-center rounded-full text-xl font-bold text-white transition-all duration-300"
+                style={{ background: step.color, boxShadow: `0 10px 24px -6px ${step.color}` }}
+              >
+                {step.num}
               </div>
 
-              {/* Mascot floating bottom-right */}
-              <div className="relative h-36 w-full">
-                <Image
-                  key={step.mascot}
-                  src={step.mascot}
-                  alt={step.title}
-                  width={step.mascotW}
-                  height={step.mascotH}
-                  className="jh-float-soft pointer-events-none absolute bottom-0 right-4 w-36 drop-shadow-[0_16px_30px_rgba(0,0,0,0.18)]"
-                />
+              {/* Tonal card wrapping the phone */}
+              <div
+                className="rounded-[var(--jh-radius-2xl)] border border-white/60 p-8 shadow-[var(--jh-shadow-card)] transition-all duration-500"
+                style={{ background: `linear-gradient(150deg, ${step.gradFrom} 0%, ${step.gradTo} 100%)` }}
+              >
+                {/* CSS Phone frame */}
+                <div className="w-[220px]">
+                  <div className="rounded-[38px] border-[9px] border-[var(--jh-gray-900)] bg-[var(--jh-gray-900)] shadow-[var(--jh-shadow-lg)]">
+                    <div className="overflow-hidden rounded-[29px] bg-[#8ab4e8]">
+                      {/* LINE header */}
+                      <div className="flex items-center gap-2 bg-[var(--jh-gray-900)] px-3.5 py-3 text-white">
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/15 text-[13px]">🏠</div>
+                        <div className="leading-tight">
+                          <div className="text-[12px] font-semibold">JadHor แจ้งบิล</div>
+                          <div className="text-[9px] text-white/60">ออนไลน์</div>
+                        </div>
+                      </div>
+                      {/* Chat body */}
+                      <div className="space-y-2 px-2.5 py-3.5">
+                        <div className="max-w-[90%] rounded-2xl rounded-tl-md bg-white px-3 py-2.5 text-[10px] leading-[1.6] text-[var(--jh-ink)] shadow-sm">
+                          <div className="font-bold">🧾 ใบแจ้งหนี้ค่าเช่า</div>
+                          <div className="text-[var(--jh-ink-secondary)]">สวัสดีคุณลัดดาวัลย์ 🙏</div>
+                          <div className="my-1.5 border-t border-dashed border-black/10" />
+                          <div>🏠 ห้อง 001 · 6/2569</div>
+                          <div className="my-1.5 border-t border-dashed border-black/10" />
+                          <div>• ค่าเช่า: ฿3,500</div>
+                          <div>• ค่าน้ำ: ฿612</div>
+                          <div>• ค่าไฟ: ฿1,049</div>
+                          <div className="my-1.5 border-t border-dashed border-black/10" />
+                          <div className="font-bold">💰 ยอดรวม: ฿5,161</div>
+                          <div className="text-[var(--jh-ink-secondary)]">📅 ครบกำหนด: 5 ก.ค.</div>
+                        </div>
+                        <div className="max-w-[90%] rounded-2xl rounded-tl-md px-3 py-2 text-[10px] font-semibold text-white shadow-sm" style={{ background: step.color }}>
+                          👉 แตะเพื่อชำระเงิน
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-
-            {/* Step number badge overlay */}
-            <div
-              className="absolute -right-4 -top-4 flex h-14 w-14 items-center justify-center rounded-full text-xl font-bold text-white shadow-[0_10px_24px_-6px_currentColor] transition-all duration-300"
-              style={{ background: step.color, boxShadow: `0 10px 24px -6px ${step.color}` }}
-            >
-              {step.num}
             </div>
           </div>
 
@@ -153,7 +153,6 @@ export default function HowItWorks() {
                     >
                       {s.title}
                     </div>
-                    {/* Expandable description */}
                     <div
                       className="overflow-hidden transition-all duration-300 ease-out"
                       style={{ maxHeight: active === i ? "80px" : "0px", opacity: active === i ? 1 : 0 }}
@@ -164,7 +163,7 @@ export default function HowItWorks() {
                     </div>
                   </div>
 
-                  {/* Arrow indicator */}
+                  {/* Arrow */}
                   <svg
                     className="h-4 w-4 shrink-0 transition-all duration-200"
                     style={{
