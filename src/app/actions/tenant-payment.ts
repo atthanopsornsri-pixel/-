@@ -69,45 +69,19 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
       return { success: false, error: "บิลนี้อยู่ระหว่างรอเจ้าของหอตรวจสอบสลิปอยู่แล้ว — กรุณารอการอนุมัติ" };
     }
 
-    // 2. Prepare file for Supabase Upload
+    // 2. Prepare file buffer
     const buffer = Buffer.from(await file.arrayBuffer());
 
-    // ── ตรวจสลิปอัตโนมัติ (ถ้าตั้งค่า provider ไว้) ──
-    // NOTE: verifySlip จะ catch ทุก network/timeout error และ fallback { enabled: false } เสมอ
-    //       จึงปลอดภัยที่จะ await ตรงนี้
-    const verification = await verifySlip({
-      imageBuffer: buffer,
-      contentType: file.type || "image/jpeg",
-      expectedAmount: bill.totalAmount,
-    });
-
-    // ── กรณี SlipOK ตอบ duplicate ──
-    // ความหมาย: สลิปนี้เคยถูกส่งไปยัง SlipOK แล้ว แต่อาจล้มเหลวที่ฝั่งเรา (server error ครั้งแรก)
-    // แนวทาง: อนุญาตให้ผ่าน แต่ force ให้เป็น PENDING (manual review โดยเจ้าของหอ)
-    // ห้าม block ผู้เช่า เพราะสลิปจริงและการโอนเงินเกิดขึ้นแล้ว
-    const isDuplicateFromSlipOK = verification.duplicate === true;
-
-    // ถ้า SlipOK เปิดใช้งานและตรวจว่ายอดไม่ตรง → แจ้งผู้เช่าทันที ไม่เก็บสลิป
-    if (verification.enabled && verification.amountMismatch) {
-      const slipAmt = verification.amount;
-      const amtStr = slipAmt != null ? `฿${slipAmt.toLocaleString()}` : "ไม่ทราบ";
-      return {
-        success: false,
-        error: `ยอดเงินในสลิป (${amtStr}) ไม่ตรงกับยอดบิล (฿${bill.totalAmount.toLocaleString()}) — กรุณาตรวจสอบและโอนให้ครบจำนวน`,
-      };
-    }
-
-    // Generate secure filename using Date to prevent caching issues and CUID/BillID for uniqueness
+    // Generate secure filename
     const fileExtension = file.name.split('.').pop() || 'jpg';
     const filename = `slips/${billId}-${Date.now()}.${fileExtension}`;
 
     // 3. เก็บรูปสลิป — รองรับ 2 แบบ:
-    //    (ก) ถ้าตั้งค่า Supabase Storage → อัปโหลดเป็นไฟล์ (เบากว่า, แนะนำ)
-    //    (ข) ถ้าไม่ได้ตั้งค่า → fallback เก็บเป็น base64 ในฐานข้อมูลเลย (ใช้งานได้ทันที)
+    //    (ก) ถ้าตั้งค่า Supabase Storage → อัปโหลดเป็นไฟล์
+    //    (ข) ถ้าไม่ได้ตั้งค่า → fallback เก็บเป็น base64 ในฐานข้อมูล
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    const base64DataUrl = () =>
-      `data:${file.type || "image/jpeg"};base64,${buffer.toString("base64")}`;
+    const base64DataUrl = `data:${file.type || "image/jpeg"};base64,${buffer.toString("base64")}`;
 
     let slipUrlToStore: string;
     if (supabaseUrl && supabaseServiceKey) {
@@ -119,110 +93,126 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
           upsert: true,
         });
       if (uploadError) {
-        // อัปโหลดไม่สำเร็จ → fallback base64 แทนการ fail ทั้ง flow
         console.error("Supabase Upload Error (falling back to base64):", uploadError);
-        slipUrlToStore = base64DataUrl();
+        slipUrlToStore = base64DataUrl;
       } else {
-        slipUrlToStore = filename; // เก็บ path ไว้ให้ตัวสร้าง signed URL
+        slipUrlToStore = filename;
       }
     } else {
-      // ไม่ได้ตั้งค่า Supabase → เก็บ base64 ในฐานข้อมูล
-      slipUrlToStore = base64DataUrl();
+      slipUrlToStore = base64DataUrl;
     }
 
-    // 4. ตัดสินสถานะบิลตามผลการตรวจสลิป
-    let newStatus: "PENDING" | "PAID" | "PARTIAL" = "PENDING";
-    let paidAmount = bill.paidAmount;
-    let autoVerified = false;
-
-    // ถ้า SlipOK ตอบ duplicate → force PENDING (manual review) ไม่ต้องประมวลผลต่อ
-    const skipAutoVerify = isDuplicateFromSlipOK;
-
-    if (!skipAutoVerify && verification.enabled && verification.verified) {
-      const slipAmount = verification.amount ?? 0;
-      const receiverOk = receiverMatchesPromptPay(
-        verification.receiverAccount,
-        bill.room?.property?.promptPayNo
-      );
-
-      if (!receiverOk) {
-        newStatus = "PENDING";
-      } else if (slipAmount >= bill.totalAmount) {
-        newStatus = "PAID";
-        paidAmount = bill.totalAmount;
-        autoVerified = true;
-      } else if (slipAmount > 0 && slipAmount < bill.totalAmount) {
-        newStatus = "PARTIAL";
-        paidAmount = slipAmount;
-        autoVerified = true;
-      }
-    }
-
-    // 5. Update the Database
-    //    NOTE: ใช้ base prisma ตรงๆ เพราะ TENANT RLS policy บล็อก `update` บน bill
-    //    (อนุญาตเฉพาะ read) — ownership ถูก verify แล้วตอน findUnique ผ่าน secureDb
-    //    ข้างบน (ถ้าบิลไม่ใช่ของห้องผู้เช่า bill จะเป็น null และ return error ไปก่อน)
+    // 4. บันทึก DB เป็น PENDING ทันที (fast path — ก่อน SlipOK verify)
+    //    เพื่อป้องกัน Vercel 10s timeout ทำให้ผู้เช่าเห็น error
+    //    SlipOK จะถูกเรียกแบบ non-blocking หลังจาก return สำเร็จ
     await prisma.bill.update({
       where: { id: billId },
       data: {
-        status: newStatus,
-        slipUrl: slipUrlToStore, // path (Supabase) หรือ base64 data URL (fallback)
-        paidAmount,
+        status: "PENDING",
+        slipUrl: slipUrlToStore,
+        paidAmount: bill.paidAmount,
         paymentDate: new Date(),
       }
     });
 
-    // Revalidate the dashboard so the UI instantly hides the upload form
     revalidatePath("/tenant/dashboard");
     revalidatePath("/dashboard/my-bills");
 
-    // ──────────────────────────────────────────────────────────────────────
-    // แจ้ง LINE เจ้าของเมื่อสลิปยังรอตรวจสอบ (PENDING)
-    // — เพื่อให้เจ้าของรู้ทันทีว่ามีสลิปใหม่รอการอนุมัติ
-    // ──────────────────────────────────────────────────────────────────────
-    if (newStatus === "PENDING") {
-      const ownerToken = bill.room?.property?.owner?.lineChannelAccessToken;
-      const ownerLineId = bill.room?.property?.owner?.lineUserId;
-      if (ownerToken && ownerLineId) {
-        const roomNumber = bill.room?.number || "-";
-        const appUrl =
-          process.env.NEXTAUTH_URL?.replace(/\/$/, "") ||
-          "https://jadhor.vercel.app";
-        const noteLines: string[] = [];
-        if (verification.enabled && !verification.verified) {
-          noteLines.push(`⚠️ หมายเหตุ: ตรวจสลิปอัตโนมัติไม่ผ่าน — รอตรวจด้วยตนเอง`);
-        }
-        const ownerMsg = [
-          `📬 มีสลิปรอการอนุมัติ!`,
-          `━━━━━━━━━━━━━━━━━━━━`,
-          `🚪 ห้อง ${roomNumber}`,
-          `💰 ยอดบิล: ฿${bill.totalAmount.toLocaleString()}`,
-          ...noteLines,
-          `━━━━━━━━━━━━━━━━━━━━`,
-          `👉 ตรวจสอบและอนุมัติ:`,
-          `${appUrl}/dashboard/owner/approvals`,
-        ].join("\n");
-        sendLineOAMessage(ownerLineId, ownerMsg, ownerToken).catch((err) =>
-          console.error("[LINE] owner slip notify error:", err)
-        );
-      }
+    // 5. แจ้ง LINE เจ้าของทันทีว่ามีสลิปรอตรวจ
+    const ownerToken = bill.room?.property?.owner?.lineChannelAccessToken;
+    const ownerLineId = bill.room?.property?.owner?.lineUserId;
+    if (ownerToken && ownerLineId) {
+      const roomNumber = bill.room?.number || "-";
+      const appUrl =
+        process.env.NEXTAUTH_URL?.replace(/\/$/, "") ||
+        "https://jadhor.vercel.app";
+      const ownerMsg = [
+        `📬 มีสลิปรอการอนุมัติ!`,
+        `━━━━━━━━━━━━━━━━━━━━`,
+        `🚪 ห้อง ${roomNumber}`,
+        `💰 ยอดบิล: ฿${bill.totalAmount.toLocaleString()}`,
+        `━━━━━━━━━━━━━━━━━━━━`,
+        `👉 ตรวจสอบและอนุมัติ:`,
+        `${appUrl}/dashboard/owner/approvals`,
+      ].join("\n");
+      sendLineOAMessage(ownerLineId, ownerMsg, ownerToken).catch((err) =>
+        console.error("[LINE] owner slip notify error:", err)
+      );
     }
 
-    if (autoVerified && newStatus === "PAID") {
-      return { success: true, message: "✅ ระบบตรวจสอบสลิปอัตโนมัติแล้ว — ชำระเงินสำเร็จ!" };
-    }
-    if (autoVerified && newStatus === "PARTIAL") {
-      return { success: true, message: "⚠️ รับยอดชำระบางส่วนแล้ว — โปรดติดต่อเจ้าของหอเรื่องยอดคงเหลือ" };
-    }
+    // 6. SlipOK verification — ทำแบบ non-blocking หลัง return
+    //    ถ้า SlipOK ตรวจผ่าน → อัปเดต status เป็น PAID/PARTIAL อัตโนมัติ
+    //    ถ้า SlipOK ล้มเหลว / timeout → bill ยังเป็น PENDING (เจ้าของตรวจเอง)
+    verifyAndUpgradeStatus({
+      billId,
+      buffer,
+      contentType: file.type || "image/jpeg",
+      totalAmount: bill.totalAmount,
+      promptPayNo: bill.room?.property?.promptPayNo ?? undefined,
+      slipUrl: slipUrlToStore,
+    }).catch((err) => console.error("[SlipOK async verify] error:", err));
+
     return { success: true, message: "📨 ส่งสลิปสำเร็จ! เจ้าของหอได้รับแจ้ง LINE แล้ว — กรุณารอการอนุมัติ" };
 
   } catch (error: any) {
     console.error("Submit Payment Slip Error:", error);
-    // แปล error เป็นภาษาไทยที่ผู้เช่าเข้าใจได้
     const msg = error?.message || "";
     if (msg.includes("ECONNREFUSED") || msg.includes("ENOTFOUND") || msg.includes("fetch")) {
       return { success: false, error: "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ชั่วคราว — กรุณาลองใหม่อีกครั้ง" };
     }
     return { success: false, error: "เกิดข้อผิดพลาดภายในระบบ — กรุณาลองใหม่อีกครั้ง หรือติดต่อเจ้าของหอ" };
+  }
+}
+
+// ── Non-blocking SlipOK verification ───────────────────────────────────────
+// เรียกหลังจาก return PENDING แล้ว เพื่อไม่ให้ blocking Vercel 10s timeout
+async function verifyAndUpgradeStatus(opts: {
+  billId: string;
+  buffer: Buffer;
+  contentType: string;
+  totalAmount: number;
+  promptPayNo?: string;
+  slipUrl: string;
+}) {
+  try {
+    const verification = await verifySlip({
+      imageBuffer: opts.buffer,
+      contentType: opts.contentType,
+      expectedAmount: opts.totalAmount,
+    });
+
+    // SlipOK ไม่ได้เปิดใช้งาน หรือตรวจไม่สำเร็จ → คงไว้เป็น PENDING
+    if (!verification.enabled || !verification.verified) return;
+
+    // SlipOK ตรวจผ่าน → คำนวณ status ใหม่
+    const slipAmount = verification.amount ?? 0;
+    const receiverOk = receiverMatchesPromptPay(
+      verification.receiverAccount,
+      opts.promptPayNo
+    );
+
+    let newStatus: "PAID" | "PARTIAL" | null = null;
+    let paidAmount: number | undefined;
+
+    if (receiverOk && slipAmount >= opts.totalAmount) {
+      newStatus = "PAID";
+      paidAmount = opts.totalAmount;
+    } else if (receiverOk && slipAmount > 0 && slipAmount < opts.totalAmount) {
+      newStatus = "PARTIAL";
+      paidAmount = slipAmount;
+    }
+
+    if (!newStatus) return; // ยังต้องให้เจ้าของตรวจเอง
+
+    await prisma.bill.update({
+      where: { id: opts.billId },
+      data: { status: newStatus, paidAmount },
+    });
+
+    revalidatePath("/dashboard/my-bills");
+    revalidatePath("/dashboard/owner/approvals");
+    console.log(`[SlipOK] Bill ${opts.billId} auto-upgraded to ${newStatus}`);
+  } catch (err) {
+    console.error("[SlipOK async verify] failed:", err);
   }
 }
