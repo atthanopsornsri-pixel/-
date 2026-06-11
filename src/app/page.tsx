@@ -262,65 +262,48 @@ export default async function Home() {
         <HowItWorks />
 
         {/* ---------------- LINE Mockup (เพียงแค่..รับบิลผ่าน LINE) ---------------- */}
-        <section className="overflow-hidden px-6 py-24">
+        <section className="overflow-hidden px-6 py-24 bg-white">
           <div className="mx-auto grid max-w-[1120px] items-center gap-14 md:grid-cols-2">
-            {/* Phone mockup (CSS only) */}
-            <div className="flex justify-center md:justify-start">
-              <div className="relative w-[290px]">
+            {/* Phone mockup image (dynamic glow) */}
+            <div className="flex justify-center">
+              <div className="relative w-full max-w-[320px]">
                 {/* glow behind phone */}
                 <div
                   aria-hidden
-                  className="pointer-events-none absolute -inset-6 -z-10 opacity-60 blur-[50px]"
+                  className="pointer-events-none absolute -inset-6 -z-10 opacity-70 blur-[50px]"
                   style={{
                     background:
-                      "radial-gradient(50% 50% at 50% 35%, rgba(0,122,255,.30), transparent 70%), radial-gradient(45% 45% at 60% 80%, rgba(52,199,89,.28), transparent 72%)",
+                      "radial-gradient(50% 50% at 50% 35%, rgba(0,122,255,.32), transparent 70%), radial-gradient(45% 45% at 60% 80%, rgba(52,199,89,.28), transparent 72%)",
                   }}
                 />
-                {/* phone frame */}
-                <div className="rounded-[44px] border-[10px] border-[var(--jh-gray-900)] bg-[var(--jh-gray-900)] shadow-[var(--jh-shadow-lg)]">
-                  <div className="overflow-hidden rounded-[34px] bg-[#8ab4e8]">
-                    {/* LINE chat header */}
-                    <div className="flex items-center gap-2.5 bg-[var(--jh-gray-900)] px-4 py-3 text-white">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-[15px]">🏠</div>
-                      <div className="leading-tight">
-                        <div className="text-[13px] font-semibold">JadHor แจ้งบิล</div>
-                        <div className="text-[10px] text-white/60">ออนไลน์</div>
-                      </div>
-                    </div>
-                    {/* chat body */}
-                    <div className="space-y-2 px-3 py-4">
-                      <div className="ml-1 max-w-[88%] rounded-2xl rounded-tl-md bg-white px-3.5 py-3 text-[11px] leading-[1.55] text-[var(--jh-ink)] shadow-sm">
-                        <div className="font-bold">🧾 ใบแจ้งหนี้ค่าเช่า — อนา เพลส</div>
-                        <div className="text-[var(--jh-ink-secondary)]">สวัสดีคุณลัดดาวัลย์ 🙏</div>
-                        <div className="my-1.5 border-t border-dashed border-black/10" />
-                        <div>🏠 อนา เพลส</div>
-                        <div>🚪 ห้อง 001 · ประจำเดือน 6/2569</div>
-                        <div className="my-1.5 border-t border-dashed border-black/10" />
-                        <div>• ค่าเช่าห้อง: ฿3,500</div>
-                        <div>• ค่าน้ำ (36 หน่วย): ฿612</div>
-                        <div>• ค่าไฟ (149.9 หน่วย): ฿1,049.3</div>
-                        <div className="my-1.5 border-t border-dashed border-black/10" />
-                        <div className="font-bold text-[var(--jh-ink)]">💰 ยอดรวม: ฿5,161.3</div>
-                        <div className="text-[var(--jh-ink-secondary)]">📅 ครบกำหนด: 5 ก.ค. 2569</div>
-                      </div>
-                      <div className="ml-1 max-w-[88%] rounded-2xl rounded-tl-md bg-[var(--jh-blue)] px-3.5 py-2.5 text-[11px] font-semibold text-white shadow-sm">
-                        👉 แตะเพื่อชำระเงินและแนบสลิป
-                      </div>
-                    </div>
-                  </div>
+                <div className="relative group">
+                  <Image
+                    src="/images/tenant_bill_preview.png"
+                    alt="ตัวอย่างการรับบิลผ่าน LINE ของ JadHor OS"
+                    width={500}
+                    height={1000}
+                    className="w-full h-auto rounded-[36px] shadow-[0_20px_50px_rgba(0,0,0,0.12)] border border-slate-100 transform group-hover:-translate-y-1.5 transition-transform duration-500 ease-out"
+                  />
+                  {/* Decorative float badge */}
+                  <span className="absolute -top-3 -right-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500 text-white font-bold shadow-lg animate-bounce">
+                    ✓
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* Text + checklist */}
             <div>
-              <h2 className="text-[32px] font-semibold leading-[1.12] tracking-[-0.02em] md:text-[42px]">
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--jh-green-ink)]">
+                Tenant Experience
+              </span>
+              <h2 className="mt-3.5 text-[32px] font-semibold leading-[1.12] tracking-[-0.02em] md:text-[42px]">
                 เพียงแค่..ออกบิล
                 <br />
                 ที่เหลือส่งเข้า LINE ให้เอง
               </h2>
               <p className="mt-4 text-[17px] leading-[1.6] text-[var(--jh-ink-secondary)]">
-                ลูกบ้านไม่ต้องโหลดแอปอะไรเพิ่ม รับทุกอย่างผ่าน LINE ที่ใช้อยู่ทุกวัน
+                ลูกบ้านไม่ต้องโหลดแอปอะไรเพิ่ม รับทุกอย่างผ่านแอปพลิเคชัน LINE ที่ใช้ส่งข้อความอยู่ทุกวัน
               </p>
               <ul className="mt-7 space-y-3.5">
                 {LINE_BENEFITS.map((b) => (
@@ -331,6 +314,78 @@ export default async function Home() {
                 ))}
               </ul>
             </div>
+          </div>
+        </section>
+
+        {/* ---------------- Verification Mockup (ระบบตรวจสอบสลิปอัตโนมัติ) ---------------- */}
+        <section className="overflow-hidden px-6 py-24 bg-[var(--jh-surface)]">
+          <div className="mx-auto grid max-w-[1120px] items-center gap-14 md:grid-cols-2">
+            
+            {/* Text details (Order is swapped on desktop so image is on the right) */}
+            <div className="order-2 md:order-1">
+              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--jh-blue)]">
+                Auto Verification
+              </span>
+              <h2 className="mt-3.5 text-[32px] font-semibold leading-[1.12] tracking-[-0.02em] md:text-[42px]">
+                ตรวจสอบความถูกต้อง
+                <br />
+                และอนุมัติบิลในเสี้ยววินาที
+              </h2>
+              <p className="mt-4 text-[17px] leading-[1.6] text-[var(--jh-ink-secondary)]">
+                เมื่อลูกบ้านส่งสลิปโอนเงิน ระบบจะประมวลผลเช็กยอดเงินจาก QR Code กับธนาคารผ่าน API SlipOK ทันที ตรวจจับสลิปซ้ำ สลิปปลอม หรือยอดเงินไม่ตรง
+              </p>
+              <ul className="mt-7 space-y-3.5">
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="mt-0.5 h-[22px] w-[22px] shrink-0 text-[var(--jh-blue)]" strokeWidth={2} />
+                  <span className="text-[15px] leading-[1.5] text-[var(--jh-ink)]">อ่านรายละเอียด ยอดเงิน ประเภทสลิป จากธนาคารจริง</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="mt-0.5 h-[22px] w-[22px] shrink-0 text-[var(--jh-blue)]" strokeWidth={2} />
+                  <span className="text-[15px] leading-[1.5] text-[var(--jh-ink)]">ระบบตรวจสอบและปิดยอดชำระแบบเรียลไทม์ไม่ต้องรอคุณกด</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <CheckCircle2 className="mt-0.5 h-[22px] w-[22px] shrink-0 text-[var(--jh-blue)]" strokeWidth={2} />
+                  <span className="text-[15px] leading-[1.5] text-[var(--jh-ink)]">แจ้งเตือนแอดมิน/เจ้าของหอพักทันทีเมื่อมียอดโอนเข้ามาใหม่</span>
+                </li>
+              </ul>
+              <div className="mt-8">
+                <Link
+                  href="/register"
+                  className="inline-flex h-[48px] items-center justify-center rounded-full bg-[#34c759] px-[26px] text-base font-bold text-white shadow-[0_8px_18px_-6px_#34c759] transition-transform active:scale-[0.97] hover:-translate-y-0.5"
+                >
+                  เริ่มใช้งานฟรี!
+                </Link>
+              </div>
+            </div>
+
+            {/* Phone mockup image showing slip OK verify */}
+            <div className="order-1 md:order-2 flex justify-center">
+              <div className="relative w-full max-w-[320px]">
+                {/* glow behind phone */}
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute -inset-6 -z-10 opacity-70 blur-[50px]"
+                  style={{
+                    background:
+                      "radial-gradient(50% 50% at 50% 35%, rgba(175,82,222,.32), transparent 70%), radial-gradient(45% 45% at 60% 80%, rgba(0,122,255,.28), transparent 72%)",
+                  }}
+                />
+                <div className="relative group">
+                  <Image
+                    src="/images/owner_billing_verify.png"
+                    alt="ระบบอนุมัติบิลและตรวจสลิปโอนเงินอัตโนมัติ"
+                    width={500}
+                    height={1000}
+                    className="w-full h-auto rounded-[36px] shadow-[0_20px_50px_rgba(0,0,0,0.12)] border border-slate-100 transform group-hover:-translate-y-1.5 transition-transform duration-500 ease-out"
+                  />
+                  {/* Green badge arrow doodle indicator */}
+                  <span className="absolute bottom-12 -left-4 inline-flex items-center gap-1 bg-[#34c759] text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg">
+                    ✓ สลิปถูกต้อง
+                  </span>
+                </div>
+              </div>
+            </div>
+
           </div>
         </section>
 

@@ -139,15 +139,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "กรุณาระบุเบอร์โทรทดสอบ" }, { status: 400 });
     }
 
-    // ดึง API Key จาก DB
+    // ดึง API Key + Secret จาก DB
     const addon = await prisma.smsAddon.findUnique({
       where: { ownerId: session.user.id },
-      select: { thaibulkApiKey: true, thaibulkSenderId: true },
+      select: { thaibulkApiKey: true, thaibulkApiSecret: true, thaibulkSenderId: true },
     });
 
-    if (!addon?.thaibulkApiKey) {
+    if (!addon?.thaibulkApiKey || !addon?.thaibulkApiSecret) {
       return NextResponse.json(
-        { message: "ยังไม่ได้บันทึก API Key กรุณาบันทึกก่อนทดสอบ" },
+        { message: "ยังไม่ได้บันทึก API Key และ API Secret ให้ครบ กรุณาบันทึกก่อนทดสอบ" },
         { status: 400 }
       );
     }
@@ -164,7 +164,7 @@ export async function POST(req: Request) {
       normalized,
       "[JadHor] ทดสอบระบบ SMS สำเร็จ! ขอบคุณที่ใช้บริการ JadHor OS",
       addon.thaibulkApiKey,
-      "",
+      addon.thaibulkApiSecret,
       addon.thaibulkSenderId ?? "JadHor"
     );
 
