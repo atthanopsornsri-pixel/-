@@ -156,7 +156,7 @@ export default function MyBillsPage() {
       ) : bills.length === 0 ? (
         <div className="text-center py-12 rounded-[var(--jh-radius-2xl)] border border-dashed border-slate-200 bg-white p-6 max-w-md mx-auto shadow-sm">
           <img
-            src="/images/mascot/empty_bills_sleep.png"
+            src="/images/mascot/empty_bills_sleep.png?v=2"
             alt="ไม่มียอดค้างชำระ"
             className="w-40 h-40 mx-auto mb-4 jh-float-soft drop-shadow-[0_8px_16px_rgba(0,0,0,0.06)] object-contain"
           />
