@@ -14,6 +14,7 @@ interface SuccessPopupProps {
   message?: string;
   autoCloseMs?: number; // auto-close หลัง N ms (default: ไม่ auto-close)
   onClose: () => void;
+  mascotType?: "payment" | "maintenance" | "general";
 }
 
 export default function SuccessPopup({
@@ -22,6 +23,7 @@ export default function SuccessPopup({
   message,
   autoCloseMs,
   onClose,
+  mascotType,
 }: SuccessPopupProps) {
   // Auto close
   useEffect(() => {
@@ -46,17 +48,33 @@ export default function SuccessPopup({
           <X className="w-4 h-4" />
         </button>
 
-        {/* Icon */}
-        <div
-          className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-          style={{ background: "linear-gradient(150deg, #f3fcf6 0%, #e0f7e9 100%)" }}
-        >
-          <CheckCircle2
-            className="w-9 h-9"
-            style={{ color: "#34c759" }}
-            strokeWidth={2}
-          />
-        </div>
+        {/* Mascot / Icon */}
+        {mascotType ? (
+          <div className="mb-4 relative flex justify-center">
+            <img
+              src={
+                mascotType === "payment"
+                  ? "/images/mascot/payment_success.png"
+                  : mascotType === "maintenance"
+                  ? "/images/mascot/maintenance_guide.png"
+                  : "/images/mascot/logo_avatar.png"
+              }
+              alt="Mascot Success"
+              className="w-32 h-32 object-contain jh-float-soft drop-shadow-[0_8px_16px_rgba(0,0,0,0.06)]"
+            />
+          </div>
+        ) : (
+          <div
+            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+            style={{ background: "linear-gradient(150deg, #f3fcf6 0%, #e0f7e9 100%)" }}
+          >
+            <CheckCircle2
+              className="w-9 h-9"
+              style={{ color: "#34c759" }}
+              strokeWidth={2}
+            />
+          </div>
+        )}
 
         {/* Text */}
         <h3 className="text-lg font-bold text-slate-800 leading-snug">{title}</h3>

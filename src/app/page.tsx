@@ -146,12 +146,12 @@ export default async function Home() {
           />
           <div className="relative z-10 mx-auto max-w-[1120px]">
             <Image
-              src="/images/mascot-hero.png"
+              src="/images/mascot/hero_landing.png"
               alt="มาสคอต JadHor"
               width={1146}
               height={888}
               priority
-              className="mx-auto w-64 drop-shadow-[0_20px_44px_rgba(0,0,0,0.12)] sm:w-80 md:w-[420px]"
+              className="mx-auto w-64 drop-shadow-[0_20px_44px_rgba(0,0,0,0.12)] sm:w-80 md:w-[420px] jh-float object-contain"
             />
             <h1 className="mt-7 text-[44px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[64px]">
               JadHor OS

@@ -527,12 +527,21 @@ export default function MaintenancePage() {
             })}
 
             {filteredRequests.length === 0 && (
-              <div className="col-span-full text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200">
-                <Wrench className="w-10 h-10 mx-auto mb-3 text-slate-200" />
-                <p className="font-semibold text-slate-400">
+              <div className="col-span-full text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200 p-6 max-w-md mx-auto shadow-sm">
+                <img
+                  src="/images/mascot/maintenance_guide.png"
+                  alt="ไม่มีงานซ่อม"
+                  className="w-32 h-32 mx-auto mb-4 jh-float-soft drop-shadow-[0_8px_16px_rgba(0,0,0,0.06)] object-contain"
+                />
+                <p className="font-bold text-slate-800 text-base">
                   {filter === "ALL"
-                    ? "ไม่มีประวัติการแจ้งซ่อม"
+                    ? "ไม่มีรายการแจ้งซ่อม"
                     : `ไม่มีรายการ "${STATUS_META[filter as StatusKey]?.label ?? filter}"`}
+                </p>
+                <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                  {role === "TENANT"
+                    ? "หากมีอุปกรณ์เสียหายหรือชำรุดในห้องพัก สามารถส่งเรื่องแจ้งซ่อมผ่านฟอร์มได้ทันทีเลยนะคะ 🔧"
+                    : "ระบบทำงานเรียบร้อยดี ไม่มีเรื่องค้างคาหรือคิวรอช่างเข้าซ่อมเลยค่ะ 🎉"}
                 </p>
               </div>
             )}
@@ -548,6 +557,7 @@ export default function MaintenancePage() {
         message={successPopup.message}
         autoCloseMs={4000}
         onClose={() => setSuccessPopup({ open: false, title: "" })}
+        mascotType="maintenance"
       />
 
       {/* ── Modal นัดหมายเข้าซ่อม ── */}

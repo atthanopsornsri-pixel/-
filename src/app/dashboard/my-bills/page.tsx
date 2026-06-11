@@ -7,6 +7,7 @@ import { QRCodeSVG } from "qrcode.react";
 import generatePayload from "promptpay-qr";
 import { submitPaymentSlip } from "@/app/actions/tenant-payment";
 import { PageHeader } from "@/components/PageHeader";
+import SuccessPopup from "@/components/SuccessPopup";
 import {
   Receipt,
   Clock,
@@ -78,6 +79,11 @@ export default function MyBillsPage() {
   const [isUploading, setIsUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Success popup state
+  const [successPopup, setSuccessPopup] = useState<{ open: boolean; title: string; message?: string }>({
+    open: false, title: "",
+  });
+
   function openPayModal(bill: any) {
     setPayBill(bill);
     setSlipFile(null);
@@ -111,7 +117,11 @@ export default function MyBillsPage() {
       formData.append("file", slipFile);
       const result = await submitPaymentSlip(null, formData);
       if (result.success) {
-        toast.success(result.message || "ส่งสลิปสำเร็จ! รอเจ้าของหอตรวจสอบ 🎉");
+        setSuccessPopup({
+          open: true,
+          title: "ส่งสลิปชำระเงินสำเร็จ! 🎉",
+          message: "ระบบกำลังส่งให้เจ้าของหอพักตรวจสอบความถูกต้องนะคะ"
+        });
         closePayModal();
         mutateBills();
       } else {
@@ -144,9 +154,16 @@ export default function MyBillsPage() {
           ))}
         </div>
       ) : bills.length === 0 ? (
-        <div className="text-center py-20 rounded-[var(--jh-radius-2xl)] border border-dashed border-slate-200 bg-white">
-          <Receipt className="w-12 h-12 mx-auto mb-3 text-slate-200" />
-          <p className="font-semibold text-slate-400">ยังไม่มีบิลเรียกเก็บในขณะนี้</p>
+        <div className="text-center py-12 rounded-[var(--jh-radius-2xl)] border border-dashed border-slate-200 bg-white p-6 max-w-md mx-auto shadow-sm">
+          <img
+            src="/images/mascot/empty_bills_sleep.png"
+            alt="ไม่มียอดค้างชำระ"
+            className="w-40 h-40 mx-auto mb-4 jh-float-soft drop-shadow-[0_8px_16px_rgba(0,0,0,0.06)] object-contain"
+          />
+          <p className="font-bold text-slate-800 text-lg">ไม่มียอดค้างชำระในรอบนี้</p>
+          <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+            คุณเคลียร์บิลค่าห้องพักและบริการเสร็จสิ้นหมดแล้ว นอนหลับพักผ่อนให้สบายใจได้เลยนะคะ 😴
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -398,6 +415,15 @@ export default function MyBillsPage() {
           </div>
         </div>
       )}
+      {/* ── Success Popup ── */}
+      <SuccessPopup
+        open={successPopup.open}
+        title={successPopup.title}
+        message={successPopup.message}
+        autoCloseMs={5000}
+        onClose={() => setSuccessPopup({ open: false, title: "" })}
+        mascotType="payment"
+      />
     </div>
   );
 }
