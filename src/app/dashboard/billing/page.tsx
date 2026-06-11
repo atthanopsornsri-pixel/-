@@ -396,7 +396,7 @@ export default function BillingPage() {
             </div>
 
             {/* ── Shared: เลือกหอ + ห้อง ── */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div className="space-y-2">
                 <Label>อพาร์ตเม้นท์</Label>
                 <select className="flex h-11 w-full rounded-[var(--jh-radius-md)] border border-[var(--jh-border)] bg-white px-3.5 py-2 text-sm focus:border-[var(--jh-blue)] focus:ring-4 focus:ring-[var(--jh-focus-ring)] outline-none transition-shadow" value={propertyId} onChange={handlePropertyChange} required>
@@ -507,7 +507,7 @@ export default function BillingPage() {
                   💡 บิลเข้าอยู่ออกครั้งเดียวตอนรับผู้เช่าใหม่ — เงินประกันจะถูกบันทึกลงสัญญาเช่าให้อัตโนมัติ และลูกบ้านต้องจ่ายบิลนี้ก่อนจึงจะเซ็นสัญญาได้
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>วันเริ่มสัญญา (ถ้ามี)</Label>
                     <Input type="date" value={leaseStart} onChange={e => setLeaseStart(e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />

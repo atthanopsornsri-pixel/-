@@ -460,7 +460,7 @@ export default async function Home() {
 
               <div className="p-10 md:w-3/5">
                 <form className="space-y-5" action="/api/contact" method="POST">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>ชื่อ-นามสกุล</Label>
                       <Input name="name" placeholder="สมชาย ใจดี" required className="h-11 rounded-[var(--jh-radius-md)]" />

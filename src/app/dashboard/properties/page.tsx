@@ -357,7 +357,7 @@ export default function PropertiesPage() {
               {/* Section 1: Legal */}
               <div>
                 <h4 className="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">ข้อมูลผู้ประกอบการ</h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-slate-600 font-medium ml-1">ชื่อบริษัท / ชื่อจดทะเบียน</Label>
                     <Input value={companyName} onChange={(e) => setCompanyName(e.target.value)} className="rounded-2xl h-12 bg-slate-50 border-slate-200" placeholder="ปล่อยว่างเพื่อใช้ชื่อหอพัก" />
@@ -372,7 +372,7 @@ export default function PropertiesPage() {
               {/* Section 2: Payment */}
               <div>
                 <h4 className="font-bold text-slate-800 mb-4 border-b border-slate-100 pb-2">บัญชีรับชำระเงิน (PromptPay QR Code)</h4>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-slate-600 font-medium ml-1">เบอร์พร้อมเพย์</Label>
                     <Input value={promptPayNo} onChange={(e) => setPromptPayNo(e.target.value)} className="rounded-2xl h-12 bg-slate-50 border-slate-200" placeholder="เบอร์มือถือ หรือ บัตรประชาชน" />
