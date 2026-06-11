@@ -72,40 +72,141 @@ export default function HowItWorks() {
 
               {/* Tonal card wrapping the phone */}
               <div
-                className="rounded-[var(--jh-radius-2xl)] border border-white/60 p-8 shadow-[var(--jh-shadow-card)] transition-all duration-500"
+                className="rounded-[var(--jh-radius-2xl)] border border-white/60 p-8 shadow-[var(--jh-shadow-card)] transition-all duration-500 min-h-[380px] flex items-center justify-center"
                 style={{ background: `linear-gradient(150deg, ${step.gradFrom} 0%, ${step.gradTo} 100%)` }}
               >
                 {/* CSS Phone frame */}
-                <div className="w-[220px]">
-                  <div className="rounded-[38px] border-[9px] border-[var(--jh-gray-900)] bg-[var(--jh-gray-900)] shadow-[var(--jh-shadow-lg)]">
-                    <div className="overflow-hidden rounded-[29px] bg-[#8ab4e8]">
-                      {/* LINE header */}
-                      <div className="flex items-center gap-2 bg-[var(--jh-gray-900)] px-3.5 py-3 text-white">
-                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/15 text-[13px]">🏠</div>
-                        <div className="leading-tight">
-                          <div className="text-[12px] font-semibold">JadHor แจ้งบิล</div>
-                          <div className="text-[9px] text-white/60">ออนไลน์</div>
+                <div className="w-[230px] transition-all duration-300">
+                  <div className="rounded-[38px] border-[9px] border-[var(--jh-gray-900)] bg-[var(--jh-gray-900)] shadow-[var(--jh-shadow-lg)] overflow-hidden">
+                    <div className="overflow-hidden rounded-[29px] bg-[#8ab4e8] min-h-[290px] flex flex-col">
+                      
+                      {/* ──── Dynamic Render based on Active Step ──── */}
+                      {active === 0 && (
+                        /* Step 1: ลงทะเบียน & สร้างหอพัก */
+                        <div className="flex-1 flex flex-col bg-slate-50 text-[10px] p-3 text-[var(--jh-ink)]">
+                          <div className="font-bold border-b pb-1.5 mb-2 flex items-center gap-1.5 text-[var(--jh-blue)]">
+                            <span className="text-base">🏢</span> สร้างหอพักใหม่
+                          </div>
+                          <div className="space-y-2 flex-1">
+                            <div className="bg-white p-2 rounded-lg border border-slate-100">
+                              <span className="text-slate-400 block text-[8px]">ชื่อหอพัก</span>
+                              <span className="font-bold">สบายดี อพาร์ตเม้นท์</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-1.5">
+                              <div className="bg-white p-2 rounded-lg border border-slate-100">
+                                <span className="text-slate-400 block text-[8px]">เรทค่าไฟ</span>
+                                <span className="font-bold text-blue-600">฿8 / หน่วย</span>
+                              </div>
+                              <div className="bg-white p-2 rounded-lg border border-slate-100">
+                                <span className="text-slate-400 block text-[8px]">เรทค่าน้ำ</span>
+                                <span className="font-bold text-emerald-600">฿18 / หน่วย</span>
+                              </div>
+                            </div>
+                            <div className="bg-white p-2 rounded-lg border border-slate-100 flex justify-between items-center">
+                              <div>
+                                <span className="text-slate-400 block text-[8px]">การจัดตั้งห้อง</span>
+                                <span className="font-semibold">ห้อง 101 - 310</span>
+                              </div>
+                              <span className="text-[9px] font-bold text-emerald-500">30 ห้อง ✓</span>
+                            </div>
+                          </div>
+                          <div className="mt-2 text-center py-1.5 bg-blue-600 text-white rounded-lg font-bold text-[9px]">
+                            บันทึกข้อมูลหอพัก
+                          </div>
                         </div>
-                      </div>
-                      {/* Chat body */}
-                      <div className="space-y-2 px-2.5 py-3.5">
-                        <div className="max-w-[90%] rounded-2xl rounded-tl-md bg-white px-3 py-2.5 text-[10px] leading-[1.6] text-[var(--jh-ink)] shadow-sm">
-                          <div className="font-bold">🧾 ใบแจ้งหนี้ค่าเช่า</div>
-                          <div className="text-[var(--jh-ink-secondary)]">สวัสดีคุณลัดดาวัลย์ 🙏</div>
-                          <div className="my-1.5 border-t border-dashed border-black/10" />
-                          <div>🏠 ห้อง 001 · 6/2569</div>
-                          <div className="my-1.5 border-t border-dashed border-black/10" />
-                          <div>• ค่าเช่า: ฿3,500</div>
-                          <div>• ค่าน้ำ: ฿612</div>
-                          <div>• ค่าไฟ: ฿1,049</div>
-                          <div className="my-1.5 border-t border-dashed border-black/10" />
-                          <div className="font-bold">💰 ยอดรวม: ฿5,161</div>
-                          <div className="text-[var(--jh-ink-secondary)]">📅 ครบกำหนด: 5 ก.ค.</div>
+                      )}
+
+                      {active === 1 && (
+                        /* Step 2: เพิ่มผู้เช่าเข้าห้อง */
+                        <div className="flex-1 flex flex-col">
+                          {/* LINE Header */}
+                          <div className="flex items-center gap-2 bg-[var(--jh-gray-900)] px-3 py-2 text-white">
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs">🚪</div>
+                            <div className="leading-tight">
+                              <div className="text-[10px] font-semibold">เชิญลูกบ้าน</div>
+                              <div className="text-[8px] text-white/50">ออนไลน์</div>
+                            </div>
+                          </div>
+                          {/* Chat body */}
+                          <div className="flex-1 space-y-2 px-2 py-3 text-[9px] leading-relaxed">
+                            <div className="max-w-[90%] rounded-xl rounded-tl-md bg-white p-2.5 text-[var(--jh-ink)] shadow-sm">
+                              <div className="font-bold text-emerald-600">🔑 ลิงก์เชิญเข้าห้องพัก</div>
+                              <div className="text-slate-500">ห้อง 101 | สบายดี อพาร์ตเม้นท์</div>
+                              <div className="my-1 border-t border-dashed border-black/10" />
+                              <div className="font-mono bg-slate-50 p-1 text-center rounded border font-semibold text-slate-800 text-[10px]">
+                                รหัสเชิญ: JAD-A896
+                              </div>
+                              <div className="text-[8px] text-slate-400 mt-1">กดลิงก์ด้านล่างเพื่อผูกบัญชี LINE</div>
+                            </div>
+                            <div className="max-w-[90%] rounded-xl rounded-tl-md bg-[#34c759] p-2 text-center font-bold text-white shadow-sm cursor-pointer">
+                              👉 ลงทะเบียนลูกบ้านห้อง 101
+                            </div>
+                          </div>
                         </div>
-                        <div className="max-w-[90%] rounded-2xl rounded-tl-md px-3 py-2 text-[10px] font-semibold text-white shadow-sm" style={{ background: step.color }}>
-                          👉 แตะเพื่อชำระเงิน
+                      )}
+
+                      {active === 2 && (
+                        /* Step 3: จดมิเตอร์ ออกบิลอัตโนมัติ */
+                        <div className="flex-1 flex flex-col">
+                          {/* LINE Header */}
+                          <div className="flex items-center gap-2 bg-[var(--jh-gray-900)] px-3 py-2 text-white">
+                            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs">🧾</div>
+                            <div className="leading-tight">
+                              <div className="text-[10px] font-semibold">JadHor แจ้งบิล</div>
+                              <div className="text-[8px] text-white/50">ส่งบิลล่าสุด</div>
+                            </div>
+                          </div>
+                          {/* Chat body */}
+                          <div className="flex-1 space-y-2 px-2 py-3 text-[9px] leading-relaxed">
+                            <div className="max-w-[90%] rounded-xl rounded-tl-md bg-white p-2.5 text-[var(--jh-ink)] shadow-sm">
+                              <div className="font-bold">🧾 ใบแจ้งหนี้ค่าเช่า — ห้อง 101</div>
+                              <div className="my-1 border-t border-dashed border-black/10" />
+                              <div>• ค่าเช่าห้อง: ฿4,000</div>
+                              <div>• ค่าน้ำ (12 หน่วย): ฿216</div>
+                              <div>• ค่าไฟ (90 หน่วย): ฿720</div>
+                              <div className="my-1 border-t border-dashed border-black/10" />
+                              <div className="font-bold text-orange-600">💰 ยอดรวม: ฿4,936</div>
+                            </div>
+                            <div className="max-w-[90%] rounded-xl rounded-tl-md bg-[#ff9500] p-2 text-center font-bold text-white shadow-sm">
+                              👉 แตะเพื่อชำระเงินและแนบสลิป
+                            </div>
+                          </div>
                         </div>
-                      </div>
+                      )}
+
+                      {active === 3 && (
+                        /* Step 4: รับเงิน & ตรวจสลิปออนไลน์ */
+                        <div className="flex-1 flex flex-col bg-slate-50 text-[10px] p-3 text-[var(--jh-ink)]">
+                          <div className="font-bold border-b pb-1.5 mb-2 flex justify-between items-center text-[var(--jh-indigo)]">
+                            <span>🔍 ระบบตรวจสลิปอัตโนมัติ</span>
+                            <span className="text-[8px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 font-bold">SlipOK</span>
+                          </div>
+                          <div className="space-y-2 flex-1">
+                            <div className="bg-white p-2 rounded-lg border border-slate-100 flex items-center gap-2">
+                              <span className="text-xl">🧾</span>
+                              <div className="flex-1">
+                                <span className="text-slate-400 block text-[8px]">ตรวจพบสลิปธนาคาร</span>
+                                <span className="font-bold text-slate-800">กสิกรไทย (K-Plus)</span>
+                              </div>
+                            </div>
+                            <div className="bg-white p-2 rounded-lg border border-slate-100 flex justify-between items-center">
+                              <div>
+                                <span className="text-slate-400 block text-[8px]">ยอดเงินโอน</span>
+                                <span className="font-bold text-slate-800">฿4,936.00</span>
+                              </div>
+                              <span className="text-[8px] bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded">ตรงยอดบิล ✓</span>
+                            </div>
+                            <div className="bg-white p-2 rounded-lg border border-slate-100">
+                              <span className="text-slate-400 block text-[8px]">สถานะบิล</span>
+                              <span className="font-extrabold text-emerald-600 text-[10px]">ชำระเงินเสร็จสิ้น (PAID) ✓</span>
+                            </div>
+                          </div>
+                          <div className="mt-2 text-center py-1.5 bg-[#5856d6] text-white rounded-lg font-bold text-[9px]">
+                            ปิดยอดบิลเรียบร้อย
+                          </div>
+                        </div>
+                      )}
+
                     </div>
                   </div>
                 </div>
