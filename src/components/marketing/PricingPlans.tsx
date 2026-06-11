@@ -31,7 +31,7 @@ const PLANS: Plan[] = [
     monthlyNum: 599,
     yearlyNum: 5990,
     features: ["จัดการได้สูงสุด 100 ห้อง", "ฟีเจอร์ทั้งหมดในแพ็กเกจ Starter", "ระบบตรวจสลิปอัตโนมัติ"],
-    cta: "ทดลองใช้ฟรี 14 วัน",
+    cta: "เริ่มใช้งานเลย",
     href: "/register",
     featured: true,
   },
