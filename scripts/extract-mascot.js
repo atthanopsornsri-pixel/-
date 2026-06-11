@@ -11,16 +11,16 @@ fs.mkdirSync(OUT, { recursive: true });
 // แต่ละ sheet 1536x1024 = 3 คอลัมน์ x 2 แถว, ตัวการ์ตูนอยู่ครึ่งบนของช่อง
 const CELL_W = 512;
 const CELL_H = 512;
-const CHAR_H = 372; // สูงเฉพาะตัวการ์ตูน (ตัดคำบรรยายล่างทิ้ง)
+const CHAR_H = 440; // เพิ่มให้ครอบคลุมขา + เท้าของมาสคอต (คำบรรยายอยู่ ~440-512)
 const TOL = 44; // tolerance ระยะสี (Euclidean RGB) สำหรับถือว่าเป็นพื้นหลัง
 
 const SHEETS = [
   {
-    file: "DDED27DD-0664-4A11-A0C5-1991C8230FE1.png",
+    file: "design/mascot-sheets/DDED27DD-0664-4A11-A0C5-1991C8230FE1.png",
     names: ["invoice", "payment", "record", "expense", "report", "profit"],
   },
   {
-    file: "0D1C0237-AE10-4F01-A9A4-25D494386691.png",
+    file: "design/mascot-sheets/0D1C0237-AE10-4F01-A9A4-25D494386691.png",
     names: ["promote", "promotion", "target", "ad", "analyze", "attract"],
   },
 ];
