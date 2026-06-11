@@ -54,10 +54,10 @@ export default function SuccessPopup({
             <img
               src={
                 mascotType === "payment"
-                  ? "/images/mascot/payment_success.png?v=2"
+                  ? "/images/mascot/payment_success.png"
                   : mascotType === "maintenance"
-                  ? "/images/mascot/maintenance_guide.png?v=2"
-                  : "/images/mascot/logo_avatar.png?v=2"
+                  ? "/images/mascot/maintenance_guide.png"
+                  : "/images/mascot/logo_avatar.png"
               }
               alt="Mascot Success"
               className="w-32 h-32 object-contain jh-float-soft drop-shadow-[0_8px_16px_rgba(0,0,0,0.06)]"

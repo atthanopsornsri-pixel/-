@@ -149,7 +149,7 @@ export default function ParcelsPage() {
               {parcels.length === 0 && !isLoading ? (
                 <div className="text-center py-10 px-4">
                   <img
-                    src="/images/mascot/empty_parcels.png?v=2"
+                    src="/images/mascot/empty_parcels.png"
                     alt="ไม่มีพัสดุ"
                     className="w-32 h-32 mx-auto mb-4 jh-float-soft drop-shadow-[0_8px_16px_rgba(0,0,0,0.06)] object-contain"
                   />

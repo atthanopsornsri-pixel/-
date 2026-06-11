@@ -110,7 +110,7 @@ export default async function Home() {
       <header className="sticky top-0 z-50 border-b border-black/[0.06] bg-[var(--jh-glass-bg)] backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-[var(--jh-glass-bg)]">
         <div className="flex h-14 w-full items-center justify-between px-6 md:px-10 lg:px-14">
           <Link href="/" className="flex items-center gap-2.5 text-[18px] font-bold tracking-[-0.02em] text-[var(--jh-brand-navy)]">
-            <Image src="/images/mascot/logo_avatar.png?v=2" alt="JadHor OS" width={30} height={30} className="h-[30px] w-[30px] object-contain rounded-md" />
+            <Image src="/images/mascot/logo_avatar.png" alt="JadHor OS" width={30} height={30} className="h-[30px] w-[30px] object-contain rounded-md" />
             JadHor OS
           </Link>
           <nav className="flex items-center gap-7 text-sm text-[var(--jh-ink-secondary)]">
@@ -146,7 +146,7 @@ export default async function Home() {
           />
           <div className="relative z-10 mx-auto max-w-[1120px]">
             <Image
-              src="/images/mascot/hero_landing.png?v=2"
+              src="/images/mascot/hero_landing.png"
               alt="มาสคอต JadHor"
               width={1146}
               height={888}
@@ -483,7 +483,7 @@ export default async function Home() {
             {/* Brand + tagline */}
             <div>
               <div className="inline-flex items-center gap-2.5">
-                <Image src="/images/mascot/logo_avatar.png?v=2" alt="JadHor OS" width={40} height={40} className="h-10 w-10 object-contain rounded-md" />
+                <Image src="/images/mascot/logo_avatar.png" alt="JadHor OS" width={40} height={40} className="h-10 w-10 object-contain rounded-md" />
                 <span className="text-[20px] font-bold tracking-[-0.02em] text-white">JadHor OS</span>
               </div>
               <p className="mt-4 max-w-[300px] text-[13px] leading-[1.7] text-[var(--jh-ink-tertiary)]">

@@ -529,7 +529,7 @@ export default function MaintenancePage() {
             {filteredRequests.length === 0 && (
               <div className="col-span-full text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200 p-6 max-w-md mx-auto shadow-sm">
                 <img
-                  src="/images/mascot/maintenance_guide.png?v=2"
+                  src="/images/mascot/maintenance_guide.png"
                   alt="ไม่มีงานซ่อม"
                   className="w-32 h-32 mx-auto mb-4 jh-float-soft drop-shadow-[0_8px_16px_rgba(0,0,0,0.06)] object-contain"
                 />
