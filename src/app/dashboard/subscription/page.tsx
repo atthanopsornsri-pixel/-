@@ -146,6 +146,9 @@ export default function SubscriptionPage() {
 
   const [smsApiKey, setSmsApiKey] = useState("");
   const [smsApiKeyMasked, setSmsApiKeyMasked] = useState("");
+  const [smsApiSecret, setSmsApiSecret] = useState("");
+  const [smsApiSecretMasked, setSmsApiSecretMasked] = useState("");
+  const [smsHasSecret, setSmsHasSecret] = useState(false);
   const [smsSenderId, setSmsSenderId] = useState("JadHor");
   const [smsTestPhone, setSmsTestPhone] = useState("");
   const [smsCredSaving, setSmsCredSaving] = useState(false);
@@ -181,8 +184,11 @@ export default function SubscriptionPage() {
         const cred = await smsCredRes.json();
         if (cred) {
           setSmsHasKey(cred.hasApiKey || false);
+          setSmsHasSecret(cred.hasApiSecret || false);
           setSmsApiKeyMasked(cred.thaibulkApiKey || "");
+          setSmsApiSecretMasked(cred.thaibulkApiSecret || "");
           setSmsApiKey("");
+          setSmsApiSecret("");
           setSmsSenderId(cred.thaibulkSenderId || "JadHor");
         }
       }
@@ -214,18 +220,27 @@ export default function SubscriptionPage() {
       setSmsCredMsg({ ok: false, text: "กรุณากรอก API Key" });
       return;
     }
+    if (!smsApiSecret && !smsHasSecret) {
+      setSmsCredMsg({ ok: false, text: "กรุณากรอก API Secret" });
+      return;
+    }
     setSmsCredSaving(true);
     setSmsCredMsg(null);
     try {
       const res = await fetch("/api/owner/sms-credentials", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey: smsApiKey || null, senderId: smsSenderId }),
+        body: JSON.stringify({
+          apiKey: smsApiKey || null,
+          apiSecret: smsApiSecret || null,
+          senderId: smsSenderId,
+        }),
       });
       const data = await res.json();
       if (res.ok) {
         setSmsHasKey(true);
-        setSmsCredMsg({ ok: true, text: "บันทึก API Key สำเร็จแล้ว" });
+        if (smsApiSecret) setSmsHasSecret(true);
+        setSmsCredMsg({ ok: true, text: "บันทึก API Key & Secret สำเร็จแล้ว" });
       } else {
         setSmsCredMsg({ ok: false, text: data?.message || "เกิดข้อผิดพลาด" });
       }
@@ -645,7 +660,7 @@ export default function SubscriptionPage() {
           >
             <span className="text-xl shrink-0">ℹ️</span>
             <div className="text-sm text-blue-800">
-              <p className="font-semibold">วิธีรับ API Key</p>
+              <p className="font-semibold">วิธีรับ API Key &amp; API Secret</p>
               <p className="mt-1 text-blue-700/80">
                 สมัครที่{" "}
                 <a
@@ -656,13 +671,15 @@ export default function SubscriptionPage() {
                 >
                   thaibulksms.com
                 </a>{" "}
-                → Developer Settings → API Key → สร้าง key → คัดลอก API Key มาวางด้านล่าง
+                → Settings → API Key → สร้าง key → คัดลอก <strong>ทั้ง API Key และ API Secret</strong> มาวางด้านล่าง
+                (ระบบส่ง SMS ใช้ Basic Auth ต้องมีครบทั้งคู่)
               </p>
             </div>
           </div>
 
           {/* Form */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* API Key */}
             <div className="space-y-1.5">
               <label className="block text-sm font-semibold text-[var(--jh-ink)]">
                 API Key{" "}
@@ -685,22 +702,47 @@ export default function SubscriptionPage() {
                 className="flex h-11 w-full rounded-xl border border-white/60 bg-white/70 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
               />
             </div>
+            {/* API Secret */}
             <div className="space-y-1.5">
               <label className="block text-sm font-semibold text-[var(--jh-ink)]">
-                Sender ID{" "}
-                <span className="text-xs text-[var(--jh-ink-tertiary)] font-normal">
-                  (max 11 ตัวอักษร — แสดงเป็นชื่อผู้ส่ง)
-                </span>
+                API Secret{" "}
+                {smsHasSecret && smsApiSecretMasked && (
+                  <span className="ml-1 text-xs font-mono font-normal text-[var(--jh-ink-secondary)] bg-white/60 px-2 py-0.5 rounded">
+                    {smsApiSecretMasked}
+                  </span>
+                )}
+                {smsHasSecret && (
+                  <span className="ml-1 text-xs text-[var(--jh-ink-tertiary)] font-normal">
+                    (กรอกใหม่เพื่ออัปเดต)
+                  </span>
+                )}
               </label>
               <input
-                type="text"
-                value={smsSenderId}
-                onChange={(e) => setSmsSenderId(e.target.value.slice(0, 11))}
-                placeholder="JadHor"
-                maxLength={11}
+                type="password"
+                value={smsApiSecret}
+                onChange={(e) => setSmsApiSecret(e.target.value)}
+                placeholder={smsHasSecret ? "กรอก API Secret ใหม่ หรือว่างไว้เพื่อคงของเดิม" : "xxxxxxxxxxxxxxxxxxxxxxxx"}
                 className="flex h-11 w-full rounded-xl border border-white/60 bg-white/70 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
               />
             </div>
+          </div>
+
+          {/* Sender ID */}
+          <div className="space-y-1.5">
+            <label className="block text-sm font-semibold text-[var(--jh-ink)]">
+              Sender ID{" "}
+              <span className="text-xs text-[var(--jh-ink-tertiary)] font-normal">
+                (max 11 ตัวอักษร — แสดงเป็นชื่อผู้ส่ง ต้องลงทะเบียนกับ Thaibulksms ก่อน)
+              </span>
+            </label>
+            <input
+              type="text"
+              value={smsSenderId}
+              onChange={(e) => setSmsSenderId(e.target.value.slice(0, 11))}
+              placeholder="JadHor"
+              maxLength={11}
+              className="flex h-11 w-full sm:w-1/2 rounded-xl border border-white/60 bg-white/70 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-400 transition-all"
+            />
           </div>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
@@ -719,7 +761,7 @@ export default function SubscriptionPage() {
             )}
           </div>
 
-          {smsHasKey && (
+          {smsHasKey && smsHasSecret && (
             <div className="border-t border-white/40 pt-5 space-y-3">
               <p className="text-sm font-semibold text-[var(--jh-ink)]">ทดสอบส่ง SMS</p>
               <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">

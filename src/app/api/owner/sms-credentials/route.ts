@@ -24,6 +24,7 @@ export async function GET() {
         resetMonth: true,
         resetYear: true,
         thaibulkApiKey: true,
+        thaibulkApiSecret: true,
         thaibulkSenderId: true,
       },
     });
@@ -31,12 +32,16 @@ export async function GET() {
     if (!addon) return NextResponse.json(null);
 
     const key = addon.thaibulkApiKey;
+    const secret = addon.thaibulkApiSecret;
+    const mask = (v: string | null) =>
+      v && v.length > 8 ? v.slice(0, 4) + "****" + v.slice(-4) : v ? "****" : null;
+
     return NextResponse.json({
       ...addon,
       hasApiKey: !!key,
-      thaibulkApiKey: key && key.length > 8
-        ? key.slice(0, 4) + "****" + key.slice(-4)
-        : key ? "****" : null,
+      hasApiSecret: !!secret,
+      thaibulkApiKey: mask(key),
+      thaibulkApiSecret: mask(secret),
     });
   } catch (error) {
     console.error("SMS credentials GET error:", error);
@@ -44,7 +49,7 @@ export async function GET() {
   }
 }
 
-// PUT: บันทึก/อัปเดต API Key (ไม่ต้องการ secret)
+// PUT: บันทึก/อัปเดต API Key + API Secret (Basic Auth ต้องใช้ทั้งคู่)
 export async function PUT(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -52,23 +57,30 @@ export async function PUT(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { apiKey, senderId } = await req.json();
+    const { apiKey, apiSecret, senderId } = await req.json();
 
-    // apiKey === null หมายความว่า "คงของเดิม" (อัปเดตแค่ senderId)
+    // ค่า null/undefined = "คงของเดิม" (อัปเดตแค่ field อื่น)
     const isUpdatingKey = apiKey !== null && apiKey !== undefined;
+    const isUpdatingSecret = apiSecret !== null && apiSecret !== undefined;
 
-    // ถ้าส่ง key มาจริงๆ → validate
+    // ถ้าส่ง key/secret มาจริงๆ → validate ไม่ให้ว่าง
     if (isUpdatingKey && !apiKey?.trim()) {
-      return NextResponse.json(
-        { message: "กรุณาระบุ API Key" },
-        { status: 400 }
-      );
+      return NextResponse.json({ message: "กรุณาระบุ API Key" }, { status: 400 });
+    }
+    if (isUpdatingSecret && !apiSecret?.trim()) {
+      return NextResponse.json({ message: "กรุณาระบุ API Secret" }, { status: 400 });
     }
 
-    // ป้องกัน masked key หลุดเข้ามา (defensive guard)
+    // ป้องกัน masked value หลุดเข้ามา (defensive guard)
     if (isUpdatingKey && apiKey?.includes("****")) {
       return NextResponse.json(
         { message: "กรุณากรอก API Key ใหม่ทั้งหมด (ไม่ใช่ค่า masked)" },
+        { status: 400 }
+      );
+    }
+    if (isUpdatingSecret && apiSecret?.includes("****")) {
+      return NextResponse.json(
+        { message: "กรุณากรอก API Secret ใหม่ทั้งหมด (ไม่ใช่ค่า masked)" },
         { status: 400 }
       );
     }
@@ -80,27 +92,26 @@ export async function PUT(req: Request) {
       );
     }
 
-    // ตรวจว่ามี addon อยู่แล้วหรือไม่ (กรณี apiKey=null และยังไม่มี record → error)
-    if (!isUpdatingKey) {
-      const existing = await prisma.smsAddon.findUnique({
-        where: { ownerId: session.user.id },
-        select: { id: true, thaibulkApiKey: true },
-      });
-      if (!existing?.thaibulkApiKey) {
-        return NextResponse.json(
-          { message: "กรุณาระบุ API Key ก่อนบันทึก" },
-          { status: 400 }
-        );
-      }
+    // ตรวจว่ามี credentials ครบหรือยัง — Basic Auth ต้องมีทั้ง key และ secret
+    const existing = await prisma.smsAddon.findUnique({
+      where: { ownerId: session.user.id },
+      select: { id: true, thaibulkApiKey: true, thaibulkApiSecret: true },
+    });
+    const willHaveKey = isUpdatingKey ? true : !!existing?.thaibulkApiKey;
+    const willHaveSecret = isUpdatingSecret ? true : !!existing?.thaibulkApiSecret;
+    if (!willHaveKey || !willHaveSecret) {
+      return NextResponse.json(
+        { message: "กรุณาระบุทั้ง API Key และ API Secret ให้ครบก่อนบันทึก" },
+        { status: 400 }
+      );
     }
 
     const now = new Date();
     const updateData: Record<string, unknown> = {
       thaibulkSenderId: (senderId?.trim() || "JadHor").slice(0, 11),
     };
-    if (isUpdatingKey) {
-      updateData.thaibulkApiKey = (apiKey as string).trim();
-    }
+    if (isUpdatingKey) updateData.thaibulkApiKey = (apiKey as string).trim();
+    if (isUpdatingSecret) updateData.thaibulkApiSecret = (apiSecret as string).trim();
 
     const addon = await prisma.smsAddon.upsert({
       where: { ownerId: session.user.id },
@@ -114,6 +125,7 @@ export async function PUT(req: Request) {
         resetYear: now.getFullYear(),
         isActive: false,
         thaibulkApiKey: isUpdatingKey ? (apiKey as string).trim() : "",
+        thaibulkApiSecret: isUpdatingSecret ? (apiSecret as string).trim() : "",
         thaibulkSenderId: (senderId?.trim() || "JadHor").slice(0, 11),
       },
     });
