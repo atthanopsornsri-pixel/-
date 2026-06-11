@@ -4,7 +4,9 @@
 const sharp = require("sharp");
 const path = require("path");
 
-const SRC = path.resolve(__dirname, "..", "public", "images", "mascot-hero.png");
+// รับชื่อไฟล์จาก arg (default = mascot-hero.png) เช่น: node scripts/remove-bg-hero.js logo-mascot.png
+const FILE = process.argv[2] || "mascot-hero.png";
+const SRC = path.resolve(__dirname, "..", "public", "images", FILE);
 const OUT = SRC; // เขียนทับ
 const TOL = 60; // tolerance สีพื้นหลัง (พื้นหลังขาวล้วน เผื่อ anti-alias/เงา)
 
