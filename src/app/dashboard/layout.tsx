@@ -80,7 +80,7 @@ export default async function DashboardLayout({
       <aside className="w-[280px] flex-shrink-0 bg-[var(--jh-surface)] hidden md:flex flex-col border-r border-black/[0.06] relative z-20">
         <div className="px-6 pt-7 pb-3">
           <Link href="/" className="flex items-center gap-3 mb-3 group cursor-pointer hover:opacity-80 transition-opacity">
-            <div className="relative h-12 w-12 flex-shrink-0 group-hover:scale-105 transition-transform bg-white rounded-[var(--jh-radius-md)] shadow-[var(--jh-shadow-sm)] border border-black/[0.06] p-1">
+            <div className="relative h-12 w-12 flex-shrink-0 group-hover:scale-105 transition-transform">
               <Image src="/images/logo-mascot.png" alt="มาสคอต JadHor OS" fill className="object-contain" priority />
             </div>
             <div className="flex flex-col">

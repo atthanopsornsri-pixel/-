@@ -46,7 +46,7 @@ export default function MobileNav({ role }: MobileNavProps) {
       <div className={`fixed top-0 left-0 h-[100dvh] w-72 bg-[#F5F5F7] text-[#1D1D1F] z-[9999] transform transition-transform duration-300 ease-in-out flex flex-col shadow-2xl ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6 flex items-center justify-between border-b border-slate-200/40">
           <Link href="/" onClick={closeNav} className="flex items-center gap-3 group cursor-pointer hover:opacity-80 transition-opacity">
-            <div className="relative h-10 w-10 flex-shrink-0 bg-white rounded-xl shadow-sm border border-slate-100 p-0.5 group-hover:scale-105 transition-transform">
+            <div className="relative h-10 w-10 flex-shrink-0 group-hover:scale-105 transition-transform">
               <Image src="/images/logo-mascot.png" alt="มาสคอต JadHor OS" fill className="object-contain" priority />
             </div>
             <div className="flex flex-col">

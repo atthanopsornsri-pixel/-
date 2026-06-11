@@ -134,7 +134,7 @@ export default async function Home() {
 
       <main>
         {/* ---------------- Hero ---------------- */}
-        <section className="relative px-6 pt-20 text-center">
+        <section className="relative px-6 pt-20 pb-24 text-center">
           {/* Soft multi-color glow (iCloud+ / Apple Intelligence) */}
           <div
             aria-hidden
@@ -428,9 +428,7 @@ export default async function Home() {
             {/* Brand + tagline */}
             <div>
               <div className="inline-flex items-center gap-2.5">
-                <div className="rounded-[var(--jh-radius-md)] bg-white p-1 shadow-[var(--jh-shadow-sm)]">
-                  <Image src="/images/logo-mascot.png" alt="JadHor OS" width={36} height={36} className="h-9 w-9 object-contain" />
-                </div>
+                <Image src="/images/logo-mascot.png" alt="JadHor OS" width={40} height={40} className="h-10 w-10 object-contain" />
                 <span className="text-[20px] font-bold tracking-[-0.02em] text-white">JadHor OS</span>
               </div>
               <p className="mt-4 max-w-[300px] text-[13px] leading-[1.7] text-[var(--jh-gray-500)]">
