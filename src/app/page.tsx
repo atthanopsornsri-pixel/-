@@ -422,21 +422,65 @@ export default async function Home() {
       </main>
 
       {/* ---------------- Footer ---------------- */}
-      <footer className="bg-[var(--jh-gray-900)] px-6 py-12 text-[var(--jh-gray-500)]">
-        <div className="mx-auto flex max-w-[1120px] flex-col items-center justify-between gap-6 md:flex-row">
-          <div className="text-center md:text-left">
-            <div className="inline-flex items-center gap-2 rounded-[var(--jh-radius-md)] bg-white px-3 py-1.5">
-              <Image src="/images/logo.png" alt="JadHor OS" width={26} height={26} className="h-[26px] w-[26px] object-contain" />
-              <span className="font-bold tracking-[-0.02em] text-[var(--jh-gray-900)]">JadHor OS</span>
+      <footer className="bg-[var(--jh-gray-900)] px-6 pt-16 pb-8 text-[var(--jh-gray-500)]">
+        <div className="mx-auto max-w-[1120px]">
+          <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-[1.7fr_1fr_1fr_1.4fr]">
+            {/* Brand + tagline */}
+            <div>
+              <div className="inline-flex items-center gap-2.5">
+                <div className="rounded-[var(--jh-radius-md)] bg-white p-1 shadow-[var(--jh-shadow-sm)]">
+                  <Image src="/images/logo-mascot.png" alt="JadHor OS" width={36} height={36} className="h-9 w-9 object-contain" />
+                </div>
+                <span className="text-[20px] font-bold tracking-[-0.02em] text-white">JadHor OS</span>
+              </div>
+              <p className="mt-4 max-w-[300px] text-[13px] leading-[1.7] text-[var(--jh-gray-500)]">
+                แพลตฟอร์มบริหารจัดการหอพักยุคใหม่ ออกบิล–เก็บค่าเช่า–ดูแลลูกบ้าน จบครบในที่เดียว
+              </p>
             </div>
-            <p className="mt-3.5 text-[13px] text-[var(--jh-gray-500)]">
-              แพลตฟอร์มบริหารจัดการหอพักยุคใหม่
-              <br />© 2026 JadHor OS. All rights reserved.
-            </p>
+
+            {/* บริการของเรา */}
+            <div>
+              <h4 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-white/90">บริการของเรา</h4>
+              <ul className="mt-4 space-y-3 text-sm">
+                <li><a href="#features" className="transition-colors hover:text-white">ฟีเจอร์</a></li>
+                <li><a href="#how-it-works" className="transition-colors hover:text-white">วิธีใช้งาน</a></li>
+                <li><a href="#pricing" className="transition-colors hover:text-white">แพ็กเกจทั้งหมด</a></li>
+              </ul>
+            </div>
+
+            {/* ช่วยเหลือ */}
+            <div>
+              <h4 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-white/90">ช่วยเหลือ</h4>
+              <ul className="mt-4 space-y-3 text-sm">
+                <li><a href="#faq" className="transition-colors hover:text-white">คำถามที่พบบ่อย</a></li>
+                <li><a href="#contact" className="transition-colors hover:text-white">ติดต่อทีมงาน</a></li>
+                <li><Link href="/login" className="transition-colors hover:text-white">เข้าสู่ระบบ</Link></li>
+              </ul>
+            </div>
+
+            {/* ติดต่อเรา */}
+            <div>
+              <h4 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-white/90">ติดต่อเรา</h4>
+              <div className="mt-4 space-y-3 text-sm">
+                <a href="tel:0640353806" className="flex items-center gap-2.5 transition-colors hover:text-white">
+                  <Phone className="h-[18px] w-[18px] shrink-0 text-white/50" strokeWidth={1.75} />
+                  064-035-3806
+                </a>
+                <a href="mailto:atthanop.sornsri@gmail.com" className="flex items-center gap-2.5 break-all transition-colors hover:text-white">
+                  <Mail className="h-[18px] w-[18px] shrink-0 text-white/50" strokeWidth={1.75} />
+                  atthanop.sornsri@gmail.com
+                </a>
+              </div>
+            </div>
           </div>
-          <div className="flex gap-7 text-sm">
-            <Link href="/terms" className="transition-colors hover:text-white">เงื่อนไขการใช้งาน</Link>
-            <Link href="/privacy" className="transition-colors hover:text-white">นโยบายความเป็นส่วนตัว</Link>
+
+          {/* Bottom bar */}
+          <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 md:flex-row">
+            <p className="text-[13px]">© 2026 JadHor OS. All rights reserved.</p>
+            <div className="flex gap-6 text-[13px]">
+              <Link href="/terms" className="transition-colors hover:text-white">เงื่อนไขการใช้งาน</Link>
+              <Link href="/privacy" className="transition-colors hover:text-white">นโยบายความเป็นส่วนตัว</Link>
+            </div>
           </div>
         </div>
       </footer>
