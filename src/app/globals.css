@@ -243,3 +243,22 @@
     margin: 1cm;
   }
 }
+
+/* ── Mascot float animation (ตัวมาสคอตประจำเว็บ JadHor) ── */
+@keyframes jh-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(-1.5deg); }
+}
+@keyframes jh-float-soft {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-9px); }
+}
+.jh-float {
+  animation: jh-float 5s ease-in-out infinite;
+}
+.jh-float-soft {
+  animation: jh-float-soft 6.5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .jh-float, .jh-float-soft { animation: none; }
+}

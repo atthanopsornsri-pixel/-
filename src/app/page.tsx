@@ -198,16 +198,27 @@ export default async function Home() {
               </p>
             )}
 
-            {/* Dashboard mockup */}
-            <div className="mx-auto mt-16 max-w-[1000px] overflow-hidden rounded-[var(--jh-radius-2xl)] border border-black/[0.06] shadow-[var(--jh-shadow-lg)]">
+            {/* Dashboard mockup + มาสคอตประจำเว็บ */}
+            <div className="relative mx-auto mt-16 max-w-[1000px]">
+              {/* มาสคอต JadHor โผล่มุมซ้ายบน ชี้ชวนเข้าระบบ */}
               <Image
-                src="/images/dashboard-mockup.png"
-                alt="JadHor OS Dashboard"
-                width={1400}
-                height={900}
+                src="/images/mascot/promote.png"
+                alt="มาสคอต JadHor"
+                width={444}
+                height={349}
                 priority
-                className="block h-auto w-full"
+                className="jh-float pointer-events-none absolute -left-3 -top-14 z-20 w-24 drop-shadow-[0_16px_30px_rgba(0,0,0,0.18)] sm:-left-8 sm:-top-20 sm:w-32 md:-left-16 md:-top-24 md:w-40"
               />
+              <div className="overflow-hidden rounded-[var(--jh-radius-2xl)] border border-black/[0.06] shadow-[var(--jh-shadow-lg)]">
+                <Image
+                  src="/images/dashboard-mockup.png"
+                  alt="JadHor OS Dashboard"
+                  width={1400}
+                  height={900}
+                  priority
+                  className="block h-auto w-full"
+                />
+              </div>
             </div>
           </div>
         </section>
@@ -312,6 +323,14 @@ export default async function Home() {
             {/* Phone mockup (CSS only) */}
             <div className="flex justify-center md:justify-start">
               <div className="relative w-[290px]">
+                {/* มาสคอตถือมือถือ ยืนเชียร์ข้างเครื่อง */}
+                <Image
+                  src="/images/mascot/payment.png"
+                  alt="มาสคอต JadHor ถือมือถือ"
+                  width={457}
+                  height={344}
+                  className="jh-float-soft pointer-events-none absolute -right-14 bottom-2 z-20 hidden w-32 drop-shadow-[0_16px_30px_rgba(0,0,0,0.18)] lg:block xl:-right-20 xl:w-40"
+                />
                 {/* glow behind phone */}
                 <div
                   aria-hidden
@@ -382,7 +401,15 @@ export default async function Home() {
         {/* ---------------- Pricing ---------------- */}
         <section id="pricing" className="bg-[var(--jh-surface)] px-6 py-24">
           <div className="mx-auto max-w-[1120px]">
-            <div className="mx-auto max-w-[640px] text-center">
+            <div className="relative mx-auto max-w-[640px] text-center">
+              {/* มาสคอตท่าโปรโมชั่น โผล่มุมขวาบนหัวข้อราคา */}
+              <Image
+                src="/images/mascot/promotion.png"
+                alt="มาสคอต JadHor โปรโมชั่น"
+                width={486}
+                height={352}
+                className="jh-float-soft pointer-events-none absolute -right-8 -top-16 z-10 hidden w-28 drop-shadow-[0_16px_30px_rgba(0,0,0,0.16)] md:block lg:-right-24 lg:w-36"
+              />
               <h2 className="text-[32px] font-semibold tracking-[-0.02em] md:text-[40px]">
                 แพ็กเกจที่เติบโตไปพร้อมธุรกิจคุณ
               </h2>
@@ -403,8 +430,17 @@ export default async function Home() {
 
         {/* ---------------- Contact ---------------- */}
         <section id="contact" className="border-t border-black/[0.06] bg-[var(--jh-surface)] px-6 py-24">
-          <div className="mx-auto max-w-[920px] overflow-hidden rounded-[var(--jh-radius-2xl)] border border-black/[0.06] bg-white shadow-[var(--jh-shadow-card)]">
-            <div className="flex flex-col md:flex-row">
+          <div className="relative mx-auto max-w-[920px]">
+            {/* มาสคอตต้อนรับ โผล่มุมขวาบนการ์ดติดต่อ */}
+            <Image
+              src="/images/mascot/attract.png"
+              alt="มาสคอต JadHor ต้อนรับ"
+              width={462}
+              height={362}
+              className="jh-float-soft pointer-events-none absolute -top-20 right-2 z-20 hidden w-28 drop-shadow-[0_16px_30px_rgba(0,0,0,0.18)] sm:block md:right-6 md:w-32"
+            />
+            <div className="overflow-hidden rounded-[var(--jh-radius-2xl)] border border-black/[0.06] bg-white shadow-[var(--jh-shadow-card)]">
+              <div className="flex flex-col md:flex-row">
               <div className="bg-[var(--jh-gray-900)] p-10 text-white md:w-2/5">
                 <h3 className="text-[22px] font-semibold tracking-[-0.01em]">ติดต่อทีมงาน</h3>
                 <p className="mt-3 text-sm leading-[1.6] text-white/70">
@@ -459,6 +495,7 @@ export default async function Home() {
                   </button>
                 </form>
               </div>
+            </div>
             </div>
           </div>
         </section>
