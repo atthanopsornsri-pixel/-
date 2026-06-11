@@ -148,10 +148,10 @@ export default async function Home() {
             <Image
               src="/images/mascot-hero.png"
               alt="มาสคอต JadHor"
-              width={1341}
-              height={1173}
+              width={1146}
+              height={888}
               priority
-              className="mx-auto w-36 drop-shadow-[0_16px_36px_rgba(0,0,0,0.14)] md:w-52"
+              className="mx-auto w-64 drop-shadow-[0_20px_44px_rgba(0,0,0,0.12)] sm:w-80 md:w-[420px]"
             />
             <h1 className="mt-7 text-[44px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[64px]">
               JadHor OS
