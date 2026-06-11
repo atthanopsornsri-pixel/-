@@ -171,20 +171,27 @@
   --jh-purple-tint: #f6ecfc;
   --jh-cyan-tint: #e2f6fb;
 
-  /* Brand mark (logo lockup only) */
+  /* Brand mark (logo lockup and theme) */
   --jh-brand-navy: #16264c;
+  --jh-brand-navy-dark: #0f1b38;
+  --jh-brand-navy-tint: #f2f5fa;
+  --jh-brand-navy-ink: #16264c;
+
   --jh-brand-gold: #d4a548;
+  --jh-brand-gold-dark: #b68936;
+  --jh-brand-gold-tint: #fffdf6;
+  --jh-brand-gold-ink: #936b23;
 
   /* Semantic aliases */
   --jh-surface: #f5f5f7;
   --jh-surface-card: #ffffff;
   --jh-surface-hover: #ececf0;
-  --jh-ink: #1d1d1f;
-  --jh-ink-secondary: #6e6e73;
-  --jh-ink-tertiary: #8e8e93;
+  --jh-ink: #131b2e;
+  --jh-ink-secondary: #525c75;
+  --jh-ink-tertiary: #838eab;
   --jh-border: #d2d2d7;
   --jh-border-subtle: rgba(0, 0, 0, 0.06);
-  --jh-focus-ring: rgba(0, 122, 255, 0.35);
+  --jh-focus-ring: rgba(22, 38, 76, 0.35);
 
   /* Radii (continuous-corner feel) */
   --jh-radius-md: 14px;   /* inputs, small buttons */

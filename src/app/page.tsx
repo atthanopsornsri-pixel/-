@@ -109,8 +109,8 @@ export default async function Home() {
       {/* ---------------- Header (iCloud glass toolbar) ---------------- */}
       <header className="sticky top-0 z-50 border-b border-black/[0.06] bg-[var(--jh-glass-bg)] backdrop-blur-xl backdrop-saturate-150 supports-[backdrop-filter]:bg-[var(--jh-glass-bg)]">
         <div className="flex h-14 w-full items-center justify-between px-6 md:px-10 lg:px-14">
-          <Link href="/" className="flex items-center gap-2.5 text-[18px] font-bold tracking-[-0.02em]">
-            <Image src="/images/logo.png" alt="JadHor OS" width={30} height={30} className="h-[30px] w-[30px] object-contain" />
+          <Link href="/" className="flex items-center gap-2.5 text-[18px] font-bold tracking-[-0.02em] text-[var(--jh-brand-navy)]">
+            <Image src="/images/mascot/logo_avatar.png" alt="JadHor OS" width={30} height={30} className="h-[30px] w-[30px] object-contain rounded-md" />
             JadHor OS
           </Link>
           <nav className="flex items-center gap-7 text-sm text-[var(--jh-ink-secondary)]">
@@ -135,13 +135,13 @@ export default async function Home() {
       <main>
         {/* ---------------- Hero ---------------- */}
         <section className="relative px-6 pt-20 pb-24 text-center">
-          {/* Soft multi-color glow (iCloud+ / Apple Intelligence) */}
+          {/* Soft multi-color glow (iCloud+ / Apple Intelligence inspired by Mascot palette) */}
           <div
             aria-hidden
             className="pointer-events-none absolute left-1/2 top-8 z-0 h-80 w-[460px] max-w-[90vw] -translate-x-1/2 opacity-55 blur-[56px]"
             style={{
               background:
-                "radial-gradient(40% 55% at 35% 40%, rgba(0,122,255,.45), transparent 70%), radial-gradient(45% 55% at 70% 35%, rgba(175,82,222,.40), transparent 72%), radial-gradient(45% 50% at 55% 75%, rgba(48,176,199,.38), transparent 72%)",
+                "radial-gradient(40% 55% at 35% 40%, rgba(22, 38, 76, 0.35), transparent 70%), radial-gradient(45% 55% at 70% 35%, rgba(212, 165, 72, 0.38), transparent 72%), radial-gradient(45% 50% at 55% 75%, rgba(255, 240, 210, 0.5), transparent 72%)",
             }}
           />
           <div className="relative z-10 mx-auto max-w-[1120px]">
@@ -165,11 +165,11 @@ export default async function Home() {
 
             <div className="mt-8">
               {session ? (
-                <DashboardButton className="inline-flex h-[52px] items-center justify-center rounded-full bg-[var(--jh-gray-900)] px-[30px] text-[17px] font-semibold text-white shadow-[var(--jh-shadow-sm)] transition-transform hover:bg-[var(--jh-gray-800)] active:scale-[0.97]" />
+                <DashboardButton className="inline-flex h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-[var(--jh-brand-gold)] to-[#ff9500] px-[30px] text-[17px] font-bold text-white shadow-[0_8px_18px_-6px_#d4a548] transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.97]" />
               ) : (
                 <Link
                   href="/login"
-                  className="inline-flex h-[52px] items-center justify-center rounded-full bg-[var(--jh-gray-900)] px-[30px] text-[17px] font-semibold text-white shadow-[var(--jh-shadow-sm)] transition-transform active:scale-[0.97]"
+                  className="inline-flex h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-[var(--jh-brand-gold)] to-[#ff9500] px-[30px] text-[17px] font-bold text-white shadow-[0_8px_18px_-6px_#d4a548] transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.97]"
                 >
                   เริ่มต้นใช้งานฟรี
                 </Link>
@@ -416,18 +416,18 @@ export default async function Home() {
           <div className="mx-auto max-w-[920px]">
             <div className="overflow-hidden rounded-[var(--jh-radius-2xl)] border border-black/[0.06] bg-white shadow-[var(--jh-shadow-card)]">
               <div className="flex flex-col md:flex-row">
-              <div className="bg-[var(--jh-gray-900)] p-10 text-white md:w-2/5">
-                <h3 className="text-[22px] font-semibold tracking-[-0.01em]">ติดต่อทีมงาน</h3>
+              <div className="bg-[var(--jh-brand-navy)] p-10 text-white md:w-2/5">
+                <h3 className="text-[22px] font-semibold tracking-[-0.01em] text-[var(--jh-brand-gold-tint)]">ติดต่อทีมงาน</h3>
                 <p className="mt-3 text-sm leading-[1.6] text-white/70">
                   มีคำถามเกี่ยวกับระบบ หรือต้องการให้ทีมงานช่วยตั้งค่าระบบให้? ติดต่อเราได้เลย ทีมงานพร้อมดูแลคุณ
                 </p>
                 <div className="mt-8 space-y-4 text-sm text-white/85">
                   <div className="flex items-center gap-3">
-                    <Phone className="h-[18px] w-[18px] shrink-0 text-white/60" strokeWidth={1.75} />
+                    <Phone className="h-[18px] w-[18px] shrink-0 text-[var(--jh-brand-gold)]" strokeWidth={1.75} />
                     064-035-3806
                   </div>
                   <div className="flex items-center gap-3 break-all">
-                    <Mail className="h-[18px] w-[18px] shrink-0 text-white/60" strokeWidth={1.75} />
+                    <Mail className="h-[18px] w-[18px] shrink-0 text-[var(--jh-brand-gold)]" strokeWidth={1.75} />
                     atthanop.sornsri@gmail.com
                   </div>
                 </div>
@@ -464,7 +464,7 @@ export default async function Home() {
                   </div>
                   <button
                     type="submit"
-                    className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[var(--jh-blue)] text-sm font-semibold text-white shadow-[var(--jh-shadow-sm)] transition-all hover:bg-[var(--jh-blue-dark)] active:scale-[0.99]"
+                    className="inline-flex h-11 w-full items-center justify-center rounded-full bg-[var(--jh-brand-navy)] text-sm font-semibold text-white shadow-[0_8px_18px_-6px_rgba(22,38,76,0.6)] transition-all hover:bg-[var(--jh-brand-navy-dark)] hover:-translate-y-0.5 active:scale-[0.99]"
                   >
                     ส่งข้อความ
                   </button>
@@ -477,16 +477,16 @@ export default async function Home() {
       </main>
 
       {/* ---------------- Footer ---------------- */}
-      <footer className="bg-[var(--jh-gray-900)] px-6 pt-16 pb-8 text-[var(--jh-gray-500)]">
+      <footer className="bg-[var(--jh-brand-navy)] px-6 pt-16 pb-8 text-[var(--jh-ink-tertiary)] border-t border-white/5">
         <div className="mx-auto max-w-[1120px]">
           <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-[1.7fr_1fr_1fr_1.4fr]">
             {/* Brand + tagline */}
             <div>
               <div className="inline-flex items-center gap-2.5">
-                <Image src="/images/logo-mascot.png" alt="JadHor OS" width={40} height={40} className="h-10 w-10 object-contain" />
+                <Image src="/images/mascot/logo_avatar.png" alt="JadHor OS" width={40} height={40} className="h-10 w-10 object-contain rounded-md" />
                 <span className="text-[20px] font-bold tracking-[-0.02em] text-white">JadHor OS</span>
               </div>
-              <p className="mt-4 max-w-[300px] text-[13px] leading-[1.7] text-[var(--jh-gray-500)]">
+              <p className="mt-4 max-w-[300px] text-[13px] leading-[1.7] text-[var(--jh-ink-tertiary)]">
                 แพลตฟอร์มบริหารจัดการหอพักยุคใหม่ ออกบิล–เก็บค่าเช่า–ดูแลลูกบ้าน จบครบในที่เดียว
               </p>
             </div>
