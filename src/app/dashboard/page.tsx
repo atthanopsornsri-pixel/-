@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { getDashboardMetrics } from "@/app/actions/dashboard";
 import { prisma } from "@/lib/prisma";
@@ -142,15 +143,25 @@ export default async function DashboardPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-8 duration-500 ease-out animate-in fade-in slide-in-from-bottom-4">
       <div className="flex flex-col items-start justify-between gap-4 md:flex-row md:items-center">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-[-0.02em] text-[var(--jh-ink)] md:text-[32px]">
-            {role === "TENANT" ? "หน้าหลัก" : "ภาพรวมระบบ"}
-          </h1>
-          <p className="mt-2 text-sm text-[var(--jh-ink-secondary)] md:text-[15px]">
-            {role === "TENANT"
-              ? "ยินดีต้อนรับกลับมา! ดูบิล แจ้งซ่อม และจัดการห้องพักของคุณได้ที่นี่"
-              : "ยินดีต้อนรับกลับมา, ขอให้วันนี้เป็นวันที่ดีในการบริหารจัดการ"}
-          </p>
+        <div className="flex items-center gap-5">
+          {/* มาสคอตประจำ dashboard โผล่ข้างหัวข้อ */}
+          <Image
+            src={role === "TENANT" ? "/images/mascot/payment.png" : "/images/mascot/report.png"}
+            alt="มาสคอต JadHor"
+            width={1045}
+            height={874}
+            className="jh-float-soft hidden w-20 shrink-0 drop-shadow-[0_10px_24px_rgba(0,0,0,0.15)] lg:block"
+          />
+          <div>
+            <h1 className="text-3xl font-semibold tracking-[-0.02em] text-[var(--jh-ink)] md:text-[32px]">
+              {role === "TENANT" ? "หน้าหลัก" : "ภาพรวมระบบ"}
+            </h1>
+            <p className="mt-2 text-sm text-[var(--jh-ink-secondary)] md:text-[15px]">
+              {role === "TENANT"
+                ? "ยินดีต้อนรับกลับมา! ดูบิล แจ้งซ่อม และจัดการห้องพักของคุณได้ที่นี่"
+                : "ยินดีต้อนรับกลับมา, ขอให้วันนี้เป็นวันที่ดีในการบริหารจัดการ"}
+            </p>
+          </div>
         </div>
         {role === "OWNER" && (
           <Link href="/dashboard/properties">
@@ -174,9 +185,18 @@ export default async function DashboardPage() {
           {/* Quick actions */}
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div
-              className="group rounded-[var(--jh-radius-2xl)] border border-white/60 p-8 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
+              className="group relative overflow-hidden rounded-[var(--jh-radius-2xl)] border border-white/60 p-8 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
               style={{ background: "linear-gradient(150deg, #f4f9ff 0%, #e3f0ff 100%)" }}
             >
+              {/* มาสคอตถือ checklist มุมขวาล่าง */}
+              <Image
+                src="/images/mascot/invoice.png"
+                alt=""
+                width={924}
+                height={808}
+                aria-hidden
+                className="jh-float-soft pointer-events-none absolute -bottom-3 right-3 w-24 opacity-80 drop-shadow-[0_8px_20px_rgba(0,0,0,0.12)]"
+              />
               <div
                 className="mb-5 flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
                 style={{ background: "#007aff", color: "#fff", boxShadow: "0 10px 22px -8px #007aff" }}
@@ -204,9 +224,18 @@ export default async function DashboardPage() {
             </div>
 
             <div
-              className="group rounded-[var(--jh-radius-2xl)] border border-white/60 p-8 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
+              className="group relative overflow-hidden rounded-[var(--jh-radius-2xl)] border border-white/60 p-8 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
               style={{ background: "linear-gradient(150deg, #f3fcf6 0%, #e0f7e9 100%)" }}
             >
+              {/* มาสคอตถือมือถือชำระเงิน มุมขวาล่าง */}
+              <Image
+                src="/images/mascot/payment.png"
+                alt=""
+                width={935}
+                height={780}
+                aria-hidden
+                className="jh-float-soft pointer-events-none absolute -bottom-2 right-2 w-24 opacity-80 drop-shadow-[0_8px_20px_rgba(0,0,0,0.12)]"
+              />
               <div
                 className="mb-5 flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
                 style={{ background: "#34c759", color: "#fff", boxShadow: "0 10px 22px -8px #34c759" }}
