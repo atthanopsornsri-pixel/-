@@ -59,26 +59,33 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
     });
 
     if (!bill) {
-      return { success: false, error: "Forbidden: Bill not found or you do not have permission to access it." };
+      return { success: false, error: "ไม่พบบิลดังกล่าว หรือคุณไม่มีสิทธิ์เข้าถึง" };
     }
 
-    if (bill.status === "PAID" || bill.status === "PENDING") {
-      return { success: false, error: "Bill is already paid or awaiting approval." };
+    if (bill.status === "PAID") {
+      return { success: false, error: "บิลนี้ได้รับการชำระเงินเรียบร้อยแล้ว" };
+    }
+    if (bill.status === "PENDING") {
+      return { success: false, error: "บิลนี้อยู่ระหว่างรอเจ้าของหอตรวจสอบสลิปอยู่แล้ว — กรุณารอการอนุมัติ" };
     }
 
     // 2. Prepare file for Supabase Upload
     const buffer = Buffer.from(await file.arrayBuffer());
 
     // ── ตรวจสลิปอัตโนมัติ (ถ้าตั้งค่า provider ไว้) ──
+    // NOTE: verifySlip จะ catch ทุก network/timeout error และ fallback { enabled: false } เสมอ
+    //       จึงปลอดภัยที่จะ await ตรงนี้
     const verification = await verifySlip({
       imageBuffer: buffer,
       contentType: file.type || "image/jpeg",
       expectedAmount: bill.totalAmount,
     });
 
-    if (verification.duplicate) {
-      return { success: false, error: "สลิปนี้เคยถูกใช้ชำระเงินไปแล้ว ไม่สามารถใช้ซ้ำได้" };
-    }
+    // ── กรณี SlipOK ตอบ duplicate ──
+    // ความหมาย: สลิปนี้เคยถูกส่งไปยัง SlipOK แล้ว แต่อาจล้มเหลวที่ฝั่งเรา (server error ครั้งแรก)
+    // แนวทาง: อนุญาตให้ผ่าน แต่ force ให้เป็น PENDING (manual review โดยเจ้าของหอ)
+    // ห้าม block ผู้เช่า เพราะสลิปจริงและการโอนเงินเกิดขึ้นแล้ว
+    const isDuplicateFromSlipOK = verification.duplicate === true;
 
     // ถ้า SlipOK เปิดใช้งานและตรวจว่ายอดไม่ตรง → แจ้งผู้เช่าทันที ไม่เก็บสลิป
     if (verification.enabled && verification.amountMismatch) {
@@ -128,7 +135,10 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
     let paidAmount = bill.paidAmount;
     let autoVerified = false;
 
-    if (verification.enabled && verification.verified) {
+    // ถ้า SlipOK ตอบ duplicate → force PENDING (manual review) ไม่ต้องประมวลผลต่อ
+    const skipAutoVerify = isDuplicateFromSlipOK;
+
+    if (!skipAutoVerify && verification.enabled && verification.verified) {
       const slipAmount = verification.amount ?? 0;
       const receiverOk = receiverMatchesPromptPay(
         verification.receiverAccount,
@@ -208,6 +218,11 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
 
   } catch (error: any) {
     console.error("Submit Payment Slip Error:", error);
-    return { success: false, error: "Internal Server Error" };
+    // แปล error เป็นภาษาไทยที่ผู้เช่าเข้าใจได้
+    const msg = error?.message || "";
+    if (msg.includes("ECONNREFUSED") || msg.includes("ENOTFOUND") || msg.includes("fetch")) {
+      return { success: false, error: "ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ชั่วคราว — กรุณาลองใหม่อีกครั้ง" };
+    }
+    return { success: false, error: "เกิดข้อผิดพลาดภายในระบบ — กรุณาลองใหม่อีกครั้ง หรือติดต่อเจ้าของหอ" };
   }
 }
