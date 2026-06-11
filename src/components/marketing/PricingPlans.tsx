@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Check, Sparkles } from "lucide-react";
+import { Check, Sparkles, Building2, TrendingUp, Crown } from "lucide-react";
 
 type Plan = {
   name: string;
@@ -13,6 +13,13 @@ type Plan = {
   cta: string;
   href: string;
   featured?: boolean;
+  Icon: React.ElementType;
+  /** solid tone color */
+  color: string;
+  gradFrom: string;
+  gradTo: string;
+  /** ink color สำหรับตัวเลข */
+  ink: string;
 };
 
 const PLANS: Plan[] = [
@@ -24,6 +31,11 @@ const PLANS: Plan[] = [
     features: ["จัดการได้สูงสุด 30 ห้อง", "ระบบออกบิล & ส่ง LINE", "ระบบแจ้งซ่อม & พัสดุ"],
     cta: "ทดลองใช้ฟรี 14 วัน",
     href: "/register",
+    Icon: Building2,
+    color: "#34c759",
+    gradFrom: "#f3fcf6",
+    gradTo: "#e0f7e9",
+    ink: "var(--jh-green-ink)",
   },
   {
     name: "Growth",
@@ -34,6 +46,11 @@ const PLANS: Plan[] = [
     cta: "เริ่มใช้งานเลย",
     href: "/register",
     featured: true,
+    Icon: TrendingUp,
+    color: "#007aff",
+    gradFrom: "#f4f9ff",
+    gradTo: "#e3f0ff",
+    ink: "var(--jh-blue)",
   },
   {
     name: "Enterprise",
@@ -43,6 +60,11 @@ const PLANS: Plan[] = [
     features: ["ไม่จำกัดจำนวนห้องพัก", "ฟีเจอร์ทั้งหมดในแพ็กเกจ Growth", "บริการ Support พิเศษ 24/7"],
     cta: "ติดต่อแอดมิน",
     href: "/register",
+    Icon: Crown,
+    color: "#5856d6",
+    gradFrom: "#f6f6ff",
+    gradTo: "#e8e7fb",
+    ink: "var(--jh-indigo)",
   },
 ];
 
@@ -121,40 +143,72 @@ export default function PricingPlans() {
       <div className="mt-12 grid items-stretch gap-5 md:grid-cols-3">
         {PLANS.map((plan) => {
           const isYearly = shownMode === "yearly";
+          const Icon = plan.Icon;
           // รายปี → แสดงราคาเฉลี่ยต่อเดือน (จ่าย 10 เดือน ได้ใช้ 12 เดือน)
           const bigPrice = isYearly ? Math.round(plan.yearlyNum / 12) : plan.monthlyNum;
           return (
             <div
               key={plan.name}
-              className={`group flex flex-col rounded-[var(--jh-radius-2xl)] p-8 transition-all duration-300 ease-out hover:-translate-y-1.5 ${
+              className={`group relative flex flex-col overflow-hidden rounded-[var(--jh-radius-2xl)] p-8 transition-all duration-300 ease-out hover:-translate-y-1.5 ${
                 plan.featured
-                  ? "border border-transparent bg-[var(--jh-blue)] text-white shadow-[0_20px_50px_rgba(0,122,255,0.28)] hover:shadow-[0_26px_60px_rgba(0,122,255,0.34)]"
-                  : "border border-black/[0.06] bg-white shadow-[var(--jh-shadow-card)] hover:shadow-[var(--jh-shadow-md)]"
+                  ? "border border-transparent text-white shadow-[0_20px_50px_rgba(0,122,255,0.28)] hover:shadow-[0_26px_60px_rgba(0,122,255,0.34)]"
+                  : "border border-white/60 shadow-[var(--jh-shadow-card)] hover:shadow-[var(--jh-shadow-md)]"
               }`}
+              style={
+                plan.featured
+                  ? { background: "linear-gradient(160deg, #2b94ff 0%, #007aff 55%, #0062cc 100%)" }
+                  : { background: `linear-gradient(150deg, ${plan.gradFrom} 0%, ${plan.gradTo} 100%)` }
+              }
             >
+              {/* Decorative glow blob (featured only) */}
               {plan.featured && (
-                <span className="mb-3 -mt-1 self-center rounded-full bg-white px-3.5 py-1 text-xs font-bold text-[var(--jh-blue)] shadow-[var(--jh-shadow-sm)]">
-                  แนะนำ · ยอดนิยม
-                </span>
+                <div
+                  className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full opacity-30 blur-2xl"
+                  style={{ background: "radial-gradient(circle, #ffffff 0%, transparent 70%)" }}
+                />
               )}
-              <div className="text-[19px] font-semibold">{plan.name}</div>
-              <div
-                className={`mt-1 text-[13px] ${
-                  plan.featured ? "text-white/60" : "text-[var(--jh-ink-tertiary)]"
-                }`}
-              >
-                {plan.desc}
+
+              {/* Header row: icon chip + recommended badge */}
+              <div className="relative flex items-center justify-between">
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                  style={
+                    plan.featured
+                      ? { background: "rgba(255,255,255,0.18)", color: "#fff", boxShadow: "0 10px 22px -8px rgba(0,0,0,0.25)" }
+                      : { background: plan.color, color: "#fff", boxShadow: `0 10px 22px -8px ${plan.color}` }
+                  }
+                >
+                  <Icon className="h-6 w-6" strokeWidth={2} />
+                </div>
+                {plan.featured && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-xs font-bold text-[var(--jh-blue)] shadow-[var(--jh-shadow-sm)]">
+                    <Sparkles className="h-3 w-3" strokeWidth={2.5} />
+                    ยอดนิยม
+                  </span>
+                )}
               </div>
 
+              {/* Name + desc */}
+              <div className="relative mt-5">
+                <div className="text-[20px] font-bold tracking-[-0.01em]">{plan.name}</div>
+                <div
+                  className={`mt-1 text-[13px] ${
+                    plan.featured ? "text-white/70" : "text-[var(--jh-ink-secondary)]"
+                  }`}
+                >
+                  {plan.desc}
+                </div>
+              </div>
+
+              {/* Price */}
               <div
-                className="mt-5 transition-all duration-300"
+                className="relative mt-5 transition-all duration-300"
                 style={{
                   transform: swap ? "translateY(10px)" : "translateY(0)",
                   opacity: swap ? 0 : 1,
                 }}
               >
                 <div className="flex items-baseline gap-2">
-                  {/* ราคาเดิมขีดฆ่า (เฉพาะรายปี) */}
                   {isYearly && (
                     <span
                       className={`text-[17px] font-medium tabular-nums line-through ${
@@ -164,7 +218,10 @@ export default function PricingPlans() {
                       {baht(plan.monthlyNum)}
                     </span>
                   )}
-                  <span className="text-[44px] font-semibold tracking-[-0.02em] tabular-nums leading-none">
+                  <span
+                    className="text-[44px] font-bold tracking-[-0.02em] tabular-nums leading-none"
+                    style={plan.featured ? { color: "#fff" } : { color: plan.ink }}
+                  >
                     {baht(bigPrice)}
                   </span>
                   <span
@@ -175,7 +232,6 @@ export default function PricingPlans() {
                     / เดือน
                   </span>
                 </div>
-                {/* บรรทัดราคาเต็มต่อปี (เฉพาะรายปี) */}
                 <div
                   className={`mt-1.5 text-[13px] font-medium ${
                     plan.featured ? "text-white/70" : "text-[var(--jh-ink-tertiary)]"
@@ -185,26 +241,34 @@ export default function PricingPlans() {
                 </div>
               </div>
 
-              <ul className="my-6 flex flex-1 flex-col gap-3.5">
+              {/* Feature list */}
+              <ul className="relative my-6 flex flex-1 flex-col gap-3.5">
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-start gap-2.5 text-sm">
-                    <Check
-                      className={`mt-0.5 h-[18px] w-[18px] shrink-0 ${
-                        plan.featured ? "text-white" : "text-[var(--jh-green)]"
-                      }`}
-                    />
+                    <span
+                      className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full"
+                      style={
+                        plan.featured
+                          ? { background: "rgba(255,255,255,0.22)" }
+                          : { background: plan.color }
+                      }
+                    >
+                      <Check className="h-3 w-3 text-white" strokeWidth={3} />
+                    </span>
                     <span className={plan.featured ? "text-white/95" : "text-[var(--jh-ink)]"}>{f}</span>
                   </li>
                 ))}
               </ul>
 
+              {/* CTA */}
               <Link
                 href={plan.href}
-                className={`inline-flex h-11 items-center justify-center rounded-full px-5 text-sm font-semibold transition-transform active:scale-[0.97] ${
+                className="relative inline-flex h-11 items-center justify-center rounded-full px-5 text-sm font-bold transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.97]"
+                style={
                   plan.featured
-                    ? "bg-white text-[var(--jh-gray-900)] hover:bg-white/90"
-                    : "bg-[var(--jh-surface)] text-[var(--jh-ink)] hover:bg-[var(--jh-surface-hover)]"
-                }`}
+                    ? { background: "#fff", color: "var(--jh-blue)", boxShadow: "0 8px 18px -6px rgba(0,0,0,0.25)" }
+                    : { background: plan.color, color: "#fff", boxShadow: `0 8px 18px -6px ${plan.color}` }
+                }
               >
                 {plan.cta}
               </Link>
