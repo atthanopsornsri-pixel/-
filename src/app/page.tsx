@@ -21,6 +21,7 @@ import {
 import DashboardButton from "@/components/DashboardButton";
 import PricingPlans from "@/components/marketing/PricingPlans";
 import FAQ from "@/components/marketing/FAQ";
+import HowItWorks from "@/components/marketing/HowItWorks";
 
 const FEATURES = [
   {
@@ -99,20 +100,6 @@ const LINE_BENEFITS = [
   "พิมพ์ถามยอดบิล–สถานะห้องกับระบบได้ตลอด 24 ชม.",
 ];
 
-const STEPS = [
-  {
-    title: "ลงทะเบียน & สร้างตึก",
-    body: "สร้างบัญชีเจ้าของ ระบุจำนวนห้องพัก ตั้งค่าราคาและสิ่งอำนวยความสะดวกพื้นฐาน",
-  },
-  {
-    title: "เพิ่มผู้เช่าเข้าห้อง",
-    body: "ลงทะเบียนผู้เช่าใหม่ ออกสัญญาเช่าให้เซ็น และเชิญผู้เช่าเข้าสู่ระบบ",
-  },
-  {
-    title: "จัดการบิล & รับเงิน",
-    body: "สิ้นเดือนกรอกแค่มิเตอร์ ระบบส่งบิลเข้า LINE ลูกบ้าน จ่ายปุ๊บ ระบบอัปเดตยอดให้ปั๊บ",
-  },
-];
 
 export default async function Home() {
   const session = await getServerSession(authOptions);
@@ -294,28 +281,7 @@ export default async function Home() {
         </section>
 
         {/* ---------------- How it works ---------------- */}
-        <section id="how-it-works" className="bg-[var(--jh-surface)] px-6 py-24">
-          <div className="mx-auto max-w-[1120px]">
-            <div className="mb-14 text-center">
-              <h2 className="text-[32px] font-semibold tracking-[-0.02em] md:text-[40px]">
-                เริ่มต้นใช้งานง่ายๆ ใน 3 ขั้นตอน
-              </h2>
-            </div>
-            <div className="grid gap-10 md:grid-cols-3">
-              {STEPS.map((s, i) => (
-                <div key={s.title} className="text-center">
-                  <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-[var(--jh-blue)] text-[22px] font-semibold text-white shadow-[0_10px_24px_rgba(0,122,255,0.28)]">
-                    {i + 1}
-                  </div>
-                  <h4 className="mb-2 text-[18px] font-semibold">{s.title}</h4>
-                  <p className="mx-auto max-w-[320px] text-sm leading-[1.6] text-[var(--jh-ink-secondary)]">
-                    {s.body}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <HowItWorks />
 
         {/* ---------------- LINE Mockup (เพียงแค่..รับบิลผ่าน LINE) ---------------- */}
         <section className="overflow-hidden px-6 py-24">
