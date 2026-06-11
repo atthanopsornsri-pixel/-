@@ -154,7 +154,7 @@ export default async function Home() {
               className="mx-auto w-64 drop-shadow-[0_20px_44px_rgba(0,0,0,0.12)] sm:w-80 md:w-[420px] jh-float object-contain"
             />
             <h1 className="mt-7 text-[44px] font-semibold leading-[1.05] tracking-[-0.03em] md:text-[64px]">
-              JadHor OS
+              JadHor
               <span className="mt-2.5 block text-[22px] font-medium tracking-[-0.01em] text-[var(--jh-ink-tertiary)] md:text-[26px]">
                 (จัดหอ)
               </span>
