@@ -461,7 +461,7 @@ export default function RoomsPage() {
                       onClick={() => handleDraftVacancyListing(room)}
                       className="w-full mb-3 rounded-full border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100/80 h-10 text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-[0_8px_18px_-6px_rgba(255,149,0,0.15)]"
                     >
-                      ✨ เขียนโฆษณาปล่อยเช่าอัจฉริยะ
+                      เขียนคำโฆษณาปล่อยเช่า
                     </Button>
                   )}
                   
@@ -626,7 +626,7 @@ export default function RoomsPage() {
               {isDraftingListing ? (
                 <div className="flex flex-col items-center justify-center py-12 space-y-4">
                   <div className="w-10 h-10 border-4 border-amber-500/30 border-t-amber-600 rounded-full animate-spin" />
-                  <p className="text-sm font-medium text-slate-500">ระบบอัจฉริยะกำลังร่างข้อความโฆษณาปล่อยเช่า...</p>
+                  <p className="text-sm font-medium text-slate-500">ระบบกำลังร่างข้อความโฆษณาปล่อยเช่า...</p>
                 </div>
               ) : (
                 <div className="space-y-4">

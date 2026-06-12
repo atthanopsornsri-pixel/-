@@ -146,7 +146,7 @@ export default function MaintenancePage() {
         setTitle(""); setDescription(""); clearImage();
         setPreferredDate(""); setPreferredTime("09:00");
         mutateRequests();
-        toast.success("ส่งเรื่องแจ้งซ่อมสำเร็จ เจ้าของหอพักได้รับแจ้งแล้ว 🔧");
+        toast.success("ส่งเรื่องแจ้งซ่อมสำเร็จ เจ้าของหอพักได้รับแจ้งแล้ว");
       } else {
         const data = await res.json();
         toast.error(data.message || "เกิดข้อผิดพลาด");

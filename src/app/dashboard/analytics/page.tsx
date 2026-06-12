@@ -170,7 +170,7 @@ export default async function AnalyticsPage() {
                 </span>
               </div>
             </div>
-            <span className="text-[10px] font-medium text-[var(--jh-green-ink)] shrink-0">✨ คาดการณ์</span>
+            <span className="text-[10px] font-medium text-[var(--jh-green-ink)] shrink-0">คาดการณ์</span>
           </div>
         </div>
       </div>

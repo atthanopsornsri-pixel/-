@@ -44,8 +44,14 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     }
 
     return NextResponse.json({ text: listingText });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error drafting vacancy listing:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+    if (error instanceof Error && error.message === "API_KEY_NOT_CONFIGURED") {
+      return NextResponse.json({ message: "กรุณาเปิดใช้งานระบบและตั้งค่ารหัสเชื่อมต่อ (API Key) ในหน้าแอดมินหรือไฟล์ .env ก่อนใช้งาน" }, { status: 400 });
+    }
+    if (error?.status === 401) {
+      return NextResponse.json({ message: "รหัสเชื่อมต่อ (API Key) ไม่ถูกต้องหรือไม่ได้รับอนุญาต กรุณาตรวจสอบข้อมูลคีย์อีกครั้ง" }, { status: 401 });
+    }
+    return NextResponse.json({ message: "เกิดข้อผิดพลาดในการเชื่อมต่อระบบบริการข้อมูลหลังบ้าน" }, { status: 500 });
   }
 }

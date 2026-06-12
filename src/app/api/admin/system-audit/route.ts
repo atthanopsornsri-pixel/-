@@ -83,8 +83,14 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ report: reportMarkdown });
-  } catch (error) {
+  } catch (error: any) {
     console.error("System security audit failed:", error);
-    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+    if (error instanceof Error && error.message === "API_KEY_NOT_CONFIGURED") {
+      return NextResponse.json({ message: "กรุณาเปิดใช้งานระบบและตั้งค่ารหัสเชื่อมต่อ (API Key) ในหน้าแอดมินหรือไฟล์ .env ก่อนใช้งาน" }, { status: 400 });
+    }
+    if (error?.status === 401) {
+      return NextResponse.json({ message: "รหัสเชื่อมต่อ (API Key) ไม่ถูกต้องหรือไม่ได้รับอนุญาต กรุณาตรวจสอบข้อมูลคีย์อีกครั้ง" }, { status: 401 });
+    }
+    return NextResponse.json({ message: "เกิดข้อผิดพลาดในการรันระบบตรวจสอบความสมบูรณ์หลังบ้าน" }, { status: 500 });
   }
 }
