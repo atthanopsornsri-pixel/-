@@ -57,6 +57,13 @@ export async function POST(
     if (error?.status === 401) {
       return NextResponse.json({ message: "รหัสเชื่อมต่อ (API Key) ไม่ถูกต้องหรือไม่ได้รับอนุญาต กรุณาตรวจสอบข้อมูลคีย์อีกครั้ง" }, { status: 401 });
     }
+    // Anthropic ตอบ 400 พร้อมข้อความ credit balance too low เมื่อเครดิตหมด/ยังไม่เติม
+    if (error?.status === 400 && String(error?.message || "").toLowerCase().includes("credit")) {
+      return NextResponse.json(
+        { message: "ระบบสแกนเอกสารยังไม่เปิดใช้งาน (เครดิตบริการประมวลผลเอกสารหมด) — กรอกข้อมูลผู้เช่าด้วยตนเองได้ตามปกติ" },
+        { status: 402 }
+      );
+    }
     return NextResponse.json({ message: "เกิดข้อผิดพลาดในการเชื่อมต่อระบบสแกนเอกสาร" }, { status: 500 });
   }
 }
