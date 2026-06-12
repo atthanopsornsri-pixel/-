@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -127,8 +127,12 @@ export async function POST(req: Request) {
         `👉 เข้าระบบเพื่อรับเรื่องและนัดหมาย`,
       ].filter(Boolean).join("\n");
 
-      sendLineOAMessage(owner.lineUserId, lineMsg, owner.lineChannelAccessToken)
-        .catch((err) => console.error("[LINE] maintenance notify error:", err));
+      const ownerLineId = owner.lineUserId;
+      const ownerToken = owner.lineChannelAccessToken;
+      after(() =>
+        sendLineOAMessage(ownerLineId, lineMsg, ownerToken)
+          .catch((err) => console.error("[LINE] maintenance notify error:", err))
+      );
     }
 
     return NextResponse.json(request, { status: 201 });
@@ -288,13 +292,23 @@ export async function PATCH(req: Request) {
     }
 
     if (lineMsg && owner.lineChannelAccessToken && tenant?.lineUserId) {
-      sendLineOAMessage(tenant.lineUserId, lineMsg, owner.lineChannelAccessToken)
-        .catch((err) => console.error("[LINE] maintenance status notify error:", err));
+      const finalLineMsg = lineMsg;
+      const tenantLineId = tenant.lineUserId;
+      const lineToken = owner.lineChannelAccessToken;
+      after(() =>
+        sendLineOAMessage(tenantLineId, finalLineMsg, lineToken)
+          .catch((err) => console.error("[LINE] maintenance status notify error:", err))
+      );
     }
 
     if (smsMsg && tenant?.phoneNumber && maintReq.room.property.ownerId) {
-      sendSmsWithAddon(maintReq.room.property.ownerId, tenant.phoneNumber, smsMsg)
-        .catch((err) => console.error("[SMS] maintenance status notify error:", err));
+      const finalSmsMsg = smsMsg;
+      const tenantPhone = tenant.phoneNumber;
+      const smsOwnerId = maintReq.room.property.ownerId;
+      after(() =>
+        sendSmsWithAddon(smsOwnerId, tenantPhone, finalSmsMsg)
+          .catch((err) => console.error("[SMS] maintenance status notify error:", err))
+      );
     }
 
     return NextResponse.json(request);

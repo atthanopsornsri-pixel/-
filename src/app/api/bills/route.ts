@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -149,7 +149,8 @@ export async function POST(req: Request) {
         take: 3,
       });
 
-      (async () => {
+      // after() — Vercel จะรอให้งานนี้เสร็จหลังส่ง response แล้ว (IIFE เฉย ๆ โดนตัดทิ้ง)
+      after(async () => {
         const aiMsg = await draftBillNotification({
           tenantName,
           roomNumber: bill.room.number,
@@ -174,16 +175,20 @@ export async function POST(req: Request) {
           `${appUrl}/dashboard/my-bills`,
         ].join("\n");
 
-        sendLineOAMessage(tenantLineId, lineMsg, lineToken)
+        await sendLineOAMessage(tenantLineId, lineMsg, lineToken)
           .catch((err) => console.error("[LINE] bill notify error:", err));
-      })();
+      });
     }
 
     // SMS notification (ถ้า owner มี SMS addon และผู้เช่ามีเบอร์)
     if (tenant?.phoneNumber && room?.property?.ownerId) {
       const smsMsg = `[JadHor] บิลห้อง ${bill.room.number} เดือน ${month}/${yearBE} ยอด ฿${totalAmount.toLocaleString()} กำหนดชำระ ${dueStr} จ่ายได้ที่ ${appUrl}/dashboard/my-bills`;
-      sendSmsWithAddon(room.property.ownerId, tenant.phoneNumber, smsMsg)
-        .catch((err) => console.error("[SMS] bill notify error:", err));
+      const smsPhone = tenant.phoneNumber;
+      const smsOwnerId = room.property.ownerId;
+      after(() =>
+        sendSmsWithAddon(smsOwnerId, smsPhone, smsMsg)
+          .catch((err) => console.error("[SMS] bill notify error:", err))
+      );
     }
 
     // Feature #2: Anomaly detection — แจ้งเตือนเจ้าของถ้าค่าน้ำ/ไฟผิดปกติ (fire-and-forget)
@@ -191,7 +196,7 @@ export async function POST(req: Request) {
       const ownerLineId = room.property.owner.lineUserId;
       const ownerToken = room.property.owner.lineChannelAccessToken;
 
-      (async () => {
+      after(async () => {
         const history = await prisma.bill.findMany({
           where: { roomId, isDeleted: false, id: { not: bill.id } },
           select: { waterUnits: true, electricUnits: true, month: true, year: true },
@@ -217,10 +222,10 @@ export async function POST(req: Request) {
             `👉 ตรวจสอบเพิ่มเติมในระบบจัดการบิล`,
           ].join("\n");
 
-          sendLineOAMessage(ownerLineId, alertMsg, ownerToken)
+          await sendLineOAMessage(ownerLineId, alertMsg, ownerToken)
             .catch((err) => console.error("[LINE] anomaly alert error:", err));
         }
-      })();
+      });
     }
 
     return NextResponse.json(bill, { status: 201 });

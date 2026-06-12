@@ -1,5 +1,9 @@
 import Anthropic from "@anthropic-ai/sdk";
 
+// โมเดลกลาง — งานข้อความใช้ Haiku 4.5 (เร็ว/ถูก), งานอ่านรูปเอกสารใช้ Sonnet 4.6 (แม่นกว่า)
+const TEXT_MODEL = "claude-haiku-4-5";
+const VISION_MODEL = "claude-sonnet-4-6";
+
 function getClient(): Anthropic | null {
   const key = process.env.ANTHROPIC_API_KEY;
   if (!key || key.trim() === "" || key.includes("วางคีย์ตรงนี้") || key.includes("your-key")) {
@@ -31,7 +35,7 @@ export async function detectBillAnomaly(params: {
   const currentSummary = `เดือน ${newBill.month}/${newBill.year + 543}: น้ำ ${newBill.waterUnits ?? "เหมาจ่าย"} หน่วย, ไฟ ${newBill.electricUnits ?? "เหมาจ่าย"} หน่วย`;
 
   const res = await client.messages.create({
-    model: "claude-3-5-haiku-20241022",
+    model: TEXT_MODEL,
     max_tokens: 300,
     messages: [
       {
@@ -77,7 +81,7 @@ export async function categorizeMaintenance(params: {
   if (!client) throw new Error("API_KEY_NOT_CONFIGURED");
 
   const res = await client.messages.create({
-    model: "claude-3-5-haiku-20241022",
+    model: TEXT_MODEL,
     max_tokens: 200,
     messages: [
       {
@@ -132,7 +136,7 @@ export async function draftBillNotification(params: {
     : "ใช้ภาษาเป็นมิตรสุภาพ";
 
   const res = await client.messages.create({
-    model: "claude-3-5-haiku-20241022",
+    model: TEXT_MODEL,
     max_tokens: 400,
     messages: [
       {
@@ -201,7 +205,7 @@ export async function draftVacancyListing(params: {
 ไม่ต้องอธิบายคำนำหรือสิ่งอื่นใด ตอบเฉพาะข้อความประกาศที่จะนำไปโพสต์ได้เลย ห้ามใช้อีโมจิ (Emoji) หรือรูปภาพสัญลักษณ์ใดๆ ทั้งสิ้น`;
 
   const res = await client.messages.create({
-    model: "claude-3-5-haiku-20241022",
+    model: TEXT_MODEL,
     max_tokens: 600,
     messages: [{ role: "user", content: prompt }],
   });
@@ -247,7 +251,7 @@ export async function parseLeaseContractImage(base64Image: string): Promise<{
 }`;
 
   const res = await client.messages.create({
-    model: "claude-3-5-sonnet-20241022",
+    model: VISION_MODEL,
     max_tokens: 500,
     messages: [
       {
@@ -328,7 +332,7 @@ export async function runSystemSecurityAudit(diagnostics: {
 3. ห้ามใช้อีโมจิ (Emoji) หรือเครื่องหมายสัญลักษณ์พิเศษ เช่น 🟢, 🟡, 🔴, ✅, ❌ โดยเด็ดขาด ให้ใช้ข้อความปกติระบุระดับความรุนแรง เช่น [ด่วนมาก], [ความรุนแรงต่ำ], [ผ่าน], [ไม่ผ่าน] แทน`;
 
   const res = await client.messages.create({
-    model: "claude-3-5-haiku-20241022",
+    model: TEXT_MODEL,
     max_tokens: 800,
     messages: [{ role: "user", content: prompt }],
   });
