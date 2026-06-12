@@ -3,6 +3,7 @@
 import { getSecurePrisma } from "@/lib/prisma-secure";
 import { createClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { verifySlip, receiverMatchesPromptPay } from "@/lib/slip-verification";
 import { sendLineOAMessage } from "@/lib/line";
 import { prisma } from "@/lib/prisma";
@@ -140,17 +141,21 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
       );
     }
 
-    // 6. SlipOK verification — ทำแบบ non-blocking หลัง return
-    //    ถ้า SlipOK ตรวจผ่าน → อัปเดต status เป็น PAID/PARTIAL อัตโนมัติ
-    //    ถ้า SlipOK ล้มเหลว / timeout → bill ยังเป็น PENDING (เจ้าของตรวจเอง)
-    verifyAndUpgradeStatus({
+    // 6. SlipOK verification — ใช้ after() เพื่อให้รันหลัง response ส่งไปแล้ว
+    //    ป้องกัน Vercel Lambda ถูก terminate ก่อน SlipOK ตอบกลับ
+    const verifyOpts = {
       billId,
       buffer,
       contentType: file.type || "image/jpeg",
       totalAmount: bill.totalAmount,
       promptPayNo: bill.room?.property?.promptPayNo ?? undefined,
       slipUrl: slipUrlToStore,
-    }).catch((err) => console.error("[SlipOK async verify] error:", err));
+    };
+    after(() =>
+      verifyAndUpgradeStatus(verifyOpts).catch((err) =>
+        console.error("[SlipOK async verify] error:", err)
+      )
+    );
 
     return { success: true, message: "📨 ส่งสลิปสำเร็จ! เจ้าของหอได้รับแจ้ง LINE แล้ว — กรุณารอการอนุมัติ" };
 

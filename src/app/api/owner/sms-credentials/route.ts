@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendThaibulkSms, normalizeThaiPhone } from "@/lib/sms";
+import { encryptCredential, decryptCredential } from "@/lib/encryption";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -31,8 +33,9 @@ export async function GET() {
 
     if (!addon) return NextResponse.json(null);
 
-    const key = addon.thaibulkApiKey;
-    const secret = addon.thaibulkApiSecret;
+    // Decrypt before masking (stored encrypted, returned masked)
+    const key = addon.thaibulkApiKey ? decryptCredential(addon.thaibulkApiKey) : null;
+    const secret = addon.thaibulkApiSecret ? decryptCredential(addon.thaibulkApiSecret) : null;
     const mask = (v: string | null) =>
       v && v.length > 8 ? v.slice(0, 4) + "****" + v.slice(-4) : v ? "****" : null;
 
@@ -110,8 +113,8 @@ export async function PUT(req: Request) {
     const updateData: Record<string, unknown> = {
       thaibulkSenderId: (senderId?.trim() || "JadHor").slice(0, 11),
     };
-    if (isUpdatingKey) updateData.thaibulkApiKey = (apiKey as string).trim();
-    if (isUpdatingSecret) updateData.thaibulkApiSecret = (apiSecret as string).trim();
+    if (isUpdatingKey) updateData.thaibulkApiKey = encryptCredential((apiKey as string).trim());
+    if (isUpdatingSecret) updateData.thaibulkApiSecret = encryptCredential((apiSecret as string).trim());
 
     const addon = await prisma.smsAddon.upsert({
       where: { ownerId: session.user.id },
@@ -124,8 +127,8 @@ export async function PUT(req: Request) {
         resetMonth: now.getMonth() + 1,
         resetYear: now.getFullYear(),
         isActive: false,
-        thaibulkApiKey: isUpdatingKey ? (apiKey as string).trim() : "",
-        thaibulkApiSecret: isUpdatingSecret ? (apiSecret as string).trim() : "",
+        thaibulkApiKey: isUpdatingKey ? encryptCredential((apiKey as string).trim()) : "",
+        thaibulkApiSecret: isUpdatingSecret ? encryptCredential((apiSecret as string).trim()) : "",
         thaibulkSenderId: (senderId?.trim() || "JadHor").slice(0, 11),
       },
     });
@@ -143,6 +146,15 @@ export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== "OWNER") {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limit: 5 test SMS per owner per hour
+    const rl = rateLimit(`sms-test:${session.user.id}`, 5, 60 * 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { message: "ส่ง SMS ทดสอบบ่อยเกินไป กรุณารอสักครู่" },
+        { status: 429 }
+      );
     }
 
     const { testPhone } = await req.json();
@@ -175,8 +187,8 @@ export async function POST(req: Request) {
     const result = await sendThaibulkSms(
       normalized,
       "[JadHor] ทดสอบระบบ SMS สำเร็จ! ขอบคุณที่ใช้บริการ JadHor OS",
-      addon.thaibulkApiKey,
-      addon.thaibulkApiSecret,
+      decryptCredential(addon.thaibulkApiKey),
+      decryptCredential(addon.thaibulkApiSecret),
       addon.thaibulkSenderId ?? "JadHor"
     );
 

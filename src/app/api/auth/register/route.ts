@@ -1,10 +1,21 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
-        const body = await req.json();
+    // Rate limit: 5 attempts per IP per 15 minutes
+    const ip = getClientIp(req);
+    const rl = rateLimit(`register:${ip}`, 5, 15 * 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { message: "ส่งคำขอบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่" },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) } }
+      );
+    }
+
+    const body = await req.json();
     const { email: rawEmail, password, name, registrationCode } = body;
     const role = "OWNER";
 
@@ -94,6 +105,6 @@ export async function POST(req: Request) {
       friendlyMessage = "ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณาลองใหม่อีกครั้งภายหลัง";
     }
     
-    return NextResponse.json({ message: friendlyMessage, error: error.message }, { status: 500 });
+    return NextResponse.json({ message: friendlyMessage }, { status: 500 });
   }
 }

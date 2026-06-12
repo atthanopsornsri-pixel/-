@@ -108,6 +108,7 @@ export function normalizeThaiPhone(phone: string): string | null {
  * และหัก quota ใน DB หลังส่งสำเร็จ
  */
 import { prisma } from "./prisma";
+import { decryptCredential } from "./encryption";
 
 export async function sendSmsWithAddon(
   ownerId: string,
@@ -138,6 +139,9 @@ export async function sendSmsWithAddon(
     return { success: false, error: "ยังไม่ได้ตั้งค่า Thaibulksms API Key และ API Secret ให้ครบ" };
   }
 
+  const apiKey = decryptCredential(addon.thaibulkApiKey);
+  const apiSecret = decryptCredential(addon.thaibulkApiSecret);
+
   // Auto-reset quota ถ้าขึ้นเดือนใหม่
   const now = new Date();
   const currentMonth = now.getMonth() + 1;
@@ -157,12 +161,12 @@ export async function sendSmsWithAddon(
     return { success: false, error: `โควตา SMS หมดแล้ว (${currentUsed}/${addon.quota} ข้อความ/เดือน)` };
   }
 
-  // ส่ง SMS
+  // ส่ง SMS (credentials ถูก decrypt แล้วในขั้นตอนข้างบน)
   const result = await sendThaibulkSms(
     toPhone,
     message,
-    addon.thaibulkApiKey,
-    addon.thaibulkApiSecret,
+    apiKey,
+    apiSecret,
     addon.thaibulkSenderId ?? "JadHor"
   );
 

@@ -1,9 +1,17 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendLineOAMessage } from "@/lib/line";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
+    // Rate limit: 3 submissions per IP per 10 minutes
+    const ip = getClientIp(req);
+    const rl = rateLimit(`contact:${ip}`, 3, 10 * 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.redirect(new URL("/?contact=error#contact", req.url), { status: 303 });
+    }
+
     const formData = await req.formData();
 
     const name    = (formData.get("name")    as string | null)?.trim() || "";
