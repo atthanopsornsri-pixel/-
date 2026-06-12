@@ -183,13 +183,13 @@ export default function OwnerBillingPage() {
             {bills.map(bill => (
               <tr key={bill.id} className="hover:bg-slate-50/50">
                 <td className="px-6 py-4 font-bold text-slate-800">
-                  {bill.planTier} <span className="text-xs text-slate-400 ml-1 font-medium">({bill.cycle})</span>
+                  {bill.items?.[0]?.description || "ค่าบริการระบบ"}
                 </td>
                 <td className="px-6 py-4 font-medium text-slate-800">
                   {bill.month}/{bill.year + 543}
                 </td>
                 <td className="px-6 py-4 font-bold text-slate-800">
-                  {bill.amount.toLocaleString()}
+                  {bill.totalAmount.toLocaleString()}
                 </td>
                 <td className="px-6 py-4">
                   {bill.status === "UNPAID" && <span className="bg-red-50 text-red-600 px-2 py-1 rounded font-medium">รอชำระเงิน</span>}
@@ -225,8 +225,8 @@ export default function OwnerBillingPage() {
           <div className="bg-white rounded-[24px] p-8 w-full max-w-md shadow-lg animate-in zoom-in-95">
             <h2 className="text-xl font-bold text-slate-800 mb-2">แจ้งชำระเงิน</h2>
             <p className="text-slate-500 mb-6 text-sm">
-              แพ็กเกจ: {selectedBill.planTier} ({selectedBill.cycle}) <br/>
-              ยอดที่ต้องชำระ: <span className="font-bold text-slate-800">{selectedBill.amount.toLocaleString()} บาท</span>
+              รายละเอียด: {selectedBill.items?.[0]?.description || "ค่าบริการระบบ"} <br/>
+              ยอดที่ต้องชำระ: <span className="font-bold text-slate-800">{selectedBill.totalAmount.toLocaleString()} บาท</span>
             </p>
             
             <form onSubmit={handlePayment} className="space-y-4">

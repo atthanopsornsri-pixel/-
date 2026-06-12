@@ -161,7 +161,7 @@ export default function AdminBillsPage() {
                     {bill.owner?.name || bill.owner?.email}
                   </td>
                   <td className="px-6 py-4 font-bold text-slate-800">
-                    {bill.amount.toLocaleString()}
+                    {bill.totalAmount.toLocaleString()}
                   </td>
                   <td className="px-6 py-4">
                     {bill.status === "UNPAID" && <span className="bg-red-50 text-red-600 px-2 py-1 rounded font-medium">รอชำระ</span>}
