@@ -169,6 +169,30 @@ export default function RoomsPage() {
     }
   };
 
+  // สีและป้ายตามสถานะห้อง — ใช้ทั้งแถบบนการ์ดและ badge ให้ดูออกทันที
+  const statusMeta = (status: string) => {
+    switch (status) {
+      case "OCCUPIED":
+        return {
+          label: "มีผู้เช่า",
+          bar: "#007AFF",
+          badge: "bg-[#E8F2FF] text-[#007AFF] border border-[#007AFF]/20",
+        };
+      case "MAINTENANCE":
+        return {
+          label: "ปรับปรุง",
+          bar: "#FF3B30",
+          badge: "bg-red-50 text-red-600 border border-red-200",
+        };
+      default: // AVAILABLE
+        return {
+          label: "ห้องว่าง",
+          bar: "#34C759",
+          badge: "bg-[#E8F8F5] text-[#34C759] border border-[#34C759]/20",
+        };
+    }
+  };
+
   const handleCopyInvite = async (roomId: string, code: string) => {
     try {
       const inviteLink = `${window.location.origin}/register/tenant?code=${code}`;
@@ -317,15 +341,18 @@ export default function RoomsPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {rooms.map((room) => (
+              {rooms.map((room) => {
+              const meta = statusMeta(room.status);
+              return (
               <div key={room.id} className="bg-white rounded-[32px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 group transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 flex flex-col">
                 {room.imageMain ? (
                   <div className="h-40 w-full bg-slate-200 relative overflow-hidden shrink-0">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={room.imageMain} alt={`Room ${room.number}`} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
+                    <span className="absolute top-0 left-0 h-1.5 w-full" style={{ background: meta.bar }} />
                   </div>
                 ) : (
-                  <div className="h-3 w-full bg-[#007AFF]"></div>
+                  <div className="h-3 w-full" style={{ background: meta.bar }}></div>
                 )}
                 
                 <div className="p-6 flex-1 flex flex-col">
@@ -358,11 +385,9 @@ export default function RoomsPage() {
                         )}
                       </div>
                     </div>
-                    <span className={`px-3 py-1.5 rounded-full text-xs font-bold tracking-wide ${
-                      room.status === "AVAILABLE" ? "bg-[#E8F8F5] text-[#34C759] border border-[#34C759]/20" :
-                      room.status === "OCCUPIED" ? "bg-[#E8F2FF] text-[#007AFF] border border-[#007AFF]/20" : "bg-red-50 text-red-600 border border-red-200"
-                    }`}>
-                      {room.status === "AVAILABLE" ? "ห้องว่าง" : room.status === "OCCUPIED" ? "มีผู้เช่า" : "ปรับปรุง"}
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold tracking-wide whitespace-nowrap ${meta.badge}`}>
+                      <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: meta.bar }} />
+                      {meta.label}
                     </span>
                   </div>
 
@@ -408,7 +433,8 @@ export default function RoomsPage() {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
             </div>
           )}
         </div>
