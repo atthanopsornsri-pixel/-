@@ -2,14 +2,13 @@
 import { toast } from "sonner";
 
 import { useState, useEffect } from "react";
+import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Receipt, Send, BellRing, Pencil, Trash2 } from "lucide-react";
 
 export default function BillingPage() {
-  const [bills, setBills] = useState<any[]>([]);
-  const [properties, setProperties] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
   
   const [propertyId, setPropertyId] = useState("");
@@ -37,8 +36,12 @@ export default function BillingPage() {
   const [vehicleFee, setVehicleFee] = useState("");
   const [leaseStart, setLeaseStart] = useState("");
 
+  // ─── SWR: cache shared กับหน้า rooms/meters ───────────────────────
+  const { data: properties = [] } = useSWR<any[]>("/api/properties");
+  const { data: bills = [], isLoading: isBillsLoading, mutate: mutateBills } =
+    useSWR<any[]>("/api/bills");
+
   const [isLoading, setIsLoading] = useState(false);
-  const [isBillsLoading, setIsBillsLoading] = useState(true);
   const [selectedSlip, setSelectedSlip] = useState<any>(null);
 
   // ── แก้ไข / ลบ บิล ──
@@ -125,36 +128,11 @@ export default function BillingPage() {
     }
   };
 
-  useEffect(() => {
-    const loadData = async () => {
-      setIsBillsLoading(true);
-      await Promise.all([fetchProperties(), fetchBills()]);
-      setIsBillsLoading(false);
-    };
-    loadData();
-  }, []);
-
-  async function fetchProperties() {
-    const res = await fetch("/api/properties");
-    if (res.ok) {
-      const data = await res.json();
-      setProperties(data);
-    }
-  };
-
   async function fetchRooms(propId: string) {
     const res = await fetch(`/api/rooms?propertyId=${propId}`);
     if (res.ok) {
       const data = await res.json();
       setRooms(data);
-    }
-  };
-
-  async function fetchBills() {
-    const res = await fetch("/api/bills");
-    if (res.ok) {
-      const data = await res.json();
-      setBills(data);
     }
   };
 
@@ -250,7 +228,7 @@ export default function BillingPage() {
 
     if (res.ok) {
       toast.success("ออกบิลเข้าอยู่สำเร็จ! เงินประกันถูกบันทึกลงสัญญาให้อัตโนมัติ");
-      fetchBills();
+      mutateBills();
     } else {
       const data = await res.json();
       toast.error(data.message || "เกิดข้อผิดพลาด");
@@ -333,7 +311,7 @@ export default function BillingPage() {
 
     if (res.ok) {
       toast.success("สร้างบิลสำเร็จ");
-      fetchBills();
+      mutateBills();
       // Reset some fields
       setWaterUnits(""); setWaterAmount("");
       setElectricUnits(""); setElectricAmount("");
@@ -353,7 +331,7 @@ export default function BillingPage() {
       if (res.ok) {
         toast.success("อนุมัติบิลสำเร็จ! สถานะเปลี่ยนเป็นชำระแล้ว");
         setSelectedSlip(null);
-        fetchBills();
+        mutateBills();
       } else {
         toast.error("เกิดข้อผิดพลาดในการอนุมัติ");
       }
@@ -427,7 +405,7 @@ export default function BillingPage() {
       if (res.ok) {
         toast.success("แก้ไขบิลสำเร็จ");
         setEditBill(null);
-        fetchBills();
+        mutateBills();
       } else {
         const data = await res.json();
         toast.error(data.message || "เกิดข้อผิดพลาด");
@@ -449,7 +427,7 @@ export default function BillingPage() {
       const res = await fetch(`/api/bills/${bill.id}`, { method: "DELETE" });
       if (res.ok) {
         toast.success("ลบบิลสำเร็จ");
-        fetchBills();
+        mutateBills();
       } else {
         const data = await res.json();
         toast.error(data.message || "ลบบิลไม่สำเร็จ");

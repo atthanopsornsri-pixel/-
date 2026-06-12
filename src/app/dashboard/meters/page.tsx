@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import useSWR from "swr";
 import { toast } from "sonner";
 import {
   Building,
@@ -30,7 +31,6 @@ const thaiMonths = [
 ];
 
 export default function MeterEntryPage() {
-  const [properties, setProperties] = useState<any[]>([]);
   const [propertyId, setPropertyId] = useState("");
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [year, setYear] = useState(new Date().getFullYear());
@@ -42,21 +42,15 @@ export default function MeterEntryPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // ─── Load properties ────────────────────────────────────────────
+  // ─── Load properties via SWR (shared cache กับหน้า rooms/billing) ──
+  const { data: properties = [] } = useSWR<any[]>("/api/properties");
+
+  // Auto-select first property when data arrives
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/properties");
-        if (res.ok) {
-          const data = await res.json();
-          setProperties(data);
-          if (data.length > 0) setPropertyId(data[0].id);
-        }
-      } catch {
-        toast.error("ไม่สามารถโหลดข้อมูลหอพักได้");
-      }
-    })();
-  }, []);
+    if (properties.length > 0 && !propertyId) {
+      setPropertyId(properties[0].id);
+    }
+  }, [properties, propertyId]);
 
   // ─── Reload rows when filters change ────────────────────────────
   useEffect(() => {

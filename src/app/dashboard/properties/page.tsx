@@ -1,7 +1,8 @@
 "use client";
 import { toast } from "sonner";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,8 +46,7 @@ const compressImage = (file: File, maxWidth = 1000): Promise<string> => {
 
 export default function PropertiesPage() {
   const router = useRouter();
-  const [properties, setProperties] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: properties = [], isLoading, mutate: mutateProperties } = useSWR<any[]>("/api/properties");
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -75,23 +75,6 @@ export default function PropertiesPage() {
   const [defaultMotorcycleFee, setDefaultMotorcycleFee] = useState("");
 
   const [isSavingSettings, setIsSavingSettings] = useState(false);
-
-  useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
-      await fetchProperties();
-      setIsLoading(false);
-    };
-    loadData();
-  }, []);
-
-  async function fetchProperties() {
-    const res = await fetch("/api/properties");
-    if (res.ok) {
-      const data = await res.json();
-      setProperties(data);
-    }
-  };
 
   const handleSignatureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -126,7 +109,7 @@ export default function PropertiesPage() {
         setAddress("");
         setImageFile(null);
         (document.getElementById("image") as HTMLInputElement).value = "";
-        fetchProperties();
+        mutateProperties();
         router.refresh();
       } else {
         toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
@@ -185,7 +168,7 @@ export default function PropertiesPage() {
       if (res.ok) {
         toast.success("บันทึกการตั้งค่าบิลสำเร็จ!");
         setSelectedProp(null);
-        fetchProperties();
+        mutateProperties();
       } else {
         toast.error("เกิดข้อผิดพลาดในการบันทึก");
       }
