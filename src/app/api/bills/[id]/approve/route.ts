@@ -22,11 +22,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
-    // Update bill status to PAID
+    // Update bill status to PAID + sync paidAmount กับ totalAmount
     const updated = await prisma.bill.update({
       where: { id },
       data: {
         status: "PAID",
+        paidAmount: bill.totalAmount,
+        paymentDate: bill.paymentDate ?? new Date(),
       },
     });
 
