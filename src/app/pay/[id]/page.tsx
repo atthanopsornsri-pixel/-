@@ -139,7 +139,7 @@ export default function PayBillPage() {
         <div className="p-6">
           <div className="text-center mb-6">
             <p className="text-sm text-slate-500 mb-1">ยอดชำระประจำเดือน {bill.month}/{bill.year + 543}</p>
-            <h2 className="text-4xl font-extrabold text-[#007AFF]">฿{bill.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</h2>
+            <h2 className="text-4xl font-extrabold text-[#34508c]">฿{bill.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</h2>
           </div>
 
           <div className="space-y-3 mb-8 text-sm">
@@ -168,11 +168,11 @@ export default function PayBillPage() {
                     <div className="space-y-3">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={slipPreview} alt="Slip preview" className="mx-auto h-48 object-contain rounded-xl shadow-sm" />
-                      <div className="text-sm text-[#007AFF] font-medium">เปลี่ยนรูปสลิป</div>
+                      <div className="text-sm text-[#34508c] font-medium">เปลี่ยนรูปสลิป</div>
                     </div>
                   ) : (
                     <div className="py-6">
-                      <div className="w-12 h-12 bg-blue-100 text-[#007AFF] rounded-full flex items-center justify-center mx-auto mb-3">
+                      <div className="w-12 h-12 bg-blue-100 text-[#34508c] rounded-full flex items-center justify-center mx-auto mb-3">
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>
                       </div>
                       <p className="font-bold text-slate-700 mb-1">อัปโหลดสลิปโอนเงิน</p>
@@ -193,7 +193,7 @@ export default function PayBillPage() {
               <Button 
                 type="submit" 
                 disabled={!slipFile || isUploading}
-                className="w-full rounded-full h-12 bg-[#007AFF] hover:bg-[#0066CC] text-white font-bold text-base shadow-lg transition-transform hover:-translate-y-0.5"
+                className="w-full rounded-full h-12 bg-[#34508c] hover:bg-[#0066CC] text-white font-bold text-base shadow-lg transition-transform hover:-translate-y-0.5"
               >
                 {isUploading ? "กำลังอัปโหลด..." : "ส่งหลักฐานการชำระเงิน"}
               </Button>

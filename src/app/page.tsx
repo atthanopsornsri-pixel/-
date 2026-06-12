@@ -165,11 +165,11 @@ export default async function Home() {
 
             <div className="mt-8">
               {session ? (
-                <DashboardButton className="inline-flex h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-[var(--jh-brand-gold)] to-[#ff9500] px-[30px] text-[17px] font-bold text-white shadow-[0_8px_18px_-6px_#d4a548] transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.97]" />
+                <DashboardButton className="inline-flex h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-[var(--jh-brand-gold)] to-[#d4a548] px-[30px] text-[17px] font-bold text-white shadow-[0_8px_18px_-6px_#d4a548] transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.97]" />
               ) : (
                 <Link
                   href="/login"
-                  className="inline-flex h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-[var(--jh-brand-gold)] to-[#ff9500] px-[30px] text-[17px] font-bold text-white shadow-[0_8px_18px_-6px_#d4a548] transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.97]"
+                  className="inline-flex h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-[var(--jh-brand-gold)] to-[#d4a548] px-[30px] text-[17px] font-bold text-white shadow-[0_8px_18px_-6px_#d4a548] transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.97]"
                 >
                   เริ่มต้นใช้งานฟรี
                 </Link>

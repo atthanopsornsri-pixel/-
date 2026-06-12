@@ -4,9 +4,9 @@ import { useState } from "react";
 const STEPS = [
   {
     num: 1,
-    color: "#007aff",
-    gradFrom: "#f4f9ff",
-    gradTo: "#e3f0ff",
+    color: "#34508c",
+    gradFrom: "#f3f5fa",
+    gradTo: "#e4eaf5",
     title: "ลงทะเบียน & สร้างหอพัก",
     body: "สร้างบัญชีเจ้าของ ระบุจำนวนห้องพัก ตั้งค่าราคาและสิ่งอำนวยความสะดวก พร้อมตั้งค่าอัตราค่าน้ำ–ค่าไฟ",
   },
@@ -20,9 +20,9 @@ const STEPS = [
   },
   {
     num: 3,
-    color: "#ff9500",
-    gradFrom: "#fff9f2",
-    gradTo: "#ffeed9",
+    color: "#d4a548",
+    gradFrom: "#fdf8ee",
+    gradTo: "#f6ecd6",
     title: "จดมิเตอร์ ออกบิลอัตโนมัติ",
     body: "สิ้นเดือนกรอกแค่มิเตอร์น้ำ–ไฟ ระบบคำนวณยอด สร้างใบแจ้งหนี้ และส่งเข้า LINE ลูกบ้านทันที",
   },
@@ -167,7 +167,7 @@ export default function HowItWorks() {
                               <div className="my-1 border-t border-dashed border-black/10" />
                               <div className="font-bold text-orange-600">💰 ยอดรวม: ฿4,936</div>
                             </div>
-                            <div className="max-w-[90%] rounded-xl rounded-tl-md bg-[#ff9500] p-2 text-center font-bold text-white shadow-sm">
+                            <div className="max-w-[90%] rounded-xl rounded-tl-md bg-[#d4a548] p-2 text-center font-bold text-white shadow-sm">
                               👉 แตะเพื่อชำระเงินและแนบสลิป
                             </div>
                           </div>

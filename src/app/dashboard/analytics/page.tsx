@@ -69,11 +69,11 @@ export default async function AnalyticsPage() {
         {/* เฉลี่ยต่อเดือน */}
         <div
           className="group rounded-[var(--jh-radius-2xl)] border border-white/60 p-6 shadow-[var(--jh-shadow-card)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
-          style={{ background: "linear-gradient(150deg, #f4f9ff 0%, #e3f0ff 100%)" }}
+          style={{ background: "linear-gradient(150deg, #f3f5fa 0%, #e4eaf5 100%)" }}
         >
           <div
             className="mb-4 flex h-11 w-11 items-center justify-center rounded-[var(--jh-radius-md)]"
-            style={{ background: "#007aff", color: "#fff", boxShadow: "0 10px 22px -8px #007aff" }}
+            style={{ background: "#34508c", color: "#fff", boxShadow: "0 10px 22px -8px #34508c" }}
           >
             <Calendar className="h-5 w-5" strokeWidth={2} />
           </div>
@@ -123,9 +123,9 @@ export default async function AnalyticsPage() {
                   style={{
                     width: `${Math.max(d.pct, d.revenue > 0 ? 4 : 0)}%`,
                     background: d.pct >= 80
-                      ? "linear-gradient(90deg, #5856d6, #007aff)"
+                      ? "linear-gradient(90deg, #5856d6, #34508c)"
                       : d.pct >= 50
-                      ? "linear-gradient(90deg, #007aff, #34c759)"
+                      ? "linear-gradient(90deg, #34508c, #34c759)"
                       : "linear-gradient(90deg, #34c759, #30d158)",
                   }}
                 >
@@ -214,7 +214,7 @@ export default async function AnalyticsPage() {
           {/* Outstanding */}
           <div
             className="rounded-[var(--jh-radius-2xl)] border border-white/60 p-6 shadow-[var(--jh-shadow-card)]"
-            style={{ background: "linear-gradient(150deg, #fff9f2 0%, #ffeed9 100%)" }}
+            style={{ background: "linear-gradient(150deg, #fdf8ee 0%, #f6ecd6 100%)" }}
           >
             <h3 className="text-sm font-semibold text-[var(--jh-ink)] mb-4">ยอดค้างชำระเดือนนี้</h3>
             <div className="text-3xl font-bold tabular-nums" style={{ color: "var(--jh-orange-ink)" }}>

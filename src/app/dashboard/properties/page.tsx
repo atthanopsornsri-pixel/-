@@ -199,7 +199,7 @@ export default function PropertiesPage() {
         {/* Add Property Form */}
         <div className="lg:col-span-1">
           <div className="bg-white p-8 rounded-[32px] shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 sticky top-28">
-            <div className="w-12 h-12 bg-[#E8F2FF] text-[#007AFF] rounded-2xl flex items-center justify-center mb-6">
+            <div className="w-12 h-12 bg-[#e9eef7] text-[#34508c] rounded-2xl flex items-center justify-center mb-6">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
             </div>
             <h2 className="text-xl font-bold text-[#1D1D1F] mb-6">เพิ่มหอพักใหม่</h2>
@@ -241,7 +241,7 @@ export default function PropertiesPage() {
               </div>
               <Button 
                 type="submit" 
-                className="w-full rounded-full h-12 bg-[#007AFF] hover:bg-[#0066CC] text-white font-semibold shadow-md mt-4 transition-all hover:-translate-y-0.5" 
+                className="w-full rounded-full h-12 bg-[#34508c] hover:bg-[#0066CC] text-white font-semibold shadow-md mt-4 transition-all hover:-translate-y-0.5" 
                 disabled={isUploading}
               >
                 {isUploading ? "กำลังบันทึก..." : "เพิ่มหอพัก"}
@@ -291,7 +291,7 @@ export default function PropertiesPage() {
                   </div>
                 )}
                 <div className="p-6 flex-1 flex flex-col">
-                  <h3 className="font-extrabold text-xl mb-1 text-[#1D1D1F] group-hover:text-[#007AFF] transition-colors">{prop.name}</h3>
+                  <h3 className="font-extrabold text-xl mb-1 text-[#1D1D1F] group-hover:text-[#34508c] transition-colors">{prop.name}</h3>
                   <p className="text-slate-500 text-sm mb-4 line-clamp-2">{prop.address}</p>
                   
                   <div className="inline-flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full mb-6 border border-slate-100 w-fit">
@@ -391,7 +391,7 @@ export default function PropertiesPage() {
 
               {/* Section 3: Utility Rates */}
               <div>
-                <h4 className="font-bold text-[#007AFF] mb-4 border-b border-slate-100 pb-2">เรทค่าน้ำ ค่าไฟ และค่าบริการ (คำนวณอัตโนมัติ)</h4>
+                <h4 className="font-bold text-[#34508c] mb-4 border-b border-slate-100 pb-2">เรทค่าน้ำ ค่าไฟ และค่าบริการ (คำนวณอัตโนมัติ)</h4>
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="space-y-2">
                     <Label className="text-slate-600 font-medium ml-1">ค่าไฟ (บาท/หน่วย)</Label>
@@ -455,7 +455,7 @@ export default function PropertiesPage() {
                 <Button type="button" variant="outline" onClick={() => setSelectedProp(null)} className="flex-1 rounded-full h-12 border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold">
                   ยกเลิก
                 </Button>
-                <Button type="submit" disabled={isSavingSettings} className="flex-1 rounded-full h-12 bg-[#007AFF] hover:bg-[#0066CC] text-white font-semibold shadow-sm">
+                <Button type="submit" disabled={isSavingSettings} className="flex-1 rounded-full h-12 bg-[#34508c] hover:bg-[#0066CC] text-white font-semibold shadow-sm">
                   {isSavingSettings ? "กำลังบันทึก..." : "บันทึกการตั้งค่า"}
                 </Button>
               </div>

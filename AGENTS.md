@@ -4,10 +4,15 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-# Visual / Design Style — "Vibrant Tonal Cards" (locked-in, owner-approved)
+# Visual / Design Style — "Vibrant Tonal Cards × Mascot Theme" (locked-in, owner-approved)
 
-The owner approved this look on 2026-06-09. Keep ALL new UI consistent with it.
+The owner approved the card pattern on 2026-06-09 and the mascot color theme on 2026-06-12.
+Keep ALL new UI consistent with it.
 Base aesthetic = clean Apple/iCloud minimal, BUT with deliberate color — never flat white-on-white.
+Color identity comes from the JadHor mascot: **navy** (หลังคา `#16264c`), **gold** (กุญแจ `#d4a548`),
+**warm cream** surfaces (ตัวบ้าน — app background `--jh-surface: #f7f4ed`, NOT cool gray).
+Tailwind `blue-*` and `orange-*` scales are remapped to navy/gold in `globals.css` `@theme` —
+use them freely; they render as brand colors.
 
 **Card pattern (stat cards, quick-action cards, feature tiles):**
 - Background: a soft diagonal tonal gradient, NOT plain white.
@@ -29,9 +34,9 @@ Base aesthetic = clean Apple/iCloud minimal, BUT with deliberate color — never
 (`shadow-[0_8px_18px_-6px_<solid>]`), hover lifts (`hover:-translate-y-0.5`). Avoid pale tint-only buttons for primary actions.
 
 **Per-tone palette (solid / gradFrom / gradTo / ink):**
-- blue   `#007aff` / `#f4f9ff` / `#e3f0ff` / `var(--jh-blue)`
+- navy   `#34508c` / `#f3f5fa` / `#e4eaf5` / `var(--jh-blue)`       ← primary (mascot roof)
+- gold   `#d4a548` / `#fdf8ee` / `#f6ecd6` / `var(--jh-orange-ink)` ← secondary (mascot key)
 - green  `#34c759` / `#f3fcf6` / `#e0f7e9` / `var(--jh-green-ink)`
-- orange `#ff9500` / `#fff9f2` / `#ffeed9` / `var(--jh-orange-ink)`
 - indigo `#5856d6` / `#f6f6ff` / `#e8e7fb` / `var(--jh-indigo)`
 - purple `#af52de` / `#fbf5fe` / `#f3e3fb` / `var(--jh-purple)`
 - red    `#ff3b30` / `#fff5f4` / `#ffe5e3` / `var(--jh-red)`

@@ -76,17 +76,17 @@ const PLAN_META: Record<string, {
   },
   STARTER: {
     Icon: Building2,
-    color: "#007aff",
-    gradFrom: "#f4f9ff",
-    gradTo: "#e3f0ff",
+    color: "#34508c",
+    gradFrom: "#f3f5fa",
+    gradTo: "#e4eaf5",
     inkColor: "var(--jh-blue)",
     desc: "เหมาะสำหรับหอพักขนาดเล็ก สูงสุด 30 ห้อง",
   },
   GROWTH: {
     Icon: TrendingUp,
-    color: "#ff9500",
-    gradFrom: "#fff9f2",
-    gradTo: "#ffeed9",
+    color: "#d4a548",
+    gradFrom: "#fdf8ee",
+    gradTo: "#f6ecd6",
     inkColor: "var(--jh-orange-ink)",
     desc: "สำหรับหอพักที่กำลังขยาย สูงสุด 100 ห้อง",
   },
@@ -115,16 +115,16 @@ const SMS_META: Record<string, {
     Icon: MessageSquare,
   },
   SIZE_M: {
-    color: "#007aff",
-    gradFrom: "#f4f9ff",
-    gradTo: "#e3f0ff",
+    color: "#34508c",
+    gradFrom: "#f3f5fa",
+    gradTo: "#e4eaf5",
     inkColor: "var(--jh-blue)",
     Icon: Smartphone,
   },
   SIZE_L: {
-    color: "#ff9500",
-    gradFrom: "#fff9f2",
-    gradTo: "#ffeed9",
+    color: "#d4a548",
+    gradFrom: "#fdf8ee",
+    gradTo: "#f6ecd6",
     inkColor: "var(--jh-orange-ink)",
     Icon: Zap,
   },
@@ -492,7 +492,7 @@ export default function SubscriptionPage() {
         {/* Info banner */}
         <div
           className="rounded-[var(--jh-radius-xl)] border border-white/60 p-5 mb-6 shadow-[var(--jh-shadow-card)]"
-          style={{ background: "linear-gradient(150deg, #f4f9ff 0%, #e3f0ff 100%)" }}
+          style={{ background: "linear-gradient(150deg, #f3f5fa 0%, #e4eaf5 100%)" }}
         >
           <div className="flex items-start gap-3">
             <span className="text-2xl">💬</span>
@@ -656,7 +656,7 @@ export default function SubscriptionPage() {
           {/* How-to */}
           <div
             className="flex items-start gap-3 p-4 rounded-[var(--jh-radius-xl)] border border-white/60"
-            style={{ background: "linear-gradient(150deg, #f4f9ff 0%, #e3f0ff 100%)" }}
+            style={{ background: "linear-gradient(150deg, #f3f5fa 0%, #e4eaf5 100%)" }}
           >
             <span className="text-xl shrink-0">ℹ️</span>
             <div className="text-sm text-blue-800">
@@ -853,12 +853,12 @@ export default function SubscriptionPage() {
       {/* Section 4: ประวัติใบแจ้งหนี้              */}
       {/* ══════════════════════════════════════════ */}
       <section>
-        <SectionHeader icon={FileText} color="#ff9500" label="ประวัติใบแจ้งหนี้" />
+        <SectionHeader icon={FileText} color="#d4a548" label="ประวัติใบแจ้งหนี้" />
 
         {invoices.length === 0 ? (
           <div
             className="rounded-[var(--jh-radius-2xl)] border border-white/60 p-12 text-center shadow-[var(--jh-shadow-card)]"
-            style={{ background: "linear-gradient(150deg, #fff9f2 0%, #ffeed9 100%)" }}
+            style={{ background: "linear-gradient(150deg, #fdf8ee 0%, #f6ecd6 100%)" }}
           >
             <div className="text-5xl mb-4">🧾</div>
             <p className="text-[var(--jh-ink-secondary)] font-medium">ยังไม่มีใบแจ้งหนี้</p>

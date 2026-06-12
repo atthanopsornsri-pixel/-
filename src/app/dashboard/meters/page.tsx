@@ -163,7 +163,7 @@ export default function MeterEntryPage() {
           <h1 className="text-2xl md:text-[28px] font-bold text-[var(--jh-ink)] tracking-[-0.02em] flex items-center gap-3">
             <span
               className="flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)]"
-              style={{ background: "#007aff", color: "#fff", boxShadow: "0 10px 22px -8px #007aff" }}
+              style={{ background: "#34508c", color: "#fff", boxShadow: "0 10px 22px -8px #34508c" }}
             >
               <Zap className="w-6 h-6" strokeWidth={2} />
             </span>
@@ -308,7 +308,7 @@ export default function MeterEntryPage() {
                   <th
                     colSpan={3}
                     className="px-5 py-2.5 text-xs font-extrabold uppercase tracking-wider text-center border-r border-slate-100"
-                    style={{ background: "#f4f9ff", color: "#007aff" }}
+                    style={{ background: "#f3f5fa", color: "#34508c" }}
                   >
                     <span className="inline-flex items-center gap-1.5">
                       <Zap className="w-3.5 h-3.5 fill-blue-200" strokeWidth={2} />
@@ -338,11 +338,11 @@ export default function MeterEntryPage() {
                 {/* Sub-header row */}
                 <tr className="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
                   {/* Electric sub-headers */}
-                  <th className="px-4 py-2.5 border-l border-slate-100" style={{ background: "#f4f9ff" }}>มิเตอร์ก่อนหน้า</th>
-                  <th className="px-4 py-2.5 w-44" style={{ background: "#e3f0ff" }}>
+                  <th className="px-4 py-2.5 border-l border-slate-100" style={{ background: "#f3f5fa" }}>มิเตอร์ก่อนหน้า</th>
+                  <th className="px-4 py-2.5 w-44" style={{ background: "#e4eaf5" }}>
                     <span className="text-blue-600">กรอกมิเตอร์ปัจจุบัน</span>
                   </th>
-                  <th className="px-4 py-2.5 text-center border-r border-slate-100" style={{ background: "#f4f9ff" }}>หน่วย</th>
+                  <th className="px-4 py-2.5 text-center border-r border-slate-100" style={{ background: "#f3f5fa" }}>หน่วย</th>
                   {/* Water sub-headers */}
                   <th className="px-4 py-2.5" style={{ background: "#f3fcf6" }}>มิเตอร์ก่อนหน้า</th>
                   <th className="px-4 py-2.5 w-44" style={{ background: "#e0f7e9" }}>
@@ -518,7 +518,7 @@ export default function MeterEntryPage() {
             onClick={handleSave}
             disabled={isLoading || isSaving || rows.length === 0}
             className="flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-6 py-3 text-sm font-black text-white rounded-xl shadow-lg hover:shadow-xl active:scale-[0.98] cursor-pointer disabled:opacity-50 transition-all hover:-translate-y-0.5"
-            style={{ background: "#007aff", boxShadow: "0 8px 18px -6px #007aff" }}
+            style={{ background: "#34508c", boxShadow: "0 8px 18px -6px #34508c" }}
           >
             {isSaving ? (
               <Loader2 className="w-4 h-4 animate-spin" />

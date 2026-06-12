@@ -47,9 +47,9 @@ const PLANS: Plan[] = [
     href: "/register",
     featured: true,
     Icon: TrendingUp,
-    color: "#007aff",
-    gradFrom: "#f4f9ff",
-    gradTo: "#e3f0ff",
+    color: "#34508c",
+    gradFrom: "#f3f5fa",
+    gradTo: "#e4eaf5",
     ink: "var(--jh-blue)",
   },
   {
@@ -156,7 +156,7 @@ export default function PricingPlans() {
               }`}
               style={
                 plan.featured
-                  ? { background: "linear-gradient(160deg, #2b94ff 0%, #007aff 55%, #0062cc 100%)" }
+                  ? { background: "linear-gradient(160deg, #2b94ff 0%, #34508c 55%, #0062cc 100%)" }
                   : { background: `linear-gradient(150deg, ${plan.gradFrom} 0%, ${plan.gradTo} 100%)` }
               }
             >

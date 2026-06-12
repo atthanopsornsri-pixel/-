@@ -63,6 +63,34 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ── Mascot theme (2026-06-12) ──
+   remap Tailwind palette: blue → brand navy (หลังคามาสคอต), orange → brand gold (กุญแจ)
+   ทุกคลาส bg-blue-*, text-orange-* ฯลฯ จะกลายเป็นโทนแบรนด์อัตโนมัติ */
+@theme {
+  --color-blue-50: #f3f5fa;
+  --color-blue-100: #e7ecf6;
+  --color-blue-200: #c9d4ea;
+  --color-blue-300: #a3b5d8;
+  --color-blue-400: #6d87bd;
+  --color-blue-500: #4565a1;
+  --color-blue-600: #34508c;
+  --color-blue-700: #2a4172;
+  --color-blue-800: #22345c;
+  --color-blue-900: #1b294a;
+  --color-blue-950: #16264c;
+  --color-orange-50: #fdf8ee;
+  --color-orange-100: #f8eed7;
+  --color-orange-200: #f0ddb0;
+  --color-orange-300: #e5c885;
+  --color-orange-400: #dcb463;
+  --color-orange-500: #d4a548;
+  --color-orange-600: #b98a33;
+  --color-orange-700: #936b23;
+  --color-orange-800: #75551e;
+  --color-orange-900: #5e451b;
+  --color-orange-950: #44361a;
+}
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -141,9 +169,9 @@
 :root {
   /* Neutrals (Apple gray scale) */
   --jh-white: #ffffff;
-  --jh-gray-50: #f5f5f7;   /* signature app background */
-  --jh-gray-100: #ececf0;
-  --jh-gray-200: #d2d2d7;  /* hairline borders */
+  --jh-gray-50: #f7f4ed;   /* signature app background */
+  --jh-gray-100: #efeae0;
+  --jh-gray-200: #d9d3c5;  /* hairline borders */
   --jh-gray-300: #c7c7cc;
   --jh-gray-500: #8e8e93;  /* tertiary / placeholder */
   --jh-gray-600: #6e6e73;  /* secondary text */
@@ -151,21 +179,21 @@
   --jh-gray-900: #1d1d1f;  /* primary ink (near-black) */
 
   /* iOS system accent colors */
-  --jh-blue: #007aff;      /* primary action */
-  --jh-blue-dark: #0066d6; /* hover / pressed */
+  --jh-blue: #34508c;      /* primary action */
+  --jh-blue-dark: #263c6e; /* hover / pressed */
   --jh-green: #34c759;
   --jh-green-ink: #1f9d4d; /* legible green text/icon on tint */
   --jh-indigo: #5856d6;
-  --jh-orange: #ff9500;
-  --jh-orange-ink: #c2710a;
+  --jh-orange: #d4a548;
+  --jh-orange-ink: #936b23;
   --jh-red: #ff3b30;
   --jh-purple: #af52de;
   --jh-teal: #30b0c7;
 
   /* Soft accent tints (card / chip backgrounds) */
-  --jh-blue-tint: #e8f2ff;
+  --jh-blue-tint: #e9eef7;
   --jh-green-tint: #e7f8ee;
-  --jh-orange-tint: #fff2e0;
+  --jh-orange-tint: #f7efdc;
   --jh-red-tint: #ffe9e7;
   --jh-indigo-tint: #ecebfb;
   --jh-purple-tint: #f6ecfc;
@@ -183,13 +211,13 @@
   --jh-brand-gold-ink: #936b23;
 
   /* Semantic aliases */
-  --jh-surface: #f5f5f7;
+  --jh-surface: #f7f4ed;
   --jh-surface-card: #ffffff;
-  --jh-surface-hover: #ececf0;
+  --jh-surface-hover: #efeae0;
   --jh-ink: #131b2e;
   --jh-ink-secondary: #525c75;
   --jh-ink-tertiary: #838eab;
-  --jh-border: #d2d2d7;
+  --jh-border: #d9d3c5;
   --jh-border-subtle: rgba(0, 0, 0, 0.06);
   --jh-focus-ring: rgba(22, 38, 76, 0.35);
 
@@ -206,7 +234,7 @@
   --jh-shadow-lg: 0 18px 50px rgba(0, 0, 0, 0.12);
 
   /* Glass / blur (iCloud toolbar feel) */
-  --jh-glass-bg: rgba(245, 245, 247, 0.8);
+  --jh-glass-bg: rgba(247, 244, 237, 0.8);
 
   /* Motion */
   --jh-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -235,7 +263,7 @@
     background-color: white !important;
   }
   /* Force all wrapper divs to have a white background during print */
-  .bg-\[\#F5F5F7\] {
+  .bg-\[\#f7f4ed\] {
     background-color: white !important;
   }
   /* Hide sidebar and header during print */

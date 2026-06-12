@@ -40,8 +40,8 @@ const STATUS_META: Record<
     icon: <AlertCircle className="h-5 w-5" strokeWidth={2} />,
   },
   PENDING: {
-    label: "รอตรวจสอบ", gradFrom: "#fff9f2", gradTo: "#ffeed9",
-    solid: "#ff9500", ink: "var(--jh-orange-ink)",
+    label: "รอตรวจสอบ", gradFrom: "#fdf8ee", gradTo: "#f6ecd6",
+    solid: "#d4a548", ink: "var(--jh-orange-ink)",
     icon: <Clock className="h-5 w-5" strokeWidth={2} />,
   },
   PARTIAL: {
@@ -270,7 +270,7 @@ export default function MyBillsPage() {
 
                   {bill.status === "PENDING" && (
                     <div className="flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold"
-                      style={{ background: "#fff9f2", color: "#ff9500" }}>
+                      style={{ background: "#fdf8ee", color: "#d4a548" }}>
                       <Clock className="w-4 h-4" />
                       รอเจ้าของหอตรวจสอบสลิป
                     </div>
@@ -298,14 +298,14 @@ export default function MyBillsPage() {
         >
           <div
             className="w-full max-w-sm rounded-[var(--jh-radius-2xl)] border border-white/60 shadow-2xl p-6 animate-in fade-in zoom-in-95 duration-200 overflow-y-auto max-h-[90vh]"
-            style={{ background: "linear-gradient(150deg, #f4f9ff 0%, #e3f0ff 100%)" }}
+            style={{ background: "linear-gradient(150deg, #f3f5fa 0%, #e4eaf5 100%)" }}
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
                 <div
                   className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--jh-radius-md)]"
-                  style={{ background: "#007aff", color: "#fff", boxShadow: "0 10px 22px -8px #007aff" }}
+                  style={{ background: "#34508c", color: "#fff", boxShadow: "0 10px 22px -8px #34508c" }}
                 >
                   <Receipt className="h-5 w-5" strokeWidth={2} />
                 </div>
@@ -327,7 +327,7 @@ export default function MyBillsPage() {
             {/* Amount */}
             <div className="text-center mb-5">
               <p className="text-xs text-slate-500 mb-1">ยอดที่ต้องชำระ</p>
-              <p className="text-4xl font-extrabold tabular-nums" style={{ color: "#007aff" }}>
+              <p className="text-4xl font-extrabold tabular-nums" style={{ color: "#34508c" }}>
                 {thb(payBill.totalAmount)}
               </p>
             </div>
@@ -403,7 +403,7 @@ export default function MyBillsPage() {
                 onClick={handleSubmitSlip}
                 disabled={!slipFile || isUploading}
                 className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-60 disabled:translate-y-0"
-                style={{ background: "#007aff", boxShadow: "0 8px 18px -6px #007aff" }}
+                style={{ background: "#34508c", boxShadow: "0 8px 18px -6px #34508c" }}
               >
                 {isUploading ? (
                   <><span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />กำลังส่ง...</>

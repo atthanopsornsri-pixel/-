@@ -23,9 +23,9 @@ type Tone = "blue" | "green" | "orange" | "indigo" | "purple" | "red";
 
 // solid = สีสดสำหรับชิปไอคอน, grad = ไล่เฉดอ่อนๆ บนพื้นการ์ด, ink = สีตัวเลข
 const TONES: Record<Tone, { solid: string; gradFrom: string; gradTo: string; ink: string }> = {
-  blue: { solid: "#007aff", gradFrom: "#f4f9ff", gradTo: "#e3f0ff", ink: "var(--jh-blue)" },
+  blue: { solid: "#34508c", gradFrom: "#f3f5fa", gradTo: "#e4eaf5", ink: "var(--jh-blue)" },
   green: { solid: "#34c759", gradFrom: "#f3fcf6", gradTo: "#e0f7e9", ink: "var(--jh-green-ink)" },
-  orange: { solid: "#ff9500", gradFrom: "#fff9f2", gradTo: "#ffeed9", ink: "var(--jh-orange-ink)" },
+  orange: { solid: "#d4a548", gradFrom: "#fdf8ee", gradTo: "#f6ecd6", ink: "var(--jh-orange-ink)" },
   indigo: { solid: "#5856d6", gradFrom: "#f6f6ff", gradTo: "#e8e7fb", ink: "var(--jh-indigo)" },
   purple: { solid: "#af52de", gradFrom: "#fbf5fe", gradTo: "#f3e3fb", ink: "var(--jh-purple)" },
   red: { solid: "#ff3b30", gradFrom: "#fff5f4", gradTo: "#ffe5e3", ink: "var(--jh-red)" },
@@ -177,11 +177,11 @@ export default async function DashboardPage() {
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div
               className="group relative overflow-hidden rounded-[var(--jh-radius-2xl)] border border-white/60 p-8 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
-              style={{ background: "linear-gradient(150deg, #f4f9ff 0%, #e3f0ff 100%)" }}
+              style={{ background: "linear-gradient(150deg, #f3f5fa 0%, #e4eaf5 100%)" }}
             >
               <div
                 className="mb-5 flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
-                style={{ background: "#007aff", color: "#fff", boxShadow: "0 10px 22px -8px #007aff" }}
+                style={{ background: "#34508c", color: "#fff", boxShadow: "0 10px 22px -8px #34508c" }}
               >
                 <Settings2 className="h-[22px] w-[22px]" strokeWidth={2} />
               </div>
@@ -192,7 +192,7 @@ export default async function DashboardPage() {
               <div className="flex gap-3">
                 <Link
                   href="/dashboard/rooms"
-                  className="rounded-full bg-[var(--jh-blue)] px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_18px_-6px_#007aff] transition-all hover:bg-[var(--jh-blue-dark)] hover:-translate-y-0.5"
+                  className="rounded-full bg-[var(--jh-blue)] px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_18px_-6px_#34508c] transition-all hover:bg-[var(--jh-blue-dark)] hover:-translate-y-0.5"
                 >
                   จัดการห้องพัก →
                 </Link>
@@ -254,11 +254,11 @@ export default async function DashboardPage() {
 
           <div
             className="group rounded-[var(--jh-radius-2xl)] border border-white/60 p-8 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
-            style={{ background: "linear-gradient(150deg, #fff9f2 0%, #ffeed9 100%)" }}
+            style={{ background: "linear-gradient(150deg, #fdf8ee 0%, #f6ecd6 100%)" }}
           >
             <div
               className="mb-5 flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
-              style={{ background: "#ff9500", color: "#fff", boxShadow: "0 10px 22px -8px #ff9500" }}
+              style={{ background: "#d4a548", color: "#fff", boxShadow: "0 10px 22px -8px #d4a548" }}
             >
               <Wrench className="h-[22px] w-[22px]" strokeWidth={2} />
             </div>

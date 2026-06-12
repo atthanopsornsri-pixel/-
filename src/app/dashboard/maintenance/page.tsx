@@ -31,11 +31,11 @@ const STATUS_META: Record<
 > = {
   PENDING: {
     label: "รอดำเนินการ", color: "text-orange-600", bg: "bg-orange-100",
-    gradFrom: "#fff9f2", gradTo: "#ffeed9", solid: "#ff9500",
+    gradFrom: "#fdf8ee", gradTo: "#f6ecd6", solid: "#d4a548",
   },
   IN_PROGRESS: {
     label: "กำลังซ่อม", color: "text-blue-600", bg: "bg-blue-100",
-    gradFrom: "#f4f9ff", gradTo: "#e3f0ff", solid: "#007aff",
+    gradFrom: "#f3f5fa", gradTo: "#e4eaf5", solid: "#34508c",
   },
   COMPLETED: {
     label: "เสร็จสิ้น", color: "text-green-600", bg: "bg-green-100",
@@ -452,7 +452,7 @@ export default function MaintenancePage() {
                     {role === "OWNER" && req.preferredAt && req.status !== "COMPLETED" && (
                       <div
                         className="mt-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold"
-                        style={{ background: "#fff9f2", color: "#ff9500" }}
+                        style={{ background: "#fdf8ee", color: "#d4a548" }}
                       >
                         <CalendarClock className="w-3.5 h-3.5 shrink-0" />
                         <span>
@@ -468,7 +468,7 @@ export default function MaintenancePage() {
                     {/* แสดงวันนัดหมาย */}
                     {hasAppt && req.status === "IN_PROGRESS" && (
                       <div className="mt-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold"
-                        style={{ background: "#e3f0ff", color: "#007aff" }}>
+                        style={{ background: "#e4eaf5", color: "#34508c" }}>
                         <CalendarClock className="w-3.5 h-3.5 shrink-0" />
                         <span>นัดหมาย: {apptStr}</span>
                         {req.scheduledNote && <span className="text-blue-400">· {req.scheduledNote}</span>}
@@ -511,7 +511,7 @@ export default function MaintenancePage() {
                             onClick={() => openApptModal(req.id, req.title)}
                             disabled={isUpdating}
                             className="w-full py-2.5 rounded-full text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-60 disabled:translate-y-0"
-                            style={{ background: "#007aff", boxShadow: "0 8px 18px -6px #007aff" }}>
+                            style={{ background: "#34508c", boxShadow: "0 8px 18px -6px #34508c" }}>
                             {isUpdating ? (
                               <span className="flex items-center justify-center gap-2">
                                 <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -594,13 +594,13 @@ export default function MaintenancePage() {
           onClick={(e) => { if (e.target === e.currentTarget) setApptModal({ open: false, reqId: "", reqTitle: "" }); }}>
           <div
             className="w-full max-w-sm rounded-[var(--jh-radius-2xl)] border border-white/60 shadow-2xl p-6 animate-in fade-in zoom-in-95 duration-200"
-            style={{ background: "linear-gradient(150deg, #f4f9ff 0%, #e3f0ff 100%)" }}
+            style={{ background: "linear-gradient(150deg, #f3f5fa 0%, #e4eaf5 100%)" }}
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--jh-radius-md)]"
-                  style={{ background: "#007aff", color: "#fff", boxShadow: "0 10px 22px -8px #007aff" }}>
+                  style={{ background: "#34508c", color: "#fff", boxShadow: "0 10px 22px -8px #34508c" }}>
                   <CalendarClock className="h-5 w-5" strokeWidth={2} />
                 </div>
                 <div>
@@ -623,7 +623,7 @@ export default function MaintenancePage() {
                   value={apptDate}
                   onChange={(e) => setApptDate(e.target.value)}
                   min={new Date().toISOString().split("T")[0]}
-                  className="flex h-11 w-full rounded-xl border border-slate-200 bg-white/80 px-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#007aff]/30"
+                  className="flex h-11 w-full rounded-xl border border-slate-200 bg-white/80 px-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#34508c]/30"
                 />
               </div>
               {/* เวลา */}
@@ -633,7 +633,7 @@ export default function MaintenancePage() {
                   type="time"
                   value={apptTime}
                   onChange={(e) => setApptTime(e.target.value)}
-                  className="flex h-11 w-full rounded-xl border border-slate-200 bg-white/80 px-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#007aff]/30"
+                  className="flex h-11 w-full rounded-xl border border-slate-200 bg-white/80 px-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#34508c]/30"
                 />
               </div>
               {/* หมายเหตุ */}
@@ -643,7 +643,7 @@ export default function MaintenancePage() {
                   value={apptNote}
                   onChange={(e) => setApptNote(e.target.value)}
                   placeholder="เช่น ช่างจะเข้าทางประตูหลัก / กรุณาเตรียมกุญแจ"
-                  className="flex min-h-[80px] w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#007aff]/30 resize-none"
+                  className="flex min-h-[80px] w-full rounded-xl border border-slate-200 bg-white/80 px-3 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#34508c]/30 resize-none"
                 />
               </div>
 
@@ -658,7 +658,7 @@ export default function MaintenancePage() {
                   onClick={confirmAppointment}
                   disabled={!apptDate || isConfirmingAppt}
                   className="flex-1 py-2.5 rounded-full text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-60 disabled:translate-y-0"
-                  style={{ background: "#007aff", boxShadow: "0 8px 18px -6px #007aff" }}>
+                  style={{ background: "#34508c", boxShadow: "0 8px 18px -6px #34508c" }}>
                   {isConfirmingAppt ? (
                     <span className="flex items-center justify-center gap-2">
                       <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />

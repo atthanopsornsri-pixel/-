@@ -213,8 +213,8 @@ export default function RoomsPage() {
       case "OCCUPIED":
         return {
           label: "มีผู้เช่า",
-          bar: "#007AFF",
-          badge: "bg-[#E8F2FF] text-[#007AFF] border border-[#007AFF]/20",
+          bar: "#34508c",
+          badge: "bg-[#e9eef7] text-[#34508c] border border-[#34508c]/20",
         };
       case "MAINTENANCE":
         return {
@@ -444,7 +444,7 @@ export default function RoomsPage() {
                       <span className={`font-mono text-sm font-bold bg-white px-2 py-1 rounded-lg border shadow-sm transition-all ${
                         copiedRoomId === room.id
                           ? "border-green-400 text-green-700 font-bold"
-                          : "border-slate-200 text-[#007AFF]"
+                          : "border-slate-200 text-[#34508c]"
                       }`}>
                         {copiedRoomId === room.id ? "📋 คัดลอกลิงก์แล้ว!" : room.inviteCode}
                       </span>
@@ -650,7 +650,7 @@ export default function RoomsPage() {
                     <Button
                       type="button"
                       onClick={handleCopyDraftText}
-                      className="rounded-xl h-11 bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 shadow-[0_8px_18px_-6px_#ff9500] flex items-center gap-2"
+                      className="rounded-xl h-11 bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 shadow-[0_8px_18px_-6px_#d4a548] flex items-center gap-2"
                     >
                       📋 คัดลอกข้อความ
                     </Button>

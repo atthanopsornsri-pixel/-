@@ -4,9 +4,9 @@ import { type ReactNode } from "react";
 export type HeaderTone = "blue" | "green" | "orange" | "indigo" | "purple" | "red" | "cyan";
 
 const TONE_SOLID: Record<HeaderTone, string> = {
-  blue: "#007aff",
+  blue: "#34508c",
   green: "#34c759",
-  orange: "#ff9500",
+  orange: "#d4a548",
   indigo: "#5856d6",
   purple: "#af52de",
   red: "#ff3b30",

@@ -651,7 +651,7 @@ export default function BillingPage() {
                 <Button
                   size="sm"
                   className="relative rounded-full h-9 px-4 gap-2 text-white font-semibold text-xs transition-all hover:-translate-y-0.5"
-                  style={{ background: "#ff9500", boxShadow: "0 8px 18px -6px #ff9500" }}
+                  style={{ background: "#d4a548", boxShadow: "0 8px 18px -6px #d4a548" }}
                   onClick={handleSmartAlert}
                   disabled={isSendingAlert}
                 >

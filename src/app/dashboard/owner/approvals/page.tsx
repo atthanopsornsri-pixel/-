@@ -96,7 +96,7 @@ export default async function ApprovalsDashboardPage() {
       <div className="mb-8 flex items-center gap-3">
         <div
           className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--jh-radius-md)]"
-          style={{ background: "#ff9500", color: "#fff", boxShadow: "0 10px 22px -8px #ff9500" }}
+          style={{ background: "#d4a548", color: "#fff", boxShadow: "0 10px 22px -8px #d4a548" }}
         >
           <ClipboardCheck className="h-[22px] w-[22px]" strokeWidth={2} />
         </div>

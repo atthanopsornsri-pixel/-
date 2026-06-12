@@ -212,9 +212,9 @@ export default function BillPrintPage() {
                 <span className="text-slate-600">รวมเป็นเงิน</span>
                 <span className="font-bold text-slate-800">฿{bill.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
               </div>
-              <div className="flex justify-between py-2 px-3 bg-[#E8F2FF] border border-[#007AFF]/20 rounded-lg mt-2 text-base">
-                <span className="font-bold text-[#007AFF]">ยอดสุทธิ</span>
-                <span className="font-bold text-xl text-[#007AFF]">฿{bill.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
+              <div className="flex justify-between py-2 px-3 bg-[#e9eef7] border border-[#34508c]/20 rounded-lg mt-2 text-base">
+                <span className="font-bold text-[#34508c]">ยอดสุทธิ</span>
+                <span className="font-bold text-xl text-[#34508c]">฿{bill.totalAmount.toLocaleString(undefined, {minimumFractionDigits: 2})}</span>
               </div>
             </div>
           </div>

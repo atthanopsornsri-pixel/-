@@ -117,7 +117,7 @@ function TenantsDashboardContent() {
           <div className="flex items-center gap-3">
             <div
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--jh-radius-md)]"
-              style={{ background: "#ff9500", color: "#fff", boxShadow: "0 10px 22px -8px #ff9500" }}
+              style={{ background: "#d4a548", color: "#fff", boxShadow: "0 10px 22px -8px #d4a548" }}
             >
               <Users className="h-[21px] w-[21px]" strokeWidth={2} />
             </div>
@@ -142,7 +142,7 @@ function TenantsDashboardContent() {
               ⬅️ ดูตึกทั้งหมด
             </Button>
           )}
-          <Button onClick={() => setIsModalOpen(true)} className="rounded-full bg-[#ff9500] hover:brightness-105 text-white font-semibold shadow-[0_8px_18px_-6px_#ff9500] transition-all hover:-translate-y-0.5">
+          <Button onClick={() => setIsModalOpen(true)} className="rounded-full bg-[#d4a548] hover:brightness-105 text-white font-semibold shadow-[0_8px_18px_-6px_#d4a548] transition-all hover:-translate-y-0.5">
             + เพิ่มลูกบ้านใหม่
           </Button>
         </div>

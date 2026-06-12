@@ -131,7 +131,7 @@ export default function ParcelsPage() {
                     <Label>เลขพัสดุ (Tracking No.)</Label>
                     <Input value={trackingNumber} onChange={e => setTrackingNumber(e.target.value)} placeholder="เช่น TH123456789" />
                   </div>
-                  <Button type="submit" className="w-full rounded-full bg-[#ff9500] hover:brightness-105 text-white font-semibold shadow-[0_8px_18px_-6px_#ff9500] transition-all hover:-translate-y-0.5" disabled={isSubmitting}>
+                  <Button type="submit" className="w-full rounded-full bg-[#d4a548] hover:brightness-105 text-white font-semibold shadow-[0_8px_18px_-6px_#d4a548] transition-all hover:-translate-y-0.5" disabled={isSubmitting}>
                     {isSubmitting ? "กำลังบันทึก..." : "บันทึกข้อมูลพัสดุ"}
                   </Button>
                 </form>

@@ -245,7 +245,7 @@ export default function LeasePrintPage() {
             📝 สร้างสัญญาเช่าอัตโนมัติ
           </Button>
 
-          <Button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-transform hover:-translate-y-0.5" style={{ boxShadow: "0 8px 18px -6px #007aff" }}>
+          <Button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-transform hover:-translate-y-0.5" style={{ boxShadow: "0 8px 18px -6px #34508c" }}>
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
             พิมพ์สัญญาให้ผู้เช่าเซ็น
           </Button>
