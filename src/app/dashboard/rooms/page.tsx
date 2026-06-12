@@ -43,6 +43,12 @@ export default function RoomsPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [copiedRoomId, setCopiedRoomId] = useState<string | null>(null);
 
+  // Vacancy post drafting states (No "AI" naming in UI)
+  const [isDraftingListing, setIsDraftingListing] = useState(false);
+  const [draftedListingText, setDraftedListingText] = useState<string | null>(null);
+  const [isDraftModalOpen, setIsDraftModalOpen] = useState(false);
+  const [draftingRoomNumber, setDraftingRoomNumber] = useState("");
+
   // ── SWR: properties (cached, stale-while-revalidate) ──────────────
   const { data: properties = [], mutate: mutateProperties } = useSWR<any[]>(
     "/api/properties",
@@ -119,6 +125,38 @@ export default function RoomsPage() {
       else toast.error("ไม่สามารถลบห้องได้ อาจมีผู้เช่าอยู่");
     } catch (error) {
       console.error(error);
+    }
+  };
+
+  const handleDraftVacancyListing = async (room: any) => {
+    setIsDraftingListing(true);
+    setDraftedListingText(null);
+    setDraftingRoomNumber(room.number);
+    setIsDraftModalOpen(true);
+    try {
+      const res = await fetch(`/api/rooms/${room.id}/draft-post`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setDraftedListingText(data.text);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.message || "ไม่สามารถร่างข้อความโฆษณาได้ในขณะนี้");
+        setIsDraftModalOpen(false);
+      }
+    } catch (e) {
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อระบบหลังบ้าน");
+      setIsDraftModalOpen(false);
+    } finally {
+      setIsDraftingListing(false);
+    }
+  };
+
+  const handleCopyDraftText = () => {
+    if (draftedListingText) {
+      navigator.clipboard.writeText(draftedListingText);
+      toast.success("คัดลอกข้อความโฆษณาเรียบร้อยแล้ว! 📋");
     }
   };
 
@@ -417,6 +455,16 @@ export default function RoomsPage() {
                     ฿{room.rentPrice.toLocaleString()}<span className="text-sm font-medium text-slate-400">/เดือน</span>
                   </div>
                   
+                  {room.status === "AVAILABLE" && (
+                    <Button
+                      variant="outline"
+                      onClick={() => handleDraftVacancyListing(room)}
+                      className="w-full mb-3 rounded-full border-amber-200 text-amber-700 bg-amber-50 hover:bg-amber-100/80 h-10 text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-[0_8px_18px_-6px_rgba(255,149,0,0.15)]"
+                    >
+                      ✨ เขียนโฆษณาปล่อยเช่าอัจฉริยะ
+                    </Button>
+                  )}
+                  
                   <div className="mt-auto flex gap-3">
                     <Button variant="outline" className="flex-1 rounded-full border-slate-200 text-slate-600 hover:bg-slate-50 h-11 font-semibold" onClick={() => handleEditClick(room)}>
                       แก้ไข
@@ -559,6 +607,57 @@ export default function RoomsPage() {
                 </Button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Draft Vacancy Listing Modal (Excluding any 'AI' words) */}
+      {isDraftModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h2 className="text-lg font-extrabold text-slate-800">ร่างประกาศเช่าห้อง {draftingRoomNumber}</h2>
+              <button onClick={() => setIsDraftModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-200 transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {isDraftingListing ? (
+                <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                  <div className="w-10 h-10 border-4 border-amber-500/30 border-t-amber-600 rounded-full animate-spin" />
+                  <p className="text-sm font-medium text-slate-500">ระบบอัจฉริยะกำลังร่างข้อความโฆษณาปล่อยเช่า...</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-xs text-slate-400">
+                    ข้อความโฆษณาปล่อยเช่าที่เรียบเรียงขึ้นตามรายละเอียดของห้องและทำเลหอพัก สามารถคัดลอกไปใช้โพสต์ได้ทันที:
+                  </p>
+                  <textarea
+                    readOnly
+                    value={draftedListingText || ""}
+                    className="w-full h-64 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 text-sm font-medium leading-relaxed font-sarabun focus:outline-none resize-none"
+                  />
+                  <div className="flex justify-end gap-3 pt-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setIsDraftModalOpen(false)}
+                      className="rounded-xl h-11 font-semibold text-slate-600 hover:bg-slate-100"
+                    >
+                      ปิด
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleCopyDraftText}
+                      className="rounded-xl h-11 bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 shadow-[0_8px_18px_-6px_#ff9500] flex items-center gap-2"
+                    >
+                      📋 คัดลอกข้อความ
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

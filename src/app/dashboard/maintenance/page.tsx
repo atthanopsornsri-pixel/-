@@ -475,6 +475,34 @@ export default function MaintenancePage() {
                       </div>
                     )}
 
+                    {/* ผลการวิเคราะห์ระบบโดยย่อ (ไม่ระบุคำว่า AI) */}
+                    {role === "OWNER" && (req.aiCategory || req.aiUrgency || req.aiTechnician) && (
+                      <div className="mt-3 p-3 rounded-2xl bg-white/50 border border-white/60 text-xs flex flex-col gap-2">
+                        <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">ระบบช่วยคัดกรองห้องพักอัตโนมัติ</div>
+                        <div className="flex flex-wrap gap-1.5">
+                          {req.aiCategory && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-medium">
+                              📂 {req.aiCategory}
+                            </span>
+                          )}
+                          {req.aiUrgency && (
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-lg font-bold ${
+                              req.aiUrgency === "สูง" ? "bg-red-50 text-red-600 border border-red-100" :
+                              req.aiUrgency === "กลาง" ? "bg-amber-50 text-amber-600 border border-amber-100" :
+                              "bg-green-50 text-green-600 border border-green-100"
+                            }`}>
+                              ⚡ ด่วน: {req.aiUrgency}
+                            </span>
+                          )}
+                          {req.aiTechnician && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-medium">
+                              🔧 ช่างแนะนำ: {req.aiTechnician}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* ── Owner action buttons ── */}
                     {role === "OWNER" && req.status !== "COMPLETED" && (
                       <div className="mt-4 pt-3 border-t border-black/5 flex flex-col gap-2">

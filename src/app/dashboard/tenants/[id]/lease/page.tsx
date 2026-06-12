@@ -12,6 +12,18 @@ export default function LeasePrintPage() {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Contract parser states (No "AI" terminology)
+  const [isParsing, setIsParsing] = useState(false);
+  const [isParseModalOpen, setIsParseModalOpen] = useState(false);
+  const [parsedData, setParsedData] = useState<any>({
+    firstName: "",
+    lastName: "",
+    idCardNumber: "",
+    leaseStart: "",
+    depositAmount: "",
+  });
+  const [isSavingParsed, setIsSavingParsed] = useState(false);
+
   useEffect(() => {
     async function fetchTenant() {
       const res = await fetch(`/api/tenants/${params.id}`);
@@ -22,6 +34,79 @@ export default function LeasePrintPage() {
     };
     fetchTenant();
   }, [params.id]);
+
+  const handleFileScan = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsParsing(true);
+    setIsParseModalOpen(true);
+
+    try {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+        const res = await fetch(`/api/tenants/${params.id}/contract-parse`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image: base64String }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setParsedData({
+            firstName: data.firstName || "",
+            lastName: data.lastName || "",
+            idCardNumber: data.idCardNumber || "",
+            leaseStart: data.leaseStart || "",
+            depositAmount: data.depositAmount || "",
+          });
+        } else {
+          const err = await res.json().catch(() => ({}));
+          toast.error(err.message || "เกิดข้อผิดพลาดในการสแกนไฟล์");
+          setIsParseModalOpen(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error(error);
+      toast.error("เกิดข้อผิดพลาดในการอ่านไฟล์");
+      setIsParseModalOpen(false);
+    } finally {
+      setIsParsing(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleSaveParsedData = async () => {
+    setIsSavingParsed(true);
+    try {
+      const res = await fetch(`/api/tenants/${params.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: parsedData.firstName,
+          lastName: parsedData.lastName,
+          idCardNumber: parsedData.idCardNumber,
+          leaseStart: parsedData.leaseStart || null,
+          depositAmount: parsedData.depositAmount ? Number(parsedData.depositAmount) : null,
+        }),
+      });
+
+      if (res.ok) {
+        toast.success("บันทึกข้อมูลสัญญาเรียบร้อยแล้ว! 💾");
+        setIsParseModalOpen(false);
+        window.location.reload();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.message || "ไม่สามารถบันทึกข้อมูลได้");
+      }
+    } catch (e) {
+      toast.error("เกิดข้อผิดพลาดในการบันทึกข้อมูล");
+    } finally {
+      setIsSavingParsed(false);
+    }
+  };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -136,15 +221,31 @@ export default function LeasePrintPage() {
               ดูไฟล์สัญญาที่อัปโหลดไว้ (Legacy)
             </Button>
           ) : null}
+
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            className="bg-purple-600 hover:bg-purple-700 text-white shadow-md font-bold transition-transform hover:-translate-y-0.5"
+            style={{ boxShadow: "0 8px 18px -6px #5856d6" }}
+          >
+            📂 สแกนกรอกสัญญาอัตโนมัติ
+          </Button>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileScan}
+            accept="image/*"
+            className="hidden"
+          />
           
           <Button 
             onClick={() => window.open(`/dashboard/tenants/${params.id}/contract`, '_blank')} 
-            className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md font-bold"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-md font-bold transition-transform hover:-translate-y-0.5"
+            style={{ boxShadow: "0 8px 18px -6px #34c759" }}
           >
             📝 สร้างสัญญาเช่าอัตโนมัติ
           </Button>
 
-          <Button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md">
+          <Button onClick={() => window.print()} className="bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-transform hover:-translate-y-0.5" style={{ boxShadow: "0 8px 18px -6px #007aff" }}>
             <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
             พิมพ์สัญญาให้ผู้เช่าเซ็น
           </Button>
@@ -211,6 +312,113 @@ export default function LeasePrintPage() {
           สร้างโดยระบบบริหารจัดการหอพัก JadHor OS (Paperless Lease Agreement)
         </div>
       </div>
+
+      {/* Smart Contract Parser Modal */}
+      {isParseModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200 print:hidden">
+          <div className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <h2 className="text-lg font-extrabold text-slate-800">ผลการดึงข้อมูลเอกสารอัตโนมัติ</h2>
+              <button 
+                onClick={() => setIsParseModalOpen(false)} 
+                disabled={isSavingParsed}
+                className="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-200 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              {isParsing ? (
+                <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                  <div className="w-10 h-10 border-4 border-purple-500/30 border-t-purple-600 rounded-full animate-spin" />
+                  <p className="text-sm font-medium text-slate-500">ระบบอัจฉริยะกำลังวิเคราะห์รูปภาพสัญญา...</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <p className="text-xs text-slate-400">
+                    โปรดตรวจสอบและแก้ไขข้อมูลที่ดึงมาจากเอกสารสัญญาให้ถูกต้อง ก่อนกดยืนยันบันทึกเข้าระบบ:
+                  </p>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-bold text-slate-500">ชื่อจริง</label>
+                      <input
+                        type="text"
+                        value={parsedData.firstName}
+                        onChange={e => setParsedData({ ...parsedData, firstName: e.target.value })}
+                        className="w-full mt-1 px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-xs font-bold text-slate-500">นามสกุล</label>
+                      <input
+                        type="text"
+                        value={parsedData.lastName}
+                        onChange={e => setParsedData({ ...parsedData, lastName: e.target.value })}
+                        className="w-full mt-1 px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-xs font-bold text-slate-500">เลขประจำตัวประชาชน (13 หลัก)</label>
+                      <input
+                        type="text"
+                        maxLength={13}
+                        value={parsedData.idCardNumber}
+                        onChange={e => setParsedData({ ...parsedData, idCardNumber: e.target.value })}
+                        className="w-full mt-1 px-3 py-2 border rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-xs font-bold text-slate-500">วันเริ่มสัญญาเช่า</label>
+                      <input
+                        type="date"
+                        value={parsedData.leaseStart}
+                        onChange={e => setParsedData({ ...parsedData, leaseStart: e.target.value })}
+                        className="w-full mt-1 px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="text-xs font-bold text-slate-500">เงินประกัน (บาท)</label>
+                      <input
+                        type="number"
+                        value={parsedData.depositAmount}
+                        onChange={e => setParsedData({ ...parsedData, depositAmount: e.target.value })}
+                        className="w-full mt-1 px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 pt-4 border-t">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setIsParseModalOpen(false)}
+                      disabled={isSavingParsed}
+                      className="rounded-xl h-11 font-semibold text-slate-600 hover:bg-slate-100"
+                    >
+                      ยกเลิก
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleSaveParsedData}
+                      disabled={isSavingParsed}
+                      className="rounded-xl h-11 bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 shadow-[0_8px_18px_-6px_#5856d6]"
+                    >
+                      {isSavingParsed ? "กำลังบันทึก..." : "💾 บันทึกและกรอกข้อมูล"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
