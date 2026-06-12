@@ -1,15 +1,81 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { GoogleGenAI } from "@google/genai";
 
-// โมเดลกลาง — งานข้อความใช้ Haiku 4.5 (เร็ว/ถูก), งานอ่านรูปเอกสารใช้ Sonnet 4.6 (แม่นกว่า)
-const TEXT_MODEL = "claude-haiku-4-5";
-const VISION_MODEL = "claude-sonnet-4-6";
+// ── Hybrid AI Strategy ──
+// งานข้อความทั่วไป: Gemini (free tier) ก่อน → ถ้าไม่มี key/โควต้าหมด/ล่ม fallback เป็น Claude อัตโนมัติ
+// งานอ่านรูปสัญญาเช่า (มีเลขบัตรประชาชน = ข้อมูลอ่อนไหว): ใช้ Claude เท่านั้น
+// (free tier ของ Gemini ข้อมูลอาจถูกนำไปใช้ฝึกโมเดล จึงห้ามส่งเอกสารส่วนบุคคลไป)
+const CLAUDE_TEXT_MODEL = "claude-haiku-4-5";
+const CLAUDE_VISION_MODEL = "claude-sonnet-4-6";
+const GEMINI_TEXT_MODEL = "gemini-2.5-flash";
 
-function getClient(): Anthropic | null {
+function isPlaceholder(key: string | undefined): boolean {
+  return !key || key.trim() === "" || key.includes("วางคีย์ตรงนี้") || key.includes("your-key");
+}
+
+function getClaude(): Anthropic | null {
   const key = process.env.ANTHROPIC_API_KEY;
-  if (!key || key.trim() === "" || key.includes("วางคีย์ตรงนี้") || key.includes("your-key")) {
+  if (isPlaceholder(key)) return null;
+  return new Anthropic({ apiKey: key });
+}
+
+function getGemini(): GoogleGenAI | null {
+  const key = process.env.GEMINI_API_KEY;
+  if (isPlaceholder(key)) return null;
+  return new GoogleGenAI({ apiKey: key });
+}
+
+/**
+ * งานข้อความทั่วไป — ลอง Gemini ก่อน (ฟรี) แล้ว fallback เป็น Claude
+ * โยน API_KEY_NOT_CONFIGURED ถ้าไม่มี key ทั้งสองฝั่ง
+ */
+async function generateText(prompt: string, maxTokens: number): Promise<string> {
+  const gemini = getGemini();
+  const claude = getClaude();
+  if (!gemini && !claude) throw new Error("API_KEY_NOT_CONFIGURED");
+
+  if (gemini) {
+    try {
+      const res = await gemini.models.generateContent({
+        model: GEMINI_TEXT_MODEL,
+        contents: prompt,
+        config: {
+          maxOutputTokens: maxTokens,
+          // ปิด thinking — งานสั้น ๆ ไม่จำเป็น และกัน token โดนกินจนคำตอบโดนตัด
+          thinkingConfig: { thinkingBudget: 0 },
+        },
+      });
+      const text = (res.text ?? "").trim();
+      if (text) return text;
+      // ผลลัพธ์ว่าง (เช่น โดน safety filter) → ปล่อยไหลไปลอง Claude ต่อ
+    } catch (err) {
+      if (!claude) throw err;
+      console.error("[AI] Gemini failed, falling back to Claude:", err);
+    }
+  }
+
+  if (claude) {
+    const res = await claude.messages.create({
+      model: CLAUDE_TEXT_MODEL,
+      max_tokens: maxTokens,
+      messages: [{ role: "user", content: prompt }],
+    });
+    const block = res.content[0];
+    return block?.type === "text" ? block.text.trim() : "";
+  }
+
+  return "";
+}
+
+/** ดึง JSON object ตัวแรกออกจากข้อความตอบกลับ */
+function extractJson<T>(text: string): T | null {
+  try {
+    const match = text.match(/\{[\s\S]*\}/);
+    if (!match) return null;
+    return JSON.parse(match[0]) as T;
+  } catch {
     return null;
   }
-  return new Anthropic({ apiKey: key });
 }
 
 // Feature #2: Detect water/electricity usage anomaly after bill creation
@@ -19,8 +85,6 @@ export async function detectBillAnomaly(params: {
   newBill: { waterUnits: number | null; electricUnits: number | null; month: number; year: number };
   history: Array<{ waterUnits: number | null; electricUnits: number | null; month: number; year: number }>;
 }): Promise<{ isAnomaly: boolean; alertMessage: string } | null> {
-  const client = getClient();
-  if (!client) throw new Error("API_KEY_NOT_CONFIGURED");
   if (params.history.length < 2) return null;
 
   const { roomNumber, propertyName, newBill, history } = params;
@@ -34,14 +98,9 @@ export async function detectBillAnomaly(params: {
 
   const currentSummary = `เดือน ${newBill.month}/${newBill.year + 543}: น้ำ ${newBill.waterUnits ?? "เหมาจ่าย"} หน่วย, ไฟ ${newBill.electricUnits ?? "เหมาจ่าย"} หน่วย`;
 
-  const res = await client.messages.create({
-    model: TEXT_MODEL,
-    max_tokens: 300,
-    messages: [
-      {
-        role: "user",
-        content: `คุณเป็นระบบตรวจสอบการใช้สาธารณูปโภคในหอพัก วิเคราะห์ว่ามีค่าน้ำหรือค่าไฟผิดปกติหรือไม่
-        
+  const text = await generateText(
+    `คุณเป็นระบบตรวจสอบการใช้สาธารณูปโภคในหอพัก วิเคราะห์ว่ามีค่าน้ำหรือค่าไฟผิดปกติหรือไม่
+
 ห้อง: ${roomNumber} (${propertyName})
 ประวัติ 3 เดือนก่อน:
 ${historySummary}
@@ -56,20 +115,12 @@ ${currentSummary}
 }
 
 เกณฑ์: ถือว่าผิดปกติถ้าสูงกว่าค่าเฉลี่ยเกิน 50% (เฉพาะเดือนที่มีข้อมูลหน่วย ไม่นับเหมาจ่าย)`,
-      },
-    ],
-  });
+    300
+  );
 
-  try {
-    const text = res.content[0].type === "text" ? res.content[0].text : "";
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) return null;
-    const parsed = JSON.parse(match[0]);
-    if (!parsed.isAnomaly) return null;
-    return { isAnomaly: true, alertMessage: parsed.alertMessage || "พบค่าสาธารณูปโภคสูงผิดปกติ" };
-  } catch {
-    return null;
-  }
+  const parsed = extractJson<{ isAnomaly: boolean; alertMessage: string | null }>(text);
+  if (!parsed || !parsed.isAnomaly) return null;
+  return { isAnomaly: true, alertMessage: parsed.alertMessage || "พบค่าสาธารณูปโภคสูงผิดปกติ" };
 }
 
 // Feature #3: Auto-categorize a maintenance request
@@ -77,16 +128,8 @@ export async function categorizeMaintenance(params: {
   title: string;
   description: string;
 }): Promise<{ category: string; urgency: string; technicianType: string } | null> {
-  const client = getClient();
-  if (!client) throw new Error("API_KEY_NOT_CONFIGURED");
-
-  const res = await client.messages.create({
-    model: TEXT_MODEL,
-    max_tokens: 200,
-    messages: [
-      {
-        role: "user",
-        content: `จัดหมวดหมู่คำขอแจ้งซ่อมนี้ ตอบเป็น JSON เท่านั้น (ห้ามใช้อีโมจิเด็ดขาด):
+  const text = await generateText(
+    `จัดหมวดหมู่คำขอแจ้งซ่อมนี้ ตอบเป็น JSON เท่านั้น (ห้ามใช้อีโมจิเด็ดขาด):
 
 หัวข้อ: ${params.title}
 รายละเอียด: ${params.description}
@@ -96,18 +139,10 @@ export async function categorizeMaintenance(params: {
   "urgency": "สูง หรือ กลาง หรือ ต่ำ",
   "technicianType": "ประเภทช่าง เช่น ช่างแอร์, ช่างประปา, ช่างไฟ, ช่างทั่วไป"
 }`,
-      },
-    ],
-  });
+    200
+  );
 
-  try {
-    const text = res.content[0].type === "text" ? res.content[0].text : "";
-    const match = text.match(/\{[\s\S]*\}/);
-    if (!match) return null;
-    return JSON.parse(match[0]);
-  } catch {
-    return null;
-  }
+  return extractJson<{ category: string; urgency: string; technicianType: string }>(text);
 }
 
 // Feature #5: Draft a personalized LINE bill notification message
@@ -121,9 +156,6 @@ export async function draftBillNotification(params: {
   paymentHistory: Array<{ month: number; year: number; status: string }>;
   appUrl: string;
 }): Promise<string | null> {
-  const client = getClient();
-  if (!client) throw new Error("API_KEY_NOT_CONFIGURED");
-
   const { tenantName, roomNumber, month, year, totalAmount, dueDate, paymentHistory, appUrl } = params;
   const yearBE = year + 543;
 
@@ -135,14 +167,9 @@ export async function draftBillNotification(params: {
     ? "ผู้เช่าเคยชำระล่าช้า ใช้ภาษาสุภาพแต่เน้นความสำคัญของการชำระตรงเวลา"
     : "ใช้ภาษาเป็นมิตรสุภาพ";
 
-  const res = await client.messages.create({
-    model: TEXT_MODEL,
-    max_tokens: 400,
-    messages: [
-      {
-        role: "user",
-        content: `ร่างข้อความแจ้งบิลค่าเช่าทาง LINE ภาษาไทย ${toneNote}
-        
+  const text = await generateText(
+    `ร่างข้อความแจ้งบิลค่าเช่าทาง LINE ภาษาไทย ${toneNote}
+
 ข้อมูล:
 - ชื่อผู้เช่า: ${tenantName}
 - ห้อง: ${roomNumber}  บิลเดือน: ${month}/${yearBE}
@@ -152,16 +179,10 @@ export async function draftBillNotification(params: {
 
 ต้องมี: 1) ทักทายชื่อ 2) ยอดและวันครบกำหนด 3) ลิงก์ชำระเงิน
 ความยาวไม่เกิน 6 บรรทัด ตอบเป็นข้อความ LINE เท่านั้น ไม่ต้องอธิบาย และห้ามใช้อีโมจิ (Emoji) หรือสัญลักษณ์พิเศษเด็ดขาด`,
-      },
-    ],
-  });
+    400
+  );
 
-  try {
-    const text = res.content[0].type === "text" ? res.content[0].text : "";
-    return text.trim() || null;
-  } catch {
-    return null;
-  }
+  return text || null;
 }
 
 // ── New Smart Features (Excluding UI references to "AI") ──
@@ -177,9 +198,6 @@ export async function draftVacancyListing(params: {
   propertyName: string;
   propertyAddress: string;
 }): Promise<string | null> {
-  const client = getClient();
-  if (!client) throw new Error("API_KEY_NOT_CONFIGURED");
-
   const { roomNumber, rentPrice, floor, hasAircon, hasFan, hasFurniture, propertyName, propertyAddress } = params;
 
   const amenities = [];
@@ -188,7 +206,8 @@ export async function draftVacancyListing(params: {
   if (hasFurniture) amenities.push("เฟอร์นิเจอร์ครบครัน");
   const amenitiesStr = amenities.length > 0 ? amenities.join(", ") : "ห้องเปล่า";
 
-  const prompt = `เขียนข้อความประกาศโฆษณาปล่อยเช่าห้องพักสไตล์โปรโมตบนโซเชียลมีเดีย (เช่น Facebook, LINE) ภาษาไทยที่น่าดึงดูดใจและเป็นทางการ โดยห้ามใช้อีโมจิ (Emoji) หรือสัญลักษณ์พิเศษใดๆ โดยเด็ดขาด
+  const text = await generateText(
+    `เขียนข้อความประกาศโฆษณาปล่อยเช่าห้องพักสไตล์โปรโมตบนโซเชียลมีเดีย (เช่น Facebook, LINE) ภาษาไทยที่น่าดึงดูดใจและเป็นทางการ โดยห้ามใช้อีโมจิ (Emoji) หรือสัญลักษณ์พิเศษใดๆ โดยเด็ดขาด
 
 ข้อมูลห้องพัก:
 - โครงการ/หอพัก: ${propertyName}
@@ -202,23 +221,15 @@ export async function draftVacancyListing(params: {
 1. หัวข้อที่สะดุดตาและน่าสนใจ
 2. รายละเอียดห้องพัก ทำเล จุดเด่น และสิ่งอำนวยความสะดวก
 3. ราคาค่าเช่าและข้อมูลติดต่อกลับ (สมมติให้ติดต่อทางกล่องข้อความหรือนิติบุคคล)
-ไม่ต้องอธิบายคำนำหรือสิ่งอื่นใด ตอบเฉพาะข้อความประกาศที่จะนำไปโพสต์ได้เลย ห้ามใช้อีโมจิ (Emoji) หรือรูปภาพสัญลักษณ์ใดๆ ทั้งสิ้น`;
+ไม่ต้องอธิบายคำนำหรือสิ่งอื่นใด ตอบเฉพาะข้อความประกาศที่จะนำไปโพสต์ได้เลย ห้ามใช้อีโมจิ (Emoji) หรือรูปภาพสัญลักษณ์ใดๆ ทั้งสิ้น`,
+    600
+  );
 
-  const res = await client.messages.create({
-    model: TEXT_MODEL,
-    max_tokens: 600,
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  try {
-    const text = res.content[0].type === "text" ? res.content[0].text : "";
-    return text.trim() || null;
-  } catch {
-    return null;
-  }
+  return text || null;
 }
 
 // Feature #2: Scans contract images and extracts key variables
+// ⚠️ ใช้ Claude เท่านั้น — เอกสารมีข้อมูลส่วนบุคคล (เลขบัตรประชาชน) ห้ามส่งไป Gemini free tier
 export async function parseLeaseContractImage(base64Image: string): Promise<{
   firstName: string | null;
   lastName: string | null;
@@ -227,7 +238,7 @@ export async function parseLeaseContractImage(base64Image: string): Promise<{
   depositAmount: number | null;
   roomNumber: string | null;
 } | null> {
-  const client = getClient();
+  const client = getClaude();
   if (!client) throw new Error("API_KEY_NOT_CONFIGURED");
 
   let mediaType = "image/jpeg";
@@ -251,7 +262,7 @@ export async function parseLeaseContractImage(base64Image: string): Promise<{
 }`;
 
   const res = await client.messages.create({
-    model: VISION_MODEL,
+    model: CLAUDE_VISION_MODEL,
     max_tokens: 500,
     messages: [
       {
@@ -300,12 +311,11 @@ export async function runSystemSecurityAudit(diagnostics: {
     SLIPOK_API_KEY: boolean;
     ADMIN_LINE_NOTIFY_TOKEN: boolean;
     ANTHROPIC_API_KEY: boolean;
+    GEMINI_API_KEY: boolean;
   };
 }): Promise<string | null> {
-  const client = getClient();
-  if (!client) throw new Error("API_KEY_NOT_CONFIGURED");
-
-  const prompt = `คุณเป็นระบบความปลอดภัยและการตรวจสอบระบบหลังบ้าน (System Integrity & Security Auditor)
+  const text = await generateText(
+    `คุณเป็นระบบความปลอดภัยและการตรวจสอบระบบหลังบ้าน (System Integrity & Security Auditor)
 กรุณาวิเคราะห์ข้อมูลสถานะความสมบูรณ์และจุดบกพร่องของระบบหอพัก/อพาร์ตเมนต์ และเขียนรายงานสรุปภาษาไทยในรูปแบบข้อความรายงานที่เรียบร้อยเป็นระเบียบ ห้ามใช้อีโมจิ (Emoji) หรือรูปสัญลักษณ์ใดๆ ทั้งสิ้น
 
 ข้อมูลการตรวจสอบระบบ (System Diagnostic Metrics):
@@ -320,7 +330,8 @@ export async function runSystemSecurityAudit(diagnostics: {
   - NEXT_PUBLIC_SUPABASE_URL: ${diagnostics.envStatus.NEXT_PUBLIC_SUPABASE_URL ? "ตั้งค่าแล้ว" : "ขาดการตั้งค่า"}
   - SLIPOK_API_KEY: ${diagnostics.envStatus.SLIPOK_API_KEY ? "ตั้งค่าแล้ว" : "ขาดการตั้งค่า"}
   - ADMIN_LINE_NOTIFY_TOKEN: ${diagnostics.envStatus.ADMIN_LINE_NOTIFY_TOKEN ? "ตั้งค่าแล้ว" : "ขาดการตั้งค่า"}
-  - ANTHROPIC_API_KEY: ${diagnostics.envStatus.ANTHROPIC_API_KEY ? "ตั้งค่าแล้ว" : "ขาดการตั้งค่า"}
+  - ANTHROPIC_API_KEY (ระบบประมวลผลเอกสาร): ${diagnostics.envStatus.ANTHROPIC_API_KEY ? "ตั้งค่าแล้ว" : "ขาดการตั้งค่า"}
+  - GEMINI_API_KEY (ระบบประมวลผลข้อความ): ${diagnostics.envStatus.GEMINI_API_KEY ? "ตั้งค่าแล้ว" : "ขาดการตั้งค่า"}
 
 ข้อกำหนดในการสร้างรายงาน:
 1. ห้ามใช้คำว่า "AI" หรือระบุว่าเป็นระบบ "AI" ในรายงานโดยเด็ดขาด ให้ระบุว่าเป็น "ระบบตรวจสอบ" หรือ "รายงานการประเมินระบบหลังบ้าน"
@@ -329,18 +340,9 @@ export async function runSystemSecurityAudit(diagnostics: {
    - [จุดบกพร่องของข้อมูลที่ต้องแก้ไข] (ระบุรายละเอียดและวิธีการจัดการจุดขัดแย้งของข้อมูลอย่างเป็นรูปธรรม)
    - [ความปลอดภัยและการตั้งค่าตัวแปรระบบ] (แจ้งข้อเสนอแนะเกี่ยวกับคีย์ต่างๆ ที่จำเป็น)
    - [คำแนะนำสำหรับผู้ดูแลระบบ/ผู้พัฒนา] (ทางเทคนิค)
-3. ห้ามใช้อีโมจิ (Emoji) หรือเครื่องหมายสัญลักษณ์พิเศษ เช่น 🟢, 🟡, 🔴, ✅, ❌ โดยเด็ดขาด ให้ใช้ข้อความปกติระบุระดับความรุนแรง เช่น [ด่วนมาก], [ความรุนแรงต่ำ], [ผ่าน], [ไม่ผ่าน] แทน`;
+3. ห้ามใช้อีโมจิ (Emoji) หรือเครื่องหมายสัญลักษณ์พิเศษ เช่น 🟢, 🟡, 🔴, ✅, ❌ โดยเด็ดขาด ให้ใช้ข้อความปกติระบุระดับความรุนแรง เช่น [ด่วนมาก], [ความรุนแรงต่ำ], [ผ่าน], [ไม่ผ่าน] แทน`,
+    800
+  );
 
-  const res = await client.messages.create({
-    model: TEXT_MODEL,
-    max_tokens: 800,
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  try {
-    const text = res.content[0].type === "text" ? res.content[0].text : "";
-    return text.trim() || null;
-  } catch {
-    return null;
-  }
+  return text || null;
 }

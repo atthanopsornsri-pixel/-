@@ -64,6 +64,7 @@ export async function POST(req: Request) {
       SLIPOK_API_KEY: !!process.env.SLIPOK_API_KEY,
       ADMIN_LINE_NOTIFY_TOKEN: !!process.env.ADMIN_LINE_NOTIFY_TOKEN,
       ANTHROPIC_API_KEY: !!process.env.ANTHROPIC_API_KEY,
+      GEMINI_API_KEY: !!process.env.GEMINI_API_KEY,
     };
 
     // 6. Run Claude evaluation
