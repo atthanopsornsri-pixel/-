@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   try {
     // Rate limit: 5 attempts per IP per 15 minutes
     const ip = getClientIp(req);
-    const rl = rateLimit(`register:${ip}`, 5, 15 * 60 * 1000);
+    const rl = await rateLimit(`register:${ip}`, 5, 15 * 60 * 1000);
     if (!rl.allowed) {
       return NextResponse.json(
         { message: "ส่งคำขอบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่" },

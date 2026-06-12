@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   // Next.js 16 dev config สำหรับ cross-origin local testing
@@ -9,21 +10,28 @@ const nextConfig: NextConfig = {
       {
         source: "/(.*)",
         headers: [
-          // ป้องกัน Clickjacking
           { key: "X-Frame-Options", value: "DENY" },
-          // ป้องกัน MIME sniffing
           { key: "X-Content-Type-Options", value: "nosniff" },
-          // ควบคุม Referrer
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          // ปิด API ที่ไม่ได้ใช้
-          {
-            key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
-          },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
         ],
       },
     ];
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+
+  // ไม่ print Sentry logs ขณะ build
+  silent: !process.env.CI,
+
+  // Upload source maps ใน production เพื่อให้ stack trace อ่านง่าย
+  widenClientFileUpload: true,
+  disableLogger: true,
+
+  // ปิด Sentry tunnel (ไม่จำเป็นสำหรับโปรเจกต์ขนาดนี้)
+  tunnelRoute: undefined,
+  automaticVercelMonitors: false,
+});

@@ -55,9 +55,13 @@ export async function GET(req: Request) {
       }),
       prisma.invoice.findMany({
         where: { createdAt: { gte: thirtyDaysAgo } },
-        select: { id: true, invoiceNumber: true, ownerId: true, month: true, year: true, totalAmount: true, status: true },
-        include: { items: { select: { type: true, description: true, amount: true } } },
-      }),
+        include: {
+          items: { select: { type: true, description: true, amount: true } },
+        },
+        // ใช้ include แทน select+include ร่วมกัน (Prisma ไม่อนุญาต)
+      }).then(invs => invs.map(({ id, invoiceNumber, ownerId, month, year, totalAmount, status, items }) =>
+        ({ id, invoiceNumber, ownerId, month, year, totalAmount, status, items })
+      )),
     ]);
 
     const snapshot = {

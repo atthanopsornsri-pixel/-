@@ -149,7 +149,7 @@ export async function POST(req: Request) {
     }
 
     // Rate limit: 5 test SMS per owner per hour
-    const rl = rateLimit(`sms-test:${session.user.id}`, 5, 60 * 60 * 1000);
+    const rl = await rateLimit(`sms-test:${session.user.id}`, 5, 60 * 60 * 1000);
     if (!rl.allowed) {
       return NextResponse.json(
         { message: "ส่ง SMS ทดสอบบ่อยเกินไป กรุณารอสักครู่" },

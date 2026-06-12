@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   try {
     // Rate limit: 3 submissions per IP per 10 minutes
     const ip = getClientIp(req);
-    const rl = rateLimit(`contact:${ip}`, 3, 10 * 60 * 1000);
+    const rl = await rateLimit(`contact:${ip}`, 3, 10 * 60 * 1000);
     if (!rl.allowed) {
       return NextResponse.redirect(new URL("/?contact=error#contact", req.url), { status: 303 });
     }
