@@ -188,9 +188,9 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const propertyId = searchParams.get("propertyId");
 
-    let whereClause: any = {};
+    let whereClause: any = { isDeleted: false };
     if (propertyId && session.user.role === "OWNER") {
-      whereClause = { room: { propertyId } };
+      whereClause = { isDeleted: false, room: { propertyId } };
     }
 
     const secureDb = await getSecurePrisma();

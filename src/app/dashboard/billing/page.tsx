@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Receipt, Send, BellRing } from "lucide-react";
+import { Receipt, Send, BellRing, Pencil, Trash2 } from "lucide-react";
 
 export default function BillingPage() {
   const [bills, setBills] = useState<any[]>([]);
@@ -40,6 +40,13 @@ export default function BillingPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isBillsLoading, setIsBillsLoading] = useState(true);
   const [selectedSlip, setSelectedSlip] = useState<any>(null);
+
+  // ── แก้ไข / ลบ บิล ──
+  const [editBill, setEditBill] = useState<any>(null);
+  const [editForm, setEditForm] = useState<Record<string, string>>({});
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   const [isSendingLineMap, setIsSendingLineMap] = useState<Record<string, boolean>>({});
   const [isSendingAll, setIsSendingAll] = useState(false);
   const [isSendingAlert, setIsSendingAlert] = useState(false);
@@ -356,6 +363,104 @@ export default function BillingPage() {
     }
   };
 
+  // เปิด modal แก้ไข — เติมค่าจากบิลเดิม
+  const openEdit = (bill: any) => {
+    setEditBill(bill);
+    const toStr = (v: any) => (v === null || v === undefined ? "" : String(v));
+    if (bill.type === "CHECKIN") {
+      setEditForm({
+        securityDeposit: toStr(bill.securityDeposit),
+        advanceRent: toStr(bill.advanceRent),
+        keyDeposit: toStr(bill.keyDeposit),
+        vehicleFee: toStr(bill.vehicleFee),
+        dueDate: bill.dueDate ? new Date(bill.dueDate).toISOString().slice(0, 10) : "",
+      });
+    } else {
+      setEditForm({
+        rentAmount: toStr(bill.rentAmount),
+        waterUnits: toStr(bill.waterUnits),
+        waterAmount: toStr(bill.waterAmount),
+        electricUnits: toStr(bill.electricUnits),
+        electricAmount: toStr(bill.electricAmount),
+        commonFee: toStr(bill.commonFee),
+        parkingFee: toStr(bill.parkingFee),
+        internetFee: toStr(bill.internetFee),
+        otherFee: toStr(bill.otherFee),
+        dueDate: bill.dueDate ? new Date(bill.dueDate).toISOString().slice(0, 10) : "",
+      });
+    }
+  };
+
+  const setEF = (key: string, val: string) => setEditForm(prev => ({ ...prev, [key]: val }));
+
+  const editTotal = () => {
+    if (!editBill) return 0;
+    if (editBill.type === "CHECKIN") {
+      return (
+        (parseFloat(editForm.securityDeposit) || 0) +
+        (parseFloat(editForm.advanceRent) || 0) +
+        (parseFloat(editForm.keyDeposit) || 0) +
+        (parseFloat(editForm.vehicleFee) || 0)
+      );
+    }
+    return (
+      (parseFloat(editForm.rentAmount) || 0) +
+      (parseFloat(editForm.waterAmount) || 0) +
+      (parseFloat(editForm.electricAmount) || 0) +
+      (parseFloat(editForm.commonFee) || 0) +
+      (parseFloat(editForm.parkingFee) || 0) +
+      (parseFloat(editForm.internetFee) || 0) +
+      (parseFloat(editForm.otherFee) || 0)
+    );
+  };
+
+  const handleUpdateBill = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editBill) return;
+    setIsSavingEdit(true);
+    try {
+      const res = await fetch(`/api/bills/${editBill.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+      if (res.ok) {
+        toast.success("แก้ไขบิลสำเร็จ");
+        setEditBill(null);
+        fetchBills();
+      } else {
+        const data = await res.json();
+        toast.error(data.message || "เกิดข้อผิดพลาด");
+      }
+    } catch {
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const handleDeleteBill = async (bill: any) => {
+    const ok = window.confirm(
+      `ต้องการลบบิลห้อง ${bill.room.number}${bill.type === "CHECKIN" ? " (บิลเข้าอยู่)" : ` รอบ ${bill.month}/${bill.year + 543}`} ใช่หรือไม่?\n\nบิลจะถูกนำออกจากรายการและลูกบ้านจะไม่เห็นบิลนี้อีก`
+    );
+    if (!ok) return;
+    setDeletingId(bill.id);
+    try {
+      const res = await fetch(`/api/bills/${bill.id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("ลบบิลสำเร็จ");
+        fetchBills();
+      } else {
+        const data = await res.json();
+        toast.error(data.message || "ลบบิลไม่สำเร็จ");
+      }
+    } catch {
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   return (
     <div>
       <div className="mb-8 flex items-center gap-3">
@@ -661,6 +766,29 @@ export default function BillingPage() {
                             <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                             พิมพ์
                           </Button>
+                          {bill.status !== "PAID" && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="rounded-full border-[var(--jh-border)] text-[var(--jh-ink-secondary)] text-xs h-8 px-3 hover:bg-[var(--jh-surface)]"
+                                onClick={() => openEdit(bill)}
+                              >
+                                <Pencil className="w-3.5 h-3.5 mr-1" strokeWidth={2} />
+                                แก้ไข
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="rounded-full border-[var(--jh-red)]/30 text-[var(--jh-red)] text-xs h-8 px-3 hover:bg-[var(--jh-red-tint)]"
+                                onClick={() => handleDeleteBill(bill)}
+                                disabled={deletingId === bill.id}
+                              >
+                                <Trash2 className="w-3.5 h-3.5 mr-1" strokeWidth={2} />
+                                {deletingId === bill.id ? "กำลังลบ..." : "ลบ"}
+                              </Button>
+                            </>
+                          )}
                           {bill.room?.tenants?.[0]?.lineUserId ? (
                             <Button
                               variant="default"
@@ -747,6 +875,127 @@ export default function BillingPage() {
               </Button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Edit Bill Modal */}
+      {editBill && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <form
+            onSubmit={handleUpdateBill}
+            className="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
+          >
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+              <div>
+                <h3 className="font-bold text-[#1D1D1F]">แก้ไขบิล</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  ห้อง {editBill.room.number}
+                  {editBill.type === "CHECKIN" ? " · บิลเข้าอยู่" : ` · รอบ ${editBill.month}/${editBill.year + 543}`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditBill(null)}
+                className="p-2 bg-white rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shadow-sm border border-slate-200"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+
+            <div className="p-5 flex-1 overflow-auto space-y-4">
+              {editBill.type === "CHECKIN" ? (
+                <div className="bg-[var(--jh-surface)] p-4 rounded-[var(--jh-radius-lg)] space-y-4 border border-black/[0.06]">
+                  <div className="space-y-2">
+                    <Label>เงินประกันห้อง</Label>
+                    <Input type="number" value={editForm.securityDeposit} onChange={e => setEF("securityDeposit", e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>ค่าเช่าล่วงหน้า</Label>
+                    <Input type="number" value={editForm.advanceRent} onChange={e => setEF("advanceRent", e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>ค่ามัดจำกุญแจ / คีย์การ์ด</Label>
+                    <Input type="number" value={editForm.keyDeposit} onChange={e => setEF("keyDeposit", e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>ค่าลงทะเบียน / ที่จอดรถ</Label>
+                    <Input type="number" value={editForm.vehicleFee} onChange={e => setEF("vehicleFee", e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="bg-[var(--jh-surface)] p-4 rounded-[var(--jh-radius-lg)] space-y-4 border border-black/[0.06]">
+                    <div className="space-y-2">
+                      <Label>ค่าเช่าห้อง (บาท)</Label>
+                      <Input type="number" value={editForm.rentAmount} onChange={e => setEF("rentAmount", e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-1.5"><span className="inline-block h-2 w-2 rounded-full bg-[var(--jh-blue)]" />ค่าน้ำ (หน่วย)</Label>
+                        <Input type="number" step="0.1" value={editForm.waterUnits} onChange={e => setEF("waterUnits", e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>รวมค่าน้ำ (บาท)</Label>
+                        <Input type="number" value={editForm.waterAmount} onChange={e => setEF("waterAmount", e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label className="flex items-center gap-1.5"><span className="inline-block h-2 w-2 rounded-full bg-[var(--jh-orange)]" />ค่าไฟ (หน่วย)</Label>
+                        <Input type="number" step="0.1" value={editForm.electricUnits} onChange={e => setEF("electricUnits", e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>รวมค่าไฟ (บาท)</Label>
+                        <Input type="number" value={editForm.electricAmount} onChange={e => setEF("electricAmount", e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-[var(--jh-ink-tertiary)]">ระบบคำนวณค่าน้ำ/ไฟใหม่จากหน่วย × เรตของหอเสมอ (ถ้ามี)</p>
+                  </div>
+
+                  <div className="bg-[var(--jh-surface)] p-4 rounded-[var(--jh-radius-lg)] space-y-4 border border-black/[0.06]">
+                    <p className="font-semibold text-sm text-[var(--jh-ink-secondary)]">ค่าบริการอื่นๆ</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>ค่าส่วนกลาง</Label>
+                        <Input type="number" value={editForm.commonFee} onChange={e => setEF("commonFee", e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>ค่าที่จอดรถ</Label>
+                        <Input type="number" value={editForm.parkingFee} onChange={e => setEF("parkingFee", e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>ค่าอินเทอร์เน็ต</Label>
+                        <Input type="number" value={editForm.internetFee} onChange={e => setEF("internetFee", e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>อื่นๆ (ค่าปรับ ฯลฯ)</Label>
+                        <Input type="number" value={editForm.otherFee} onChange={e => setEF("otherFee", e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="space-y-2">
+                <Label>กำหนดชำระ</Label>
+                <Input type="date" value={editForm.dueDate} onChange={e => setEF("dueDate", e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+              </div>
+
+              <div className="flex items-center justify-between rounded-[var(--jh-radius-md)] bg-[var(--jh-surface)] px-5 py-4 border border-black/[0.06]">
+                <span className="text-sm font-medium text-[var(--jh-ink-secondary)]">ยอดรวมใหม่</span>
+                <span className="text-[26px] font-semibold tracking-[-0.02em] tabular-nums text-[var(--jh-ink)]">฿{editTotal().toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div className="p-4 bg-white border-t border-slate-100 flex gap-3">
+              <Button type="button" variant="outline" className="flex-1 rounded-full border-slate-200 h-12" onClick={() => setEditBill(null)}>
+                ยกเลิก
+              </Button>
+              <Button type="submit" className="flex-1 rounded-full bg-[var(--jh-blue)] hover:bg-[var(--jh-blue-dark)] text-white font-bold h-12 shadow-sm" disabled={isSavingEdit}>
+                {isSavingEdit ? "กำลังบันทึก..." : "บันทึกการแก้ไข"}
+              </Button>
+            </div>
+          </form>
         </div>
       )}
     </div>
