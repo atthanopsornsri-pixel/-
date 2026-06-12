@@ -114,30 +114,47 @@ export async function POST(
     if ((bill.otherFee ?? 0) > 0)
       lines.push(`• ค่าบริการอื่นๆ: ฿${bill.otherFee!.toLocaleString()}`);
 
-    // 6. ร่างข้อความแบบโปร
-    const messageText = [
-      `🧾 ใบแจ้งหนี้ค่าเช่า — ${propertyName}`,
-      `สวัสดีคุณ${tenantName} 🙏`,
-      `━━━━━━━━━━━━━━━━━━━━`,
-      `🏠 ${propertyName}`,
-      `🚪 ห้อง ${bill.room.number}  |  ประจำเดือน ${bill.month}/${yearBE}`,
-      `━━━━━━━━━━━━━━━━━━━━`,
-      ...lines,
-      `━━━━━━━━━━━━━━━━━━━━`,
-      `💰 ยอดรวมทั้งสิ้น: ฿${bill.totalAmount.toLocaleString()}`,
-      `📅 กำหนดชำระ: ${toThaiDate(bill.dueDate)}`,
-      `━━━━━━━━━━━━━━━━━━━━`,
-      `👉 ชำระเงินและแนบสลิปได้ที่:`,
-      paymentUrl,
-    ].join("\n");
+    // 6. ร่างข้อความ — แยกตามสถานะบิล
+    //    PAID → ใบเสร็จ/ขอบคุณ (ไม่ใช่ใบแจ้งหนี้+กำหนดชำระ ที่ทำให้ลูกบ้านสับสน)
+    const rangeBE = bill.type === "CHECKIN" ? "บิลเข้าอยู่" : `ประจำเดือน ${bill.month}/${yearBE}`;
+    const messageText =
+      bill.status === "PAID"
+        ? [
+            `✅ ได้รับชำระเงินเรียบร้อยแล้ว — ${propertyName}`,
+            `ขอบคุณคุณ${tenantName} 🙏`,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            `🚪 ห้อง ${bill.room.number}  |  ${rangeBE}`,
+            ...lines,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            `💰 ยอดที่ชำระ: ฿${bill.totalAmount.toLocaleString()}`,
+            bill.paymentDate ? `📅 วันที่ชำระ: ${toThaiDate(bill.paymentDate)}` : "",
+            `━━━━━━━━━━━━━━━━━━━━`,
+            `ขอบคุณที่ชำระตรงเวลา 💚`,
+          ].filter(Boolean).join("\n")
+        : [
+            `🧾 ใบแจ้งหนี้ค่าเช่า — ${propertyName}`,
+            `สวัสดีคุณ${tenantName} 🙏`,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            `🏠 ${propertyName}`,
+            `🚪 ห้อง ${bill.room.number}  |  ${rangeBE}`,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            ...lines,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            `💰 ยอดรวมทั้งสิ้น: ฿${bill.totalAmount.toLocaleString()}`,
+            `📅 กำหนดชำระ: ${toThaiDate(bill.dueDate)}`,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            `👉 ชำระเงินและแนบสลิปได้ที่:`,
+            paymentUrl,
+          ].join("\n");
 
     // 7. ส่งข้อความ
     const result = await sendLineOAMessage(targetLineId, messageText, token);
 
     if (!result.success) {
+      // result.error ผ่าน humanizeLineError มาแล้ว — เป็นภาษาไทยที่เจ้าของแก้ได้
       return NextResponse.json(
-        { message: "LINE API Error", detail: result.error },
-        { status: 500 }
+        { message: result.error || "ส่งข้อความผ่าน LINE ไม่สำเร็จ" },
+        { status: 502 }
       );
     }
 
