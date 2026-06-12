@@ -128,6 +128,22 @@ export async function GET(req: Request) {
       ],
     });
 
+    // Backfill: ห้องที่สร้างก่อนมีระบบรหัสเชิญจะไม่มี inviteCode — สร้างเติมให้อัตโนมัติ
+    for (const room of rooms) {
+      if (!room.inviteCode) {
+        for (let attempt = 0; attempt < 5; attempt++) {
+          const code = Math.random().toString(36).substring(2, 8).toUpperCase().padEnd(6, "X");
+          try {
+            await prisma.room.update({ where: { id: room.id }, data: { inviteCode: code } });
+            room.inviteCode = code;
+            break;
+          } catch {
+            // ชนกับรหัสที่มีอยู่แล้ว (@unique) — สุ่มใหม่
+          }
+        }
+      }
+    }
+
     return NextResponse.json(rooms);
   } catch (error) {
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
