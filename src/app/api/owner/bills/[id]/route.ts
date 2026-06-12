@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -92,17 +92,19 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
           where: { id: session.user.id },
           select: { name: true, email: true },
         });
-        sendLineOAMessage(
-          adminLineUserId,
-          [
-            `✅ ชำระค่าบริการ JadHor OS อัตโนมัติ`,
-            `Owner: ${owner?.name || owner?.email || session.user.id}`,
-            `ใบแจ้งหนี้: ${invoice.invoiceNumber}`,
-            `ยอด: ฿${invoice.totalAmount.toLocaleString()}`,
-            `Ref: ${verification.transRef || "-"}`,
-          ].join("\n"),
-          adminLineToken
-        ).catch((err) => console.error("[LINE] admin notify error:", err));
+        after(() =>
+          sendLineOAMessage(
+            adminLineUserId,
+            [
+              `✅ ชำระค่าบริการ JadHor OS อัตโนมัติ`,
+              `Owner: ${owner?.name || owner?.email || session.user.id}`,
+              `ใบแจ้งหนี้: ${invoice.invoiceNumber}`,
+              `ยอด: ฿${invoice.totalAmount.toLocaleString()}`,
+              `Ref: ${verification.transRef || "-"}`,
+            ].join("\n"),
+            adminLineToken
+          ).catch((err) => console.error("[LINE] admin notify error:", err))
+        );
       }
     }
 

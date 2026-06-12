@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -124,8 +124,12 @@ export async function POST(req: Request) {
         .filter(Boolean)
         .join("\n");
 
-      sendLineOAMessage(tenant.lineUserId, msg, room.property.owner.lineChannelAccessToken).catch(
-        (err) => console.error("[LINE] checkin bill notify error:", err)
+      const tenantLineId = tenant.lineUserId;
+      const lineToken = room.property.owner.lineChannelAccessToken;
+      after(() =>
+        sendLineOAMessage(tenantLineId, msg, lineToken).catch(
+          (err) => console.error("[LINE] checkin bill notify error:", err)
+        )
       );
     }
 

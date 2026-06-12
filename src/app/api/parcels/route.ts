@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -54,16 +54,21 @@ export async function POST(req: Request) {
     const parcelMsg = `มีพัสดุมาส่ง! ห้อง ${parcel.room.number} | ผู้รับ: ${recipientName || "-"} | เลขพัสดุ: ${trackingNumber || "-"}`;
 
     if (room?.property?.owner?.lineChannelAccessToken && tenant?.lineUserId) {
-      sendLineOAMessage(
-        tenant.lineUserId,
-        `📦 ${parcelMsg}`,
-        room.property.owner.lineChannelAccessToken
-      ).catch((err) => console.error("[LINE] parcel notify error:", err));
+      const tenantLineId = tenant.lineUserId;
+      const lineToken = room.property.owner.lineChannelAccessToken;
+      after(() =>
+        sendLineOAMessage(tenantLineId, `📦 ${parcelMsg}`, lineToken)
+          .catch((err) => console.error("[LINE] parcel notify error:", err))
+      );
     }
 
     if (tenant?.phoneNumber && room?.property?.ownerId) {
-      sendSmsWithAddon(room.property.ownerId, tenant.phoneNumber, `[JadHor] ${parcelMsg}`)
-        .catch((err) => console.error("[SMS] parcel notify error:", err));
+      const tenantPhone = tenant.phoneNumber;
+      const ownerId = room.property.ownerId;
+      after(() =>
+        sendSmsWithAddon(ownerId, tenantPhone, `[JadHor] ${parcelMsg}`)
+          .catch((err) => console.error("[SMS] parcel notify error:", err))
+      );
     }
 
     return NextResponse.json(parcel, { status: 201 });
