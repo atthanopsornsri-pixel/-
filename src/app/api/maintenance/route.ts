@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendLineOAMessage } from "@/lib/line";
 import { sendSmsWithAddon } from "@/lib/sms";
+import { categorizeMaintenance } from "@/lib/ai";
 
 export async function POST(req: Request) {
   try {
@@ -71,6 +72,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "You don't have an assigned room" }, { status: 400 });
     }
 
+    // Feature #3: AI categorization (await — fast with Haiku ~1s, enriches DB + LINE)
+    const aiResult = await categorizeMaintenance({ title, description }).catch(() => null);
+
     const request = await prisma.maintenanceRequest.create({
       data: {
         roomId: tenant.roomId,
@@ -78,6 +82,11 @@ export async function POST(req: Request) {
         description,
         imageUrl,
         ...(preferredAt && { preferredAt }),
+        ...(aiResult && {
+          aiCategory: aiResult.category,
+          aiUrgency: aiResult.urgency,
+          aiTechnician: aiResult.technicianType,
+        }),
       },
     });
 
@@ -96,6 +105,8 @@ export async function POST(req: Request) {
         ? preferredAt.toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })
         : null;
 
+      const urgencyEmoji: Record<string, string> = { สูง: "🔴", กลาง: "🟡", ต่ำ: "🟢" };
+
       const lineMsg = [
         `🔧 แจ้งซ่อมใหม่ — ต้องการความช่วยเหลือ!`,
         `━━━━━━━━━━━━━━━━━━━━`,
@@ -105,6 +116,10 @@ export async function POST(req: Request) {
         `🔴 เรื่อง: ${title}`,
         `📝 รายละเอียด:`,
         description,
+        aiResult ? `━━━━━━━━━━━━━━━━━━━━` : "",
+        aiResult ? `🏷 หมวดหมู่: ${aiResult.category}` : "",
+        aiResult ? `${urgencyEmoji[aiResult.urgency] ?? "⚡"} ความเร่งด่วน: ${aiResult.urgency}` : "",
+        aiResult ? `🔨 ช่างที่แนะนำ: ${aiResult.technicianType}` : "",
         preferredStr ? `━━━━━━━━━━━━━━━━━━━━` : "",
         preferredStr ? `🗓 ผู้เช่าสะดวกรับช่าง: ${preferredStr}` : "",
         `━━━━━━━━━━━━━━━━━━━━`,

@@ -263,6 +263,10 @@ model MaintenanceRequest {
   preferredAt   DateTime? // วันเวลาที่ผู้เช่าสะดวกรับช่าง (แจ้งตอน submit)
   scheduledAt   DateTime? // วันเวลานัดหมายยืนยันโดยเจ้าของ
   scheduledNote String? // หมายเหตุการนัดหมาย
+  // AI categorization fields
+  aiCategory    String? // หมวดหมู่ที่ AI จัดให้ (เช่น ระบบปรับอากาศ, ประปา, ไฟฟ้า)
+  aiUrgency     String? // ความเร่งด่วน: สูง/กลาง/ต่ำ
+  aiTechnician  String? // ประเภทช่างที่แนะนำ (เช่น ช่างแอร์, ช่างประปา)
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
   isDeleted     Boolean           @default(false)

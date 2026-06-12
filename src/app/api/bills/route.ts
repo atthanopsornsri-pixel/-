@@ -6,6 +6,7 @@ import { getSecurePrisma } from "@/lib/prisma-secure";
 import { Prisma } from "@prisma/client";
 import { sendLineOAMessage } from "@/lib/line";
 import { sendSmsWithAddon } from "@/lib/sms";
+import { detectBillAnomaly, draftBillNotification } from "@/lib/ai";
 
 export async function POST(req: Request) {
   try {
@@ -135,11 +136,32 @@ export async function POST(req: Request) {
       year: "numeric",
     });
 
-    // LINE notification
+    // Feature #5: LINE notification — personalized via AI (with fallback template)
     if (room?.property?.owner?.lineChannelAccessToken && tenant?.lineUserId) {
-      sendLineOAMessage(
-        tenant.lineUserId,
-        [
+      const lineToken = room.property.owner.lineChannelAccessToken;
+      const tenantLineId = tenant.lineUserId;
+
+      // ดึงประวัติชำระเงิน 3 เดือนล่าสุดสำหรับ AI personalization
+      const paymentHistory = await secureDb.bill.findMany({
+        where: { roomId, isDeleted: false, id: { not: bill.id } },
+        select: { month: true, year: true, status: true },
+        orderBy: [{ year: "desc" }, { month: "desc" }],
+        take: 3,
+      });
+
+      (async () => {
+        const aiMsg = await draftBillNotification({
+          tenantName,
+          roomNumber: bill.room.number,
+          month: Number(month),
+          year: Number(year),
+          totalAmount,
+          dueDate: dueStr,
+          paymentHistory,
+          appUrl,
+        }).catch(() => null);
+
+        const lineMsg = aiMsg || [
           `🧾 บิลค่าเช่าใหม่มาแล้ว!`,
           `สวัสดีคุณ${tenantName} 🙏`,
           `━━━━━━━━━━━━━━━━━━━━`,
@@ -150,9 +172,11 @@ export async function POST(req: Request) {
           `━━━━━━━━━━━━━━━━━━━━`,
           `👉 ชำระเงินและแนบสลิปได้ที่:`,
           `${appUrl}/dashboard/my-bills`,
-        ].join("\n"),
-        room.property.owner.lineChannelAccessToken
-      ).catch((err) => console.error("[LINE] bill notify error:", err));
+        ].join("\n");
+
+        sendLineOAMessage(tenantLineId, lineMsg, lineToken)
+          .catch((err) => console.error("[LINE] bill notify error:", err));
+      })();
     }
 
     // SMS notification (ถ้า owner มี SMS addon และผู้เช่ามีเบอร์)
@@ -160,6 +184,43 @@ export async function POST(req: Request) {
       const smsMsg = `[JadHor] บิลห้อง ${bill.room.number} เดือน ${month}/${yearBE} ยอด ฿${totalAmount.toLocaleString()} กำหนดชำระ ${dueStr} จ่ายได้ที่ ${appUrl}/dashboard/my-bills`;
       sendSmsWithAddon(room.property.ownerId, tenant.phoneNumber, smsMsg)
         .catch((err) => console.error("[SMS] bill notify error:", err));
+    }
+
+    // Feature #2: Anomaly detection — แจ้งเตือนเจ้าของถ้าค่าน้ำ/ไฟผิดปกติ (fire-and-forget)
+    if (room?.property?.owner?.lineUserId && room?.property?.owner?.lineChannelAccessToken) {
+      const ownerLineId = room.property.owner.lineUserId;
+      const ownerToken = room.property.owner.lineChannelAccessToken;
+
+      (async () => {
+        const history = await prisma.bill.findMany({
+          where: { roomId, isDeleted: false, id: { not: bill.id } },
+          select: { waterUnits: true, electricUnits: true, month: true, year: true },
+          orderBy: [{ year: "desc" }, { month: "desc" }],
+          take: 3,
+        });
+
+        const anomaly = await detectBillAnomaly({
+          roomNumber: bill.room.number,
+          propertyName: room.property.name || "หอพัก",
+          newBill: { waterUnits: safeWaterUnits, electricUnits: safeElectricUnits, month: Number(month), year: Number(year) },
+          history,
+        }).catch(() => null);
+
+        if (anomaly?.isAnomaly) {
+          const alertMsg = [
+            `🚨 Smart Alert: ค่าสาธารณูปโภคผิดปกติ`,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            `🏠 ห้อง ${bill.room.number}  |  เดือน ${month}/${yearBE}`,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            anomaly.alertMessage,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            `👉 ตรวจสอบเพิ่มเติมในระบบจัดการบิล`,
+          ].join("\n");
+
+          sendLineOAMessage(ownerLineId, alertMsg, ownerToken)
+            .catch((err) => console.error("[LINE] anomaly alert error:", err));
+        }
+      })();
     }
 
     return NextResponse.json(bill, { status: 201 });
