@@ -4,6 +4,13 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
+# ⚠️ Infrastructure — DO NOT TOUCH (locked, owner-mandated 2026-06-12)
+
+`vercel.json` MUST keep `"regions": ["sin1"]`. The Supabase DB and all users are in
+Singapore; without this line Vercel runs functions in iad1 (US East) and every page
+pays multiple trans-Pacific round trips (~1.5s TTFB, measured). Never remove or
+change this when editing vercel.json (e.g. when adding crons).
+
 # Visual / Design Style — "Vibrant Tonal Cards × Mascot Theme" (locked-in, owner-approved)
 
 The owner approved the card pattern on 2026-06-09 and the mascot color theme on 2026-06-12.
