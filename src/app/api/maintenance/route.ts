@@ -149,42 +149,69 @@ export async function GET(req: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    let requests;
+    // ตัด imageUrl (base64 ก้อนใหญ่หลาย MB) ออกจาก list — โหลดรูปแยกผ่าน
+    // /api/maintenance/[id]/image แทน ส่งแค่ hasImage บอกว่ามีรูปไหม
+    const listSelect = {
+      id: true,
+      roomId: true,
+      title: true,
+      description: true,
+      status: true,
+      preferredAt: true,
+      scheduledAt: true,
+      scheduledNote: true,
+      aiCategory: true,
+      aiUrgency: true,
+      aiTechnician: true,
+      createdAt: true,
+      updatedAt: true,
+    } as const;
+
+    let whereClause: any;
 
     if (session.user.role === "TENANT") {
       const tenant = await prisma.tenant.findUnique({
         where: { userId: session.user.id },
       });
       if (!tenant?.roomId) return NextResponse.json([]);
-
-      requests = await prisma.maintenanceRequest.findMany({
-        where: { roomId: tenant.roomId, isDeleted: false },
-        orderBy: { createdAt: "desc" },
-      });
+      whereClause = { roomId: tenant.roomId, isDeleted: false };
     } else if (session.user.role === "OWNER") {
       const { searchParams } = new URL(req.url);
       const propertyId = searchParams.get("propertyId");
 
-      const whereClause: any = {
+      whereClause = {
         isDeleted: false,
         room: { property: { ownerId: session.user.id } },
       };
       if (propertyId) {
         whereClause.room.propertyId = propertyId;
       }
-
-      requests = await prisma.maintenanceRequest.findMany({
-        where: whereClause,
-        include: {
-          room: { select: { number: true, property: { select: { name: true } } } },
-        },
-        orderBy: { createdAt: "desc" },
-      });
     } else {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    return NextResponse.json(requests);
+    const [requests, withImages] = await Promise.all([
+      prisma.maintenanceRequest.findMany({
+        where: whereClause,
+        select: {
+          ...listSelect,
+          ...(session.user.role === "OWNER" && {
+            room: { select: { number: true, property: { select: { name: true } } } },
+          }),
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      // query เบา ๆ เอาเฉพาะ id ของรายการที่มีรูป (ไม่ดึงตัว base64 มา)
+      prisma.maintenanceRequest.findMany({
+        where: { ...whereClause, NOT: [{ imageUrl: null }, { imageUrl: "" }] },
+        select: { id: true },
+      }),
+    ]);
+
+    const imageIds = new Set(withImages.map((r) => r.id));
+    return NextResponse.json(
+      requests.map((r) => ({ ...r, hasImage: imageIds.has(r.id) }))
+    );
   } catch (error) {
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }

@@ -420,10 +420,10 @@ export default function MaintenancePage() {
                   className="group rounded-[var(--jh-radius-2xl)] border border-white/60 shadow-[var(--jh-shadow-card)] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
                   style={{ background: `linear-gradient(150deg, ${meta.gradFrom} 0%, ${meta.gradTo} 100%)` }}>
 
-                  {req.imageUrl && (
+                  {(req.hasImage || req.imageUrl) && (
                     <div className="h-44 w-full overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={req.imageUrl} alt={req.title}
+                      <img src={`/api/maintenance/${req.id}/image`} alt={req.title} loading="lazy"
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     </div>
                   )}
