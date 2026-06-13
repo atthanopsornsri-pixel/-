@@ -128,9 +128,9 @@ export function LoginForm() {
           <Link href="/register" className="text-blue-600 hover:text-blue-700 hover:underline">
             สร้างบัญชี JadHor OS ของคุณ
           </Link>
-          <a href="#" className="text-blue-600 hover:text-blue-700 hover:underline">
+          <Link href="/forgot-password" className="text-blue-600 hover:text-blue-700 hover:underline">
             ลืมรหัสผ่านใช่หรือไม่?
-          </a>
+          </Link>
         </div>
 
         {/* Footer */}

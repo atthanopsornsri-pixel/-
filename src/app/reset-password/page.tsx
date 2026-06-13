@@ -1,0 +1,14 @@
+import { Suspense } from "react";
+import { ResetPasswordForm } from "@/components/reset-password-form";
+
+export default function ResetPasswordPage() {
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#f7f4ed] relative">
+      <div className="w-full max-w-[480px] bg-white rounded-[32px] p-10 md:p-14 shadow-[0_8px_40px_rgb(0,0,0,0.08)] animate-in fade-in zoom-in-95 duration-500 m-4 relative z-10">
+        <Suspense fallback={<div className="h-[400px] flex items-center justify-center">Loading...</div>}>
+          <ResetPasswordForm />
+        </Suspense>
+      </div>
+    </div>
+  );
+}
