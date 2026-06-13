@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { verifySlip, receiverMatchesPromptPay } from "@/lib/slip-verification";
+import { sendLineOAMessage } from "@/lib/line";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -13,11 +14,23 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ message: "Missing slipUrl" }, { status: 400 });
     }
 
-    // Find the bill (with property for promptPay matching)
+    // Find the bill (with property for promptPay matching + owner LINE for notification)
     const bill = await prisma.bill.findUnique({
       where: { id },
       include: {
-        room: { select: { property: { select: { promptPayNo: true } } } },
+        room: {
+          select: {
+            number: true,
+            property: {
+              select: {
+                promptPayNo: true,
+                owner: {
+                  select: { lineUserId: true, lineChannelAccessToken: true },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -106,6 +119,24 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         paidAmount,
       },
     });
+
+    // แจ้งเจ้าของหอผ่าน LINE ว่ามีสลิปส่งมาแล้ว
+    const owner = bill.room?.property?.owner;
+    if (owner?.lineChannelAccessToken && owner?.lineUserId) {
+      const roomNo = bill.room.number;
+      const ownerMsg =
+        newStatus === "PAID"
+          ? `✅ ห้อง ${roomNo} ชำระเงินแล้ว\n💰 ยอด: ฿${bill.totalAmount.toLocaleString()}\n🤖 ระบบตรวจสลิปผ่านอัตโนมัติ`
+          : newStatus === "PARTIAL"
+          ? `⚠️ ห้อง ${roomNo} ชำระบางส่วน ฿${(paidAmount ?? 0).toLocaleString()} / ฿${bill.totalAmount.toLocaleString()}\n📋 กรุณาตรวจสอบในระบบ`
+          : `📬 ห้อง ${roomNo} แนบสลิปชำระเงินแล้ว\n💰 ยอด: ฿${bill.totalAmount.toLocaleString()}\n👉 กรุณาเข้าตรวจสอบและอนุมัติในระบบ`;
+      const ownerLineId = owner.lineUserId;
+      const lineToken = owner.lineChannelAccessToken;
+      after(() =>
+        sendLineOAMessage(ownerLineId, ownerMsg, lineToken)
+          .catch((err) => console.error("[LINE] owner payment notify error:", err))
+      );
+    }
 
     return NextResponse.json({
       ...updated,
