@@ -1,3 +1,4 @@
+import React from "react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import Link from "next/link";
@@ -18,6 +19,8 @@ import {
   Wrench,
   type LucideIcon,
 } from "lucide-react";
+import { CountUpValue } from "@/components/count-up-value";
+import { CircularProgress } from "@/components/circular-progress";
 
 type Tone = "blue" | "green" | "orange" | "indigo" | "purple" | "red";
 
@@ -37,19 +40,39 @@ function StatCard({
   label,
   value,
   sublabel,
+  delay = 0,
+  rightSlot,
 }: {
   icon: LucideIcon;
   tone: Tone;
   label: string;
-  value: string | number;
+  value: React.ReactNode;
   sublabel: string;
+  delay?: number;
+  rightSlot?: React.ReactNode;
 }) {
   const t = TONES[tone];
   return (
     <div
-      className="group rounded-[var(--jh-radius-2xl)] border border-white/60 p-6 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
-      style={{ background: `linear-gradient(150deg, ${t.gradFrom} 0%, ${t.gradTo} 100%)` }}
+      className="group relative overflow-hidden rounded-[var(--jh-radius-2xl)] border border-white/60 p-6 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)] animate-in fade-in slide-in-from-bottom-4 [animation-fill-mode:both]"
+      style={{
+        background: `linear-gradient(150deg, ${t.gradFrom} 0%, ${t.gradTo} 100%)`,
+        animationDelay: `${delay}ms`,
+        animationDuration: "500ms",
+      }}
     >
+      {/* Right decoration: progress ring หรือ watermark icon */}
+      {rightSlot ? (
+        <div className="absolute right-5 top-1/2 -translate-y-1/2">{rightSlot}</div>
+      ) : (
+        <div
+          className="pointer-events-none absolute -bottom-5 -right-5 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-6"
+          style={{ color: t.solid, opacity: 0.07 }}
+        >
+          <Icon className="h-32 w-32" strokeWidth={1} />
+        </div>
+      )}
+
       <div
         className="mb-4 flex h-12 w-12 items-center justify-center rounded-[var(--jh-radius-md)] transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
         style={{ background: t.solid, color: "#fff", boxShadow: `0 10px 22px -8px ${t.solid}` }}
@@ -104,10 +127,10 @@ export default async function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
-          <StatCard icon={Users} tone="blue" label="เจ้าของหอพักทั้งหมด" value={totalOwners} sublabel="บัญชีผู้ให้บริการในระบบ" />
-          <StatCard icon={Building2} tone="green" label="หอพักในระบบ" value={totalProperties} sublabel="สถานที่ให้บริการทั้งหมด" />
-          <StatCard icon={Wallet} tone="indigo" label="รายได้แพลตฟอร์ม (SaaS)" value={`฿${totalRevenue.toLocaleString()}`} sublabel="ยอดชำระแล้วรวม" />
-          <StatCard icon={Ticket} tone="orange" label="Invite Code รอใช้งาน" value={pendingInvites} sublabel="โค้ดที่ยังไม่ถูกเปิดใช้" />
+          <StatCard icon={Users} tone="blue" label="เจ้าของหอพักทั้งหมด" value={<CountUpValue target={totalOwners} />} sublabel="บัญชีผู้ให้บริการในระบบ" delay={0} />
+          <StatCard icon={Building2} tone="green" label="หอพักในระบบ" value={<CountUpValue target={totalProperties} />} sublabel="สถานที่ให้บริการทั้งหมด" delay={80} />
+          <StatCard icon={Wallet} tone="indigo" label="รายได้แพลตฟอร์ม (SaaS)" value={<CountUpValue target={totalRevenue} prefix="฿" />} sublabel="ยอดชำระแล้วรวม" delay={160} />
+          <StatCard icon={Ticket} tone="orange" label="Invite Code รอใช้งาน" value={<CountUpValue target={pendingInvites} />} sublabel="โค้ดที่ยังไม่ถูกเปิดใช้" delay={240} />
         </div>
       </div>
     );
@@ -167,10 +190,17 @@ export default async function DashboardPage() {
         <>
           {/* Summary metric cards */}
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard icon={Building2} tone="blue" label="อพาร์ตเม้นท์ของคุณ" value={metrics.totalProperties} sublabel="สถานที่ทั้งหมดในระบบ" />
-            <StatCard icon={BedDouble} tone="green" label="อัตราการเข้าพัก" value={`${metrics.occupancyRate}%`} sublabel={`${metrics.occupiedRooms} จากทั้งหมด ${metrics.totalRooms} ห้อง`} />
-            <StatCard icon={Clock} tone="orange" label="หนี้ค้างชำระ (เดือนนี้)" value={formatIncome(metrics.outstandingDebt)} sublabel="กำลังรอการชำระเงิน" />
-            <StatCard icon={Wallet} tone="indigo" label="รายรับเดือนนี้ (ประเมิน)" value={formatIncome(metrics.totalRevenue)} sublabel="จากค่าเช่าและบริการ" />
+            <StatCard icon={Building2} tone="blue" label="อพาร์ตเม้นท์ของคุณ" value={<CountUpValue target={metrics.totalProperties} />} sublabel="สถานที่ทั้งหมดในระบบ" delay={0} />
+            <StatCard
+              icon={BedDouble} tone="green"
+              label="อัตราการเข้าพัก"
+              value={<CountUpValue target={metrics.occupancyRate} suffix="%" decimals={2} />}
+              sublabel={`${metrics.occupiedRooms} จากทั้งหมด ${metrics.totalRooms} ห้อง`}
+              delay={80}
+              rightSlot={<CircularProgress value={metrics.occupancyRate} color="#34c759" />}
+            />
+            <StatCard icon={Clock} tone="orange" label="หนี้ค้างชำระ (เดือนนี้)" value={formatIncome(metrics.outstandingDebt)} sublabel="กำลังรอการชำระเงิน" delay={160} />
+            <StatCard icon={Wallet} tone="indigo" label="รายรับเดือนนี้ (ประเมิน)" value={formatIncome(metrics.totalRevenue)} sublabel="จากค่าเช่าและบริการ" delay={240} />
           </div>
 
           {/* Quick actions */}
