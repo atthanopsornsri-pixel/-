@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { getSecurePrisma } from "@/lib/prisma-secure";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -23,6 +24,43 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 
     return NextResponse.json(property);
   } catch (error) {
+    return NextResponse.json({ message: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "OWNER") {
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id } = await params;
+    const secureDb = await getSecurePrisma();
+
+    const property = await secureDb.property.findUnique({
+      where: { id },
+      include: { rooms: { include: { tenants: true } } },
+    });
+
+    if (!property) {
+      return NextResponse.json({ message: "ไม่พบหอพักหรือไม่มีสิทธิ์" }, { status: 403 });
+    }
+
+    const hasOccupied = property.rooms.some((r) => r.tenants.length > 0);
+    if (hasOccupied) {
+      return NextResponse.json({ message: "ไม่สามารถลบหอพักที่มีผู้เช่าอยู่" }, { status: 400 });
+    }
+
+    const roomIds = property.rooms.map((r) => r.id);
+    await prisma.bill.deleteMany({ where: { roomId: { in: roomIds } } });
+    await prisma.maintenanceRequest.deleteMany({ where: { roomId: { in: roomIds } } });
+    await prisma.room.deleteMany({ where: { id: { in: roomIds } } });
+    await prisma.property.delete({ where: { id } });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Error deleting property:", error);
     return NextResponse.json({ message: "Internal server error" }, { status: 500 });
   }
 }

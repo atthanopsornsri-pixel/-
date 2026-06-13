@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Wind, RotateCw, LayoutGrid, UserPlus, BedDouble } from "lucide-react";
+import { Wind, RotateCw, LayoutGrid, UserPlus, BedDouble, Trash2 } from "lucide-react";
 
 
 
@@ -465,13 +465,22 @@ export default function RoomsPage() {
                     </Button>
                   )}
                   
-                  <div className="mt-auto flex gap-3">
+                  <div className="mt-auto flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="rounded-full border-red-100 text-red-300 hover:bg-red-50 hover:text-red-500 h-11 w-11 shrink-0 transition-colors"
+                      onClick={() => handleDelete(room.id)}
+                      title="ลบห้องพัก"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                     <Button variant="outline" className="flex-1 rounded-full border-slate-200 text-slate-600 hover:bg-slate-50 h-11 font-semibold" onClick={() => handleEditClick(room)}>
                       แก้ไข
                     </Button>
                     {room.status === "AVAILABLE" && (
                       <Link href={`/dashboard/tenants?action=create&roomId=${room.id}&roomNumber=${room.number}`} className="flex-1">
-                        <Button 
+                        <Button
                           className="w-full rounded-full bg-[#1D1D1F] hover:bg-[#333336] text-white h-11 font-semibold shadow-sm flex items-center justify-center gap-2"
                         >
                           <UserPlus className="w-4 h-4" /> รับผู้เช่า

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-import { Building2 } from "lucide-react";
+import { Building2, Trash2 } from "lucide-react";
 
 // Utility to compress image natively
 const compressImage = (file: File, maxWidth = 1000): Promise<string> => {
@@ -85,6 +85,22 @@ export default function PropertiesPage() {
       } catch (err) {
         console.error("Failed to compress signature", err);
       }
+    }
+  };
+
+  const handleDeleteProperty = async (id: string, name: string) => {
+    if (!confirm(`ลบ "${name}" ออกจากระบบ?\n\nจะลบห้องพักและข้อมูลที่เกี่ยวข้องทั้งหมด ไม่สามารถย้อนกลับได้`)) return;
+    try {
+      const res = await fetch(`/api/properties/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success("ลบหอพักสำเร็จ");
+        mutateProperties();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.message || "ไม่สามารถลบหอพักได้");
+      }
+    } catch {
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
     }
   };
 
@@ -291,7 +307,16 @@ export default function PropertiesPage() {
                   </div>
                 )}
                 <div className="p-6 flex-1 flex flex-col">
-                  <h3 className="font-extrabold text-xl mb-1 text-[#1D1D1F] group-hover:text-[#34508c] transition-colors">{prop.name}</h3>
+                  <div className="flex items-start justify-between gap-2 mb-1">
+                    <h3 className="font-extrabold text-xl text-[#1D1D1F] group-hover:text-[#34508c] transition-colors">{prop.name}</h3>
+                    <button
+                      onClick={() => handleDeleteProperty(prop.id, prop.name)}
+                      className="p-1.5 rounded-full text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors shrink-0"
+                      title="ลบหอพัก"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                   <p className="text-slate-500 text-sm mb-4 line-clamp-2">{prop.address}</p>
                   
                   <div className="inline-flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full mb-6 border border-slate-100 w-fit">
