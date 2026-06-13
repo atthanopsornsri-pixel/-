@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Wind, RotateCw, LayoutGrid, UserPlus, BedDouble, Trash2 } from "lucide-react";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 
 
 
@@ -42,6 +43,8 @@ export default function RoomsPage() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [copiedRoomId, setCopiedRoomId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; number: string; property: string } | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Vacancy post drafting states (No "AI" naming in UI)
   const [isDraftingListing, setIsDraftingListing] = useState(false);
@@ -117,14 +120,23 @@ export default function RoomsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("ยืนยันการลบห้องพัก? หากมีผู้เช่าอยู่จะไม่สามารถลบได้")) return;
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    setIsDeleting(true);
     try {
-      const res = await fetch(`/api/rooms/${id}`, { method: "DELETE" });
-      if (res.ok) mutateRooms();
-      else toast.error("ไม่สามารถลบห้องได้ อาจมีผู้เช่าอยู่");
-    } catch (error) {
-      console.error(error);
+      const res = await fetch(`/api/rooms/${deleteTarget.id}`, { method: "DELETE" });
+      if (res.ok) {
+        toast.success(`ลบห้อง ${deleteTarget.number} เรียบร้อยแล้ว`);
+        setDeleteTarget(null);
+        mutateRooms();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.message || "ไม่สามารถลบห้องได้");
+      }
+    } catch {
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -470,7 +482,7 @@ export default function RoomsPage() {
                       variant="outline"
                       size="icon"
                       className="rounded-full border-red-100 text-red-300 hover:bg-red-50 hover:text-red-500 h-11 w-11 shrink-0 transition-colors"
-                      onClick={() => handleDelete(room.id)}
+                      onClick={() => setDeleteTarget({ id: room.id, number: room.number, property: room.property.name })}
                       title="ลบห้องพัก"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -619,6 +631,21 @@ export default function RoomsPage() {
           </div>
         </div>
       )}
+
+      {/* Confirm Delete Room Dialog */}
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleDeleteConfirm}
+        title={`ลบห้อง ${deleteTarget?.number ?? ""}?`}
+        subtitle={deleteTarget?.property}
+        impacts={[
+          "ข้อมูลห้องพักและการตั้งค่าทั้งหมด",
+          "ประวัติบิลและการชำระเงินในห้องนี้",
+          "รหัสเชิญ (Invite Code) ของห้อง",
+        ]}
+        isDeleting={isDeleting}
+      />
 
       {/* Draft Vacancy Listing Modal (Excluding any 'AI' words) */}
       {isDraftModalOpen && (

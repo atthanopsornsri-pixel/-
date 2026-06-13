@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import { Building2, Trash2 } from "lucide-react";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 
 // Utility to compress image natively
 const compressImage = (file: File, maxWidth = 1000): Promise<string> => {
@@ -75,6 +76,8 @@ export default function PropertiesPage() {
   const [defaultMotorcycleFee, setDefaultMotorcycleFee] = useState("");
 
   const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [deletePropTarget, setDeletePropTarget] = useState<{ id: string; name: string; roomCount: number } | null>(null);
+  const [isDeletingProp, setIsDeletingProp] = useState(false);
 
   const handleSignatureChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -88,12 +91,14 @@ export default function PropertiesPage() {
     }
   };
 
-  const handleDeleteProperty = async (id: string, name: string) => {
-    if (!confirm(`ลบ "${name}" ออกจากระบบ?\n\nจะลบห้องพักและข้อมูลที่เกี่ยวข้องทั้งหมด ไม่สามารถย้อนกลับได้`)) return;
+  const handleDeletePropertyConfirm = async () => {
+    if (!deletePropTarget) return;
+    setIsDeletingProp(true);
     try {
-      const res = await fetch(`/api/properties/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/properties/${deletePropTarget.id}`, { method: "DELETE" });
       if (res.ok) {
-        toast.success("ลบหอพักสำเร็จ");
+        toast.success(`ลบ "${deletePropTarget.name}" เรียบร้อยแล้ว`);
+        setDeletePropTarget(null);
         mutateProperties();
       } else {
         const data = await res.json().catch(() => ({}));
@@ -101,6 +106,8 @@ export default function PropertiesPage() {
       }
     } catch {
       toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+    } finally {
+      setIsDeletingProp(false);
     }
   };
 
@@ -310,7 +317,7 @@ export default function PropertiesPage() {
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <h3 className="font-extrabold text-xl text-[#1D1D1F] group-hover:text-[#34508c] transition-colors">{prop.name}</h3>
                     <button
-                      onClick={() => handleDeleteProperty(prop.id, prop.name)}
+                      onClick={() => setDeletePropTarget({ id: prop.id, name: prop.name, roomCount: prop._count?.rooms ?? 0 })}
                       className="p-1.5 rounded-full text-slate-300 hover:text-red-400 hover:bg-red-50 transition-colors shrink-0"
                       title="ลบหอพัก"
                     >
@@ -348,6 +355,22 @@ export default function PropertiesPage() {
           </div>
         </div>
       </div>
+
+      {/* Confirm Delete Property Dialog */}
+      <ConfirmDeleteDialog
+        open={!!deletePropTarget}
+        onClose={() => setDeletePropTarget(null)}
+        onConfirm={handleDeletePropertyConfirm}
+        title={`ลบ "${deletePropTarget?.name ?? ""}"?`}
+        subtitle={deletePropTarget ? `มีห้องพักในระบบ ${deletePropTarget.roomCount} ห้อง` : undefined}
+        impacts={[
+          `ห้องพักทั้งหมด ${deletePropTarget?.roomCount ?? 0} ห้อง`,
+          "ประวัติบิลและการชำระเงินทุกห้อง",
+          "การตั้งค่าบิล / ภาษี / สัญญาเช่า",
+          "ข้อมูลแจ้งซ่อมทั้งหมดในหอพัก",
+        ]}
+        isDeleting={isDeletingProp}
+      />
 
       {/* Settings Modal */}
       {selectedProp && (
