@@ -187,7 +187,7 @@ export default async function Home() {
 
             {/* Benefit chips */}
             <div className="mt-8 flex flex-wrap justify-center gap-2">
-              {["ทดลองใช้ฟรี 30 วัน", "ตั้งค่าใน 10 นาที", "ลูกบ้านรับบิลผ่าน LINE ทันที"].map((chip) => (
+              {["ทดลองใช้ฟรี 14 วัน", "ตั้งค่าใน 10 นาที", "ลูกบ้านรับบิลผ่าน LINE ทันที"].map((chip) => (
                 <span
                   key={chip}
                   className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.07] bg-white/80 px-4 py-1.5 text-[13px] text-[var(--jh-ink-secondary)] shadow-sm backdrop-blur"
