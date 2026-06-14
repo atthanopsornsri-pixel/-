@@ -317,6 +317,7 @@ export async function runSystemSecurityAudit(diagnostics: {
   totalRooms: number;
   occupiedRooms: number;
   vacantRooms: number;
+  totalTenants: number;
   inconsistentRoomsCount: number;
   invalidIdCardsCount: number;
   emptyPhoneNumbersCount: number;
@@ -337,9 +338,10 @@ export async function runSystemSecurityAudit(diagnostics: {
 
 ข้อมูลการตรวจสอบระบบ (System Diagnostic Metrics):
 - จำนวนห้องพักทั้งหมด: ${diagnostics.totalRooms} (มีผู้เช่า: ${diagnostics.occupiedRooms}, ว่าง: ${diagnostics.vacantRooms})
+- จำนวนผู้เช่าทั้งหมดในระบบ: ${diagnostics.totalTenants} คน${diagnostics.totalTenants <= 5 ? " (ระบบอยู่ในช่วงเริ่มต้นหรือทดสอบ — ข้อมูลที่ขาดหายอาจเป็นข้อมูลทดสอบ ให้ประเมินตามสัดส่วนจริง ไม่ใช่ตัวเลขสัมบูรณ์)" : ""}
 - จำนวนห้องพักที่มีสถานะขัดแย้ง (เช่น ระบุว่ามีคนอยู่แต่ไม่มีประวัติผู้เช่าผูกไว้): ${diagnostics.inconsistentRoomsCount} ห้อง
-- จำนวนผู้เช่าที่กรอกเลขบัตรประชาชนไม่ถูกต้อง/ไม่มีข้อมูล: ${diagnostics.invalidIdCardsCount} คน
-- จำนวนผู้เช่าที่ไม่มีเบอร์โทรศัพท์ติดต่อ: ${diagnostics.emptyPhoneNumbersCount} คน
+- จำนวนผู้เช่าที่กรอกเลขบัตรประชาชนไม่ถูกต้อง/ไม่มีข้อมูล: ${diagnostics.invalidIdCardsCount} คน (คิดเป็น ${diagnostics.totalTenants > 0 ? Math.round((diagnostics.invalidIdCardsCount / diagnostics.totalTenants) * 100) : 0}% ของผู้เช่าทั้งหมด)
+- จำนวนผู้เช่าที่ไม่มีเบอร์โทรศัพท์ติดต่อ: ${diagnostics.emptyPhoneNumbersCount} คน (คิดเป็น ${diagnostics.totalTenants > 0 ? Math.round((diagnostics.emptyPhoneNumbersCount / diagnostics.totalTenants) * 100) : 0}% ของผู้เช่าทั้งหมด)
 - จำนวนบิล/ใบแจ้งหนี้ที่มียอดรวมขัดแย้งกันกับยอดรวมรายการย่อย: ${diagnostics.invoiceMismatchesCount} รายการ
 - สถานะตัวแปรระบบหลังบ้าน (Environment Variables Status):
   - DATABASE_URL: ${diagnostics.envStatus.DATABASE_URL ? "ตั้งค่าแล้ว" : "ขาดการตั้งค่า"}

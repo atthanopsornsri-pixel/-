@@ -34,6 +34,8 @@ export async function POST(req: Request) {
       where: { isDeleted: false }
     });
 
+    const totalTenants = tenants.length;
+
     const invalidIdCardsCount = tenants.filter(
       t => !t.idCardNumber || t.idCardNumber.replace(/[-\s]/g, "").length !== 13
     ).length;
@@ -72,6 +74,7 @@ export async function POST(req: Request) {
       totalRooms,
       occupiedRooms,
       vacantRooms,
+      totalTenants,
       inconsistentRoomsCount,
       invalidIdCardsCount,
       emptyPhoneNumbersCount,
