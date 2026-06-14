@@ -185,42 +185,67 @@ export default async function Home() {
               </p>
             )}
 
+            {/* Benefit chips */}
+            <div className="mt-8 flex flex-wrap justify-center gap-2">
+              {["ทดลองใช้ฟรี 30 วัน", "ตั้งค่าใน 10 นาที", "ลูกบ้านรับบิลผ่าน LINE ทันที"].map((chip) => (
+                <span
+                  key={chip}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-black/[0.07] bg-white/80 px-4 py-1.5 text-[13px] text-[var(--jh-ink-secondary)] shadow-sm backdrop-blur"
+                >
+                  <span className="text-[15px] font-bold leading-none text-[#34c759]">✓</span>
+                  {chip}
+                </span>
+              ))}
+            </div>
+
           </div>
         </section>
 
-        {/* ---------------- Problem (เล่าปัญหาก่อนเสนอทางแก้) ---------------- */}
-        <section className="bg-[var(--jh-surface)] px-6 py-24">
+        {/* ---------------- Problem (dark navy redesign) ---------------- */}
+        <section className="bg-[var(--jh-brand-navy)] px-6 py-24 text-white">
           <div className="mx-auto max-w-[1120px]">
             <div className="mx-auto mb-14 max-w-[680px] text-center">
-              <h2 className="text-[32px] font-semibold leading-[1.12] tracking-[-0.02em] md:text-[44px]">
-                หมดปัญหาจุกจิกเรื่องหอพัก!
+              <span className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--jh-brand-gold)]">
+                เรื่องราวที่คุ้นเคย
+              </span>
+              <h2 className="mt-4 text-[32px] font-bold leading-[1.12] tracking-[-0.02em] text-white md:text-[44px]">
+                ปัญหาที่เจ้าของหอพัก<br className="hidden sm:block" />เจอซ้ำๆ ทุกเดือน
               </h2>
-              <p className="mt-4 text-[17px] leading-[1.6] text-[var(--jh-ink-secondary)] md:text-[19px]">
+              <p className="mt-4 text-[17px] leading-[1.6] text-white/60 md:text-[19px]">
                 JadHor พร้อมช่วยเจ้าของหอพักและอพาร์ตเม้นท์ทุกขนาด
               </p>
             </div>
 
             <div className="grid gap-5 md:grid-cols-3">
-              {PROBLEMS.map((p) => (
+              {PROBLEMS.map((p, i) => (
                 <div
                   key={p.title}
-                  className="rounded-[var(--jh-radius-xl)] border border-black/[0.06] bg-white p-8 text-center shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
+                  className="group relative overflow-hidden rounded-[var(--jh-radius-xl)] border border-white/10 bg-white/[0.06] p-8 backdrop-blur-sm transition-all duration-300 hover:bg-white/[0.11] hover:-translate-y-1"
                 >
-                  <div
-                    className="mx-auto mb-5 flex h-[60px] w-[60px] items-center justify-center rounded-[var(--jh-radius-lg)]"
-                    style={{ background: p.tint, color: p.color }}
+                  {/* Large watermark number */}
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute -right-2 -top-5 select-none text-[96px] font-black leading-none text-white/[0.05]"
                   >
-                    <p.icon className="h-7 w-7" strokeWidth={1.75} />
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div className="relative">
+                    <div
+                      className="mb-5 flex h-[52px] w-[52px] items-center justify-center rounded-[var(--jh-radius-lg)]"
+                      style={{ background: "rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.9)" }}
+                    >
+                      <p.icon className="h-6 w-6" strokeWidth={1.75} />
+                    </div>
+                    <h3 className="mb-2.5 text-[19px] font-bold tracking-[-0.01em] text-white">{p.title}</h3>
+                    <p className="text-sm leading-[1.7] text-white/60">{p.body}</p>
                   </div>
-                  <h3 className="mb-2.5 text-[19px] font-semibold tracking-[-0.01em]">{p.title}</h3>
-                  <p className="mx-auto max-w-[280px] text-sm leading-[1.6] text-[var(--jh-ink-secondary)]">{p.body}</p>
                 </div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* ---------------- Features ---------------- */}
+        {/* ---------------- Features (Bento Grid) ---------------- */}
         <section id="features" className="px-6 py-24">
           <div className="mx-auto max-w-[1120px]">
             <div className="mx-auto mb-14 max-w-[680px] text-center">
@@ -238,22 +263,194 @@ export default async function Home() {
               </p>
             </div>
 
-            <div className="grid gap-5 md:grid-cols-3">
-              {FEATURES.map((f) => (
-                <div
-                  key={f.title}
-                  className="rounded-[var(--jh-radius-xl)] border border-black/[0.06] bg-white p-8 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
-                >
+            {/* ── Bento Grid ── */}
+            <div className="grid gap-4 md:grid-cols-3">
+
+              {/* ── Card 1: Billing (col-span-2, navy tonal) ── */}
+              <div
+                className="group md:col-span-2 rounded-[var(--jh-radius-2xl)] border border-white/60 p-7 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)] overflow-hidden"
+                style={{ background: "linear-gradient(150deg, #f3f5fa 0%, #e4eaf5 100%)" }}
+              >
+                <div className="flex items-start gap-4 mb-6">
                   <div
-                    className="mb-5 flex h-[52px] w-[52px] items-center justify-center rounded-[var(--jh-radius-md)]"
-                    style={{ background: f.tint, color: f.color }}
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                    style={{ background: "#34508c", color: "#fff", boxShadow: "0 10px 22px -8px #34508c" }}
                   >
-                    <f.icon className="h-[22px] w-[22px]" strokeWidth={1.75} />
+                    <Receipt className="w-6 h-6" strokeWidth={2} />
                   </div>
-                  <h3 className="mb-2.5 text-[19px] font-semibold tracking-[-0.01em]">{f.title}</h3>
-                  <p className="text-sm leading-[1.6] text-[var(--jh-ink-secondary)]">{f.body}</p>
+                  <div>
+                    <h3 className="text-[19px] font-bold text-[var(--jh-ink)] tracking-[-0.01em]">ออกบิลค่าน้ำค่าไฟอัตโนมัติ</h3>
+                    <p className="text-sm text-[var(--jh-ink-secondary)] mt-1 leading-relaxed">จดมิเตอร์ปุ๊บ ระบบคำนวณยอดให้ปั๊บ พร้อมส่งใบแจ้งหนี้ทันที ไม่ต้องนั่งคิดเลขเอง</p>
+                  </div>
                 </div>
-              ))}
+                {/* Mini billing table */}
+                <div className="rounded-xl border border-white/80 bg-white shadow-sm overflow-hidden">
+                  <div className="grid grid-cols-4 px-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wide border-b border-slate-100 bg-slate-50/80">
+                    <span>ห้อง</span><span>ก่อน</span><span>หลัง</span><span className="text-right">ยอดบิล</span>
+                  </div>
+                  {[
+                    ["101", "1,245", "1,261", "80.00"],
+                    ["102", "89", "102", "65.00"],
+                    ["103", "3,312", "3,334", "110.00"],
+                  ].map(([room, prev, curr, amt]) => (
+                    <div key={room} className="grid grid-cols-4 px-4 py-2.5 text-sm border-b border-slate-50 last:border-0 hover:bg-slate-50/60 transition-colors">
+                      <span className="font-semibold text-[var(--jh-ink)]">ห้อง {room}</span>
+                      <span className="text-slate-400 font-mono text-xs self-center">{prev}</span>
+                      <span className="text-slate-500 font-mono text-xs self-center">{curr}</span>
+                      <span className="text-right font-bold" style={{ color: "var(--jh-blue)" }}>{amt} ฿</span>
+                    </div>
+                  ))}
+                  <div className="px-4 py-2.5 flex items-center justify-between" style={{ background: "linear-gradient(90deg,#f0f4ff,#e8eeff)" }}>
+                    <span className="text-xs font-bold" style={{ color: "var(--jh-blue)" }}>✓ สร้างใบแจ้งหนี้ 3 ห้องแล้ว</span>
+                    <span className="text-xs font-bold font-mono" style={{ color: "var(--jh-blue)" }}>รวม 255.00 ฿</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Card 2: LINE (green tonal) ── */}
+              <div
+                className="group rounded-[var(--jh-radius-2xl)] border border-white/60 p-7 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)] overflow-hidden"
+                style={{ background: "linear-gradient(150deg, #f3fcf6 0%, #e0f7e9 100%)" }}
+              >
+                <div className="mb-5">
+                  <div
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                    style={{ background: "#34c759", color: "#fff", boxShadow: "0 10px 22px -8px #34c759" }}
+                  >
+                    <MessageCircle className="w-6 h-6" strokeWidth={2} />
+                  </div>
+                  <h3 className="text-[17px] font-bold text-[var(--jh-ink)] tracking-[-0.01em]">แจ้งเตือนผ่าน LINE</h3>
+                  <p className="text-xs text-[var(--jh-ink-secondary)] mt-1">ส่งตรงถึงลูกบ้านแบบเรียลไทม์</p>
+                </div>
+                {/* LINE chat bubbles */}
+                <div className="space-y-2">
+                  <div className="rounded-2xl rounded-tl-sm px-3.5 py-2.5 text-xs leading-relaxed text-white shadow-sm max-w-[90%]" style={{ background: "#00C300" }}>
+                    📋 บิลค่าเช่าเดือน มิ.ย.<br />
+                    <span className="font-bold">ห้อง 101 · ยอด 3,200 ฿</span>
+                  </div>
+                  <div className="rounded-2xl rounded-tl-sm px-3.5 py-2 text-xs text-white shadow-sm max-w-[80%]" style={{ background: "#00C300" }}>
+                    💳 สแกน QR จ่ายได้เลย →
+                  </div>
+                  <div className="rounded-2xl rounded-tr-sm ml-auto px-3.5 py-2 text-xs text-slate-700 shadow-sm max-w-[70%] text-right border border-slate-100 bg-white">
+                    โอนแล้วค่ะ 🙏
+                  </div>
+                  <div className="rounded-2xl rounded-tl-sm px-3.5 py-2 text-xs text-white shadow-sm max-w-[75%]" style={{ background: "#00C300" }}>
+                    ✅ รับเงินแล้ว ขอบคุณครับ
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Card 3: Slip Verify (green small) ── */}
+              <div
+                className="group rounded-[var(--jh-radius-2xl)] border border-white/60 p-6 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
+                style={{ background: "linear-gradient(150deg, #f3fcf6 0%, #e0f7e9 100%)" }}
+              >
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                  style={{ background: "#34c759", color: "#fff", boxShadow: "0 10px 22px -8px #34c759" }}
+                >
+                  <ScanLine className="w-5 h-5" strokeWidth={2} />
+                </div>
+                <h3 className="text-[15px] font-bold text-[var(--jh-ink)] mb-1">ตรวจสลิปอัตโนมัติ</h3>
+                <p className="text-xs text-[var(--jh-ink-secondary)] mb-5 leading-relaxed">สแกน QR ชำระผ่าน PromptPay ระบบตรวจสลิปและปิดยอดทันที</p>
+                {/* Status flow */}
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="rounded-full bg-white/80 px-2.5 py-1 text-[10px] font-bold text-slate-600 border border-slate-100">📤 รับสลิป</span>
+                  <span className="text-slate-300 text-xs">›</span>
+                  <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 border border-blue-100">🔍 ตรวจสอบ</span>
+                  <span className="text-slate-300 text-xs">›</span>
+                  <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-bold text-emerald-700 border border-emerald-200">✅ อนุมัติ</span>
+                </div>
+              </div>
+
+              {/* ── Card 4: Maintenance (red tonal) ── */}
+              <div
+                className="group rounded-[var(--jh-radius-2xl)] border border-white/60 p-6 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
+                style={{ background: "linear-gradient(150deg, #fff5f4 0%, #ffe5e3 100%)" }}
+              >
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                  style={{ background: "#ff3b30", color: "#fff", boxShadow: "0 10px 22px -8px #ff3b30" }}
+                >
+                  <Wrench className="w-5 h-5" strokeWidth={2} />
+                </div>
+                <h3 className="text-[15px] font-bold text-[var(--jh-ink)] mb-1">ระบบแจ้งซ่อมออนไลน์</h3>
+                <p className="text-xs text-[var(--jh-ink-secondary)] mb-5 leading-relaxed">ลูกบ้านแจ้งผ่านระบบ เจ้าของอัปเดตสถานะได้ทันที</p>
+                {/* Kanban status list */}
+                <div className="space-y-1.5">
+                  {[
+                    ["รอดำเนินการ", "bg-slate-100 text-slate-600", "ประตูหอ ห้อง 101"],
+                    ["กำลังซ่อม", "bg-amber-100 text-amber-700", "แอร์ ห้อง 204"],
+                    ["เสร็จแล้ว", "bg-emerald-100 text-emerald-700", "ท่อน้ำ ห้อง 301"],
+                  ].map(([status, cls, name]) => (
+                    <div key={name} className="flex items-center gap-2.5">
+                      <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${cls}`}>{status}</span>
+                      <span className="truncate text-xs text-slate-600">{name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Card 5: Contract (indigo tonal) ── */}
+              <div
+                className="group rounded-[var(--jh-radius-2xl)] border border-white/60 p-6 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
+                style={{ background: "linear-gradient(150deg, #f6f6ff 0%, #e8e7fb 100%)" }}
+              >
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                  style={{ background: "#5856d6", color: "#fff", boxShadow: "0 10px 22px -8px #5856d6" }}
+                >
+                  <FileText className="w-5 h-5" strokeWidth={2} />
+                </div>
+                <h3 className="text-[15px] font-bold text-[var(--jh-ink)] mb-1">จัดการสัญญาเช่า</h3>
+                <p className="text-xs text-[var(--jh-ink-secondary)] mb-5 leading-relaxed">ร่างสัญญา พิมพ์ PDF ให้ลูกบ้านเซ็นได้ทันที เก็บประวัติไว้ตลอด</p>
+                {/* Document type badges */}
+                <div className="flex flex-wrap gap-1.5">
+                  {["📄 PDF สัญญา", "✍️ ลายเซ็นดิจิตอล", "📁 เก็บประวัติ", "🖨️ พิมพ์ได้เลย"].map((label) => (
+                    <span key={label} className="rounded-full border border-indigo-100 bg-white/80 px-2.5 py-1 text-[10px] font-bold text-indigo-600">
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              {/* ── Card 6: Package (full-width, gold tonal) ── */}
+              <div
+                className="group md:col-span-3 rounded-[var(--jh-radius-2xl)] border border-white/60 p-6 shadow-[var(--jh-shadow-card)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)] flex flex-col gap-5 md:flex-row md:items-center"
+                style={{ background: "linear-gradient(150deg, #fdf8ee 0%, #f6ecd6 100%)" }}
+              >
+                <div className="flex items-start gap-4 flex-1 min-w-0">
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3"
+                    style={{ background: "#d4a548", color: "#fff", boxShadow: "0 10px 22px -8px #d4a548" }}
+                  >
+                    <Package className="w-5 h-5" strokeWidth={2} />
+                  </div>
+                  <div>
+                    <h3 className="text-[15px] font-bold text-[var(--jh-ink)]">จัดการพัสดุ</h3>
+                    <p className="text-xs text-[var(--jh-ink-secondary)] mt-1 leading-relaxed">นิติบุคคลรับของปุ๊บ ระบบแจ้งเตือนลูกบ้านปั๊บ พร้อมให้เข้ามารับของแบบเป็นระบบ ไม่ตกหล่น</p>
+                  </div>
+                </div>
+                {/* Package flow visualization */}
+                <div className="flex items-center gap-3 shrink-0">
+                  {[
+                    { emoji: "📦", label: "พัสดุมาถึง", bg: "bg-amber-50" },
+                    { emoji: "📲", label: "แจ้ง LINE", bg: "bg-green-50" },
+                    { emoji: "✅", label: "ลูกบ้านรับ", bg: "bg-blue-50" },
+                  ].map((step, idx) => (
+                    <div key={step.label} className="flex items-center gap-3">
+                      <div className="flex flex-col items-center gap-1.5">
+                        <div className={`w-11 h-11 rounded-xl ${step.bg} flex items-center justify-center text-xl border border-white/80`}>
+                          {step.emoji}
+                        </div>
+                        <span className="text-[10px] font-semibold text-[var(--jh-ink-secondary)]">{step.label}</span>
+                      </div>
+                      {idx < 2 && <span className="text-slate-300 text-lg mb-4">›</span>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
             </div>
           </div>
         </section>
