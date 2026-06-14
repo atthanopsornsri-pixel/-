@@ -240,8 +240,8 @@ export default function TenantProfileSetupPage() {
         {/* ── Vehicles ── */}
         <Card className="rounded-3xl border-slate-200 shadow-sm">
           <CardHeader className="pb-4">
-            <CardTitle className="text-base font-bold text-slate-800">ยานพาหนะ (ถ้ามี)</CardTitle>
-            <CardDescription className="text-xs text-slate-500">ลงทะเบียนรถที่ใช้จอดในหอพัก</CardDescription>
+            <CardTitle className="text-base font-bold text-slate-800">ยานพาหนะ <span className="text-slate-400 font-normal text-sm">(ไม่บังคับ)</span></CardTitle>
+            <CardDescription className="text-xs text-slate-500">ลงทะเบียนรถที่ใช้จอดในหอพัก — ไม่มีรถ หรือยังไม่ทราบทะเบียน กรอกภายหลังได้ที่โปรไฟล์</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
             {vehicles.map((v) => (
@@ -280,13 +280,18 @@ export default function TenantProfileSetupPage() {
                 </div>
                 <div className="flex gap-2">
                   <Button onClick={handleAddVehicle} size="sm" className="rounded-xl bg-slate-900 text-white">เพิ่มรถ</Button>
-                  <Button onClick={() => setAddingVehicle(false)} size="sm" variant="outline" className="rounded-xl">ยกเลิก</Button>
+                  <Button onClick={() => setAddingVehicle(false)} size="sm" variant="outline" className="rounded-xl">กรอกภายหลัง</Button>
                 </div>
               </div>
             ) : (
-              <Button onClick={() => setAddingVehicle(true)} variant="outline" size="sm" className="w-full rounded-xl border-dashed border-slate-300 text-slate-600">
-                + เพิ่มยานพาหนะ
-              </Button>
+              <div className="flex flex-col gap-2">
+                <Button onClick={() => setAddingVehicle(true)} variant="outline" size="sm" className="w-full rounded-xl border-dashed border-slate-300 text-slate-600">
+                  + เพิ่มยานพาหนะ
+                </Button>
+                {vehicles.length === 0 && (
+                  <p className="text-center text-xs text-slate-400">ไม่มียานพาหนะ? ข้ามได้เลย — กด "บันทึกและเข้าสู่ระบบ" ด้านล่าง</p>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>

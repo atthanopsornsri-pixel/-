@@ -83,8 +83,6 @@ function TenantRegisterForm() {
   const { data: session, status, update } = useSession();
   const isLineInAppBrowser = useIsLineInAppBrowser();
 
-  const [name, setName] = useState("");
-  const [password, setPassword] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -94,13 +92,6 @@ function TenantRegisterForm() {
     const code = searchParams.get("code") || searchParams.get("inviteCode") || "";
     if (code) setInviteCode(code.toUpperCase());
   }, [searchParams]);
-
-  // ── Hook 2: pre-fill ชื่อจาก LINE profile (must be before any early return) ──
-  useEffect(() => {
-    if (session?.user?.name && !name) {
-      setName(session.user.name);
-    }
-  }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Conditional renders (after ALL hooks) ──
   if (isLineInAppBrowser) {
@@ -166,29 +157,18 @@ function TenantRegisterForm() {
       setError("กรุณากรอกรหัสห้องพัก (Invite Code)");
       return;
     }
-    if (!name.trim()) {
-      setError("กรุณากรอกชื่อ-นามสกุลผู้เช่า");
-      return;
-    }
-    if (!password || password.length < 6) {
-      setError("กรุณากำหนดรหัสผ่านอย่างน้อย 6 ตัวอักษร");
-      return;
-    }
 
     setLoading(true);
     setError("");
 
     try {
-      // ใช้ placeholder email จาก session (ระบบสร้างให้อัตโนมัติ ผู้ใช้ไม่ต้องกรอก)
       const emailToUse = session.user.email ?? `line-${session.user.id}@line.placeholder.jadhor.app`;
 
       const res = await fetch("/api/auth/register-tenant", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name,
           email: emailToUse,
-          password,
           inviteCode,
           userId: session.user.id,
           lineUserId: session.user.lineUserId,
@@ -265,38 +245,9 @@ function TenantRegisterForm() {
               )}
             </div>
 
-            {/* ชื่อจริง — pre-fill จาก LINE แต่แก้ได้ */}
-            <div className="space-y-2">
-              <Label htmlFor="name" className="font-bold text-slate-700">
-                ชื่อ-นามสกุลจริง *
-              </Label>
-              <Input
-                id="name"
-                placeholder="สมชาย ใจดี"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="h-12 rounded-xl"
-              />
-              <p className="text-xs text-slate-400 pl-1">กรอกชื่อจริง (ดึงจาก LINE แต่แก้ได้)</p>
-            </div>
-
-            {/* Password — สำหรับเข้าสู่ระบบสำรอง */}
-            <div className="space-y-2">
-              <Label htmlFor="password" className="font-bold text-slate-700">
-                รหัสผ่านสำรอง *
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="อย่างน้อย 6 ตัวอักษร"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="h-12 rounded-xl"
-              />
-              <p className="text-xs text-slate-400 pl-1">ใช้เข้าสู่ระบบในกรณีที่ไม่ได้ใช้ LINE</p>
+            {/* ข้อความแจ้ง — ชื่อและรหัสผ่านตั้งในขั้นตอนถัดไป */}
+            <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-xs text-blue-600 leading-relaxed">
+              ขั้นตอนถัดไปจะให้กรอก <strong>ชื่อ-นามสกุลจริง</strong> และตั้ง <strong>รหัสผ่านสำรอง</strong> (ไม่บังคับ)
             </div>
 
           </CardContent>

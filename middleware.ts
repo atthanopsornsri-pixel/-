@@ -58,6 +58,11 @@ export default withAuth(
       }
     }
 
+    // 4. Unregistered TENANT — LINE login without invite code → redirect to registration
+    if (role === "TENANT" && req.nextauth.token?.isBound === false) {
+      return NextResponse.redirect(new URL("/register/tenant", req.url));
+    }
+
     return passThrough;
   },
   {

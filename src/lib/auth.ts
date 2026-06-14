@@ -99,9 +99,9 @@ export const authOptions: NextAuthOptions = {
 
       // 2. Force-refresh when trigger is "update"
       if (trigger === "update") {
-        // Force re-evaluation of binding status
-        token.isBound = false; 
-        
+        token.isBound = false;
+        token.lineCheckedAt = 0; // force LINE binding re-sync on next jwt call
+
         if (token.id) {
           const fresh = await prisma.user.findUnique({
             where: { id: token.id as string },

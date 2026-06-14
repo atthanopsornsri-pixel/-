@@ -1,19 +1,18 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email: rawEmail, password, name, inviteCode, userId: bodyUserId, lineUserId: bodyLineUserId } = body;
+    const { email: rawEmail, inviteCode, userId: bodyUserId } = body;
 
     // Security: derive userId/lineUserId from the server-side session, NOT from client body.
-    // Client may pass these for reference, but we always use the authenticated session's values.
     const session = await getServerSession(authOptions);
     const userId    = session?.user?.id ?? null;
     const lineUserId = session?.user?.lineUserId ?? null;
+    const sessionName = session?.user?.name ?? null;
 
     // If the client sent a userId that doesn't match the session, reject (spoofing attempt).
     if (bodyUserId && userId && bodyUserId !== userId) {
@@ -23,16 +22,10 @@ export async function POST(req: Request) {
     if (!inviteCode || !inviteCode.trim()) {
       return NextResponse.json({ message: "กรุณากรอกช่องรหัสห้องพัก (Invite Code)" }, { status: 400 });
     }
-    if (!name || !name.trim()) {
-      return NextResponse.json({ message: "กรุณากรอกช่องชื่อ-นามสกุลผู้เช่า" }, { status: 400 });
-    }
     if (!rawEmail || !rawEmail.trim()) {
       return NextResponse.json({ message: "กรุณากรอกช่องอีเมล" }, { status: 400 });
     }
     const email = rawEmail.trim().toLowerCase();
-    if (!password || password.length < 6) {
-      return NextResponse.json({ message: "กรุณากรอกช่องรหัสผ่าน (อย่างน้อย 6 ตัวอักษร)" }, { status: 400 });
-    }
 
     // Verify Invite Code
     const room = await prisma.room.findUnique({
@@ -51,8 +44,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "อีเมลนี้มีผู้ใช้งานแล้ว" }, { status: 400 });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     let user;
     if (userId) {
       // Check if user already has a tenant profile
@@ -64,13 +55,12 @@ export async function POST(req: Request) {
         return NextResponse.json({ message: "บัญชี LINE นี้ได้ลงทะเบียนเป็นลูกบ้านเรียบร้อยแล้ว" }, { status: 400 });
       }
 
-      // Update existing LINE OAuth user record
+      // Update existing LINE OAuth user — name from LINE session, password set later in profile step
       user = await prisma.user.update({
         where: { id: userId },
         data: {
           email,
-          password: hashedPassword,
-          name,
+          name: sessionName || undefined,
           role: "TENANT",
           lineUserId: lineUserId || undefined,
           tenantProfile: {
@@ -82,12 +72,10 @@ export async function POST(req: Request) {
         }
       });
     } else {
-      // Create new User and link as Tenant
       user = await prisma.user.create({
         data: {
           email,
-          password: hashedPassword,
-          name,
+          name: sessionName || undefined,
           role: "TENANT",
           tenantProfile: {
             create: {
