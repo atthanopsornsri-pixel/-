@@ -666,13 +666,13 @@ export default function RoomsPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <p className="text-xs text-slate-400">
+                  <p className="text-sm text-slate-400">
                     ข้อความโฆษณาปล่อยเช่าที่เรียบเรียงขึ้นตามรายละเอียดของห้องและทำเลหอพัก สามารถคัดลอกไปใช้โพสต์ได้ทันที:
                   </p>
                   <textarea
                     readOnly
                     value={draftedListingText || ""}
-                    className="w-full h-64 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 text-sm font-medium leading-relaxed font-sarabun focus:outline-none resize-none"
+                    className="w-full h-64 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-700 text-base font-medium leading-loose font-sarabun focus:outline-none resize-none"
                   />
                   <div className="flex justify-end gap-3 pt-2">
                     <Button
