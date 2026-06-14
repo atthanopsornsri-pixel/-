@@ -38,19 +38,34 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
       return NextResponse.json({ message: "Invalid tenant data" }, { status: 400 });
     }
 
-    // Use a transaction to mark the room as available and delete the tenant record
-    await prisma.$transaction([
-      prisma.room.update({
-        where: { id: tenant.roomId },
-        data: { status: "AVAILABLE" }
-      }),
-      prisma.tenant.delete({
-        where: { id: tenantId }
-      }),
-      prisma.user.delete({
-        where: { id: tenant.userId }
-      })
-    ]);
+    // Use a transaction to mark the room as available and soft-delete the tenant
+    await prisma.$transaction(async (tx) => {
+      // 1. คืนสถานะห้องเป็นว่าง
+      await tx.room.update({
+        where: { id: tenant.roomId! },
+        data: { status: "AVAILABLE" },
+      });
+
+      // 2. Soft-delete Tenant (เก็บประวัติ, หลีกเลี่ยง FK กับ vehicles/bills)
+      await tx.tenant.update({
+        where: { id: tenantId },
+        data: { isDeleted: true, roomId: null },
+      });
+
+      // 3. ลบ User เฉพาะกรณี role เป็น TENANT จริงๆ
+      //    (กัน edge case OWNER ถูกผูกเป็น tenant ระหว่างทดสอบ)
+      const userToDelete = await tx.user.findUnique({
+        where: { id: tenant.userId! },
+        select: { role: true },
+      });
+
+      if (userToDelete?.role === "TENANT") {
+        // ลบ NextAuth records ก่อนเพื่อหลีกเลี่ยง FK constraint
+        await tx.session.deleteMany({ where: { userId: tenant.userId! } });
+        await tx.account.deleteMany({ where: { userId: tenant.userId! } });
+        await tx.user.delete({ where: { id: tenant.userId! } });
+      }
+    });
 
     return NextResponse.json({ message: "Tenant evicted successfully" });
   } catch (error: any) {
