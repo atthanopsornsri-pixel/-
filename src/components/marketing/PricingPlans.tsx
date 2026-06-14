@@ -25,7 +25,7 @@ type Plan = {
 const PLANS: Plan[] = [
   {
     name: "Starter",
-    desc: "เริ่มต้นอย่างโปร",
+    desc: "หอพักขนาดเล็ก 1–30 ห้อง",
     monthlyNum: 199,
     yearlyNum: 1990,
     features: ["จัดการได้สูงสุด 30 ห้อง", "ระบบออกบิล & ส่ง LINE", "ระบบแจ้งซ่อม & พัสดุ"],
@@ -39,7 +39,7 @@ const PLANS: Plan[] = [
   },
   {
     name: "Growth",
-    desc: "สำหรับอพาร์ตเมนต์ที่กำลังขยาย",
+    desc: "อพาร์ตเมนต์ขนาดกลาง 31–100 ห้อง",
     monthlyNum: 599,
     yearlyNum: 5990,
     features: ["จัดการได้สูงสุด 100 ห้อง", "ฟีเจอร์ทั้งหมดในแพ็กเกจ Starter", "ระบบตรวจสลิปอัตโนมัติ"],
@@ -54,12 +54,12 @@ const PLANS: Plan[] = [
   },
   {
     name: "Enterprise",
-    desc: "เสือนอนกิน โปรเจกต์ใหญ่",
+    desc: "หอพักขนาดใหญ่ 101–300 ห้อง",
     monthlyNum: 1299,
     yearlyNum: 12990,
-    features: ["ไม่จำกัดจำนวนห้องพัก", "ฟีเจอร์ทั้งหมดในแพ็กเกจ Growth", "บริการ Support พิเศษ 24/7"],
+    features: ["จัดการได้สูงสุด 300 ห้อง", "ฟีเจอร์ทั้งหมดในแพ็กเกจ Growth", "บริการ Support พิเศษ 24/7"],
     cta: "ติดต่อแอดมิน",
-    href: "/register",
+    href: "#contact",
     Icon: Crown,
     color: "#5856d6",
     gradFrom: "#f6f6ff",
@@ -277,9 +277,15 @@ export default function PricingPlans() {
         })}
       </div>
 
-      <p className="mt-8 text-center text-[13px] text-[var(--jh-ink-tertiary)]">
-        * หรือเลือกชำระแบบรายปี ลดทันที 2 เดือน (จ่ายเพียง 10 เดือน)
-      </p>
+      <div className="mt-8 space-y-2 text-center text-[13px] text-[var(--jh-ink-tertiary)]">
+        <p>* หรือเลือกชำระแบบรายปี ลดทันที 2 เดือน (จ่ายเพียง 10 เดือน)</p>
+        <p>
+          มีห้องพักเกิน 300 ห้อง?{" "}
+          <a href="#contact" className="font-semibold text-[var(--jh-indigo)] underline underline-offset-2 hover:opacity-80">
+            ติดต่อทีมงานเพื่อรับราคาพิเศษตามสเกล
+          </a>
+        </p>
+      </div>
     </div>
   );
 }
