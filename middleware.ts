@@ -84,7 +84,8 @@ export default withAuth(
           path.startsWith("/p/") ||
           path === "/pricing" ||
           path === "/privacy" ||
-          path === "/terms"
+          path === "/terms" ||
+          path.startsWith("/tour")
         ) {
           return true;
         }
