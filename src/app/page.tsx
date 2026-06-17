@@ -114,6 +114,7 @@ export default async function Home() {
             JadHor OS
           </Link>
           <nav className="flex items-center gap-7 text-sm text-[var(--jh-ink-secondary)]">
+            <Link href="/tour" className="transition-colors hover:text-[var(--jh-ink)] font-semibold text-[var(--jh-blue)]">ทดลองเล่นระบบ</Link>
             <a href="#features" className="hidden transition-colors hover:text-[var(--jh-ink)] sm:inline">ฟีเจอร์</a>
             <a href="#how-it-works" className="hidden transition-colors hover:text-[var(--jh-ink)] sm:inline">วิธีใช้งาน</a>
             <a href="#pricing" className="hidden transition-colors hover:text-[var(--jh-ink)] sm:inline">แพ็กเกจ</a>
@@ -163,7 +164,7 @@ export default async function Home() {
               พื้นที่ที่ดีที่สุดสำหรับจัดการหอพัก บิลค่าเช่า และลูกบ้านทั้งหมดของคุณ
             </p>
 
-            <div className="mt-8">
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               {session ? (
                 <DashboardButton className="inline-flex h-[52px] items-center justify-center rounded-full bg-gradient-to-r from-[var(--jh-brand-gold)] to-[#d4a548] px-[30px] text-[17px] font-bold text-white shadow-[0_8px_18px_-6px_#d4a548] transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.97]" />
               ) : (
@@ -174,6 +175,12 @@ export default async function Home() {
                   เริ่มต้นใช้งานฟรี
                 </Link>
               )}
+              <Link
+                href="/tour"
+                className="inline-flex h-[52px] items-center justify-center rounded-full border border-[var(--jh-blue)] px-[30px] text-[17px] font-bold text-[var(--jh-blue)] bg-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.97]"
+              >
+                ทดลองเล่นตัวจำลองระบบ
+              </Link>
             </div>
 
             {!session && (
