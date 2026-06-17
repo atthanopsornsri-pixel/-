@@ -173,7 +173,7 @@ export default function PricingPage() {
           {[
             { title: "ไม่ต้องโหลดแอป", desc: "ผู้เช่ารับบิล จ่ายเงิน แจ้งซ่อม ผ่าน LINE ที่ทุกคนมีอยู่แล้ว", emoji: "💬" },
             { title: "ติดตั้งลงมือถือได้", desc: "กด ‘เพิ่มไปหน้าจอโฮม’ ใช้เหมือนแอปจริง เปิดเร็ว ไม่กินพื้นที่", emoji: "📱" },
-            { title: "ออกแบบสะอาดตา ใช้ง่าย", desc: "ดีไซน์เรียบหรูสไตล์มินิมอล ไม่รก เรียนรู้ได้ในนาที", emoji: "✨" },
+            { title: "ออกแบบสะอาดตา ใช้ง่าย", desc: "ดีไซน์เรียบหรูสไตล์มินิมอล ไม่รก เรียนรู้ได้ในนาที", emoji: "🎨" },
           ].map((f) => (
             <div key={f.title} className="bg-white rounded-2xl border border-slate-200 p-6 text-center shadow-sm">
               <div className="text-3xl mb-3">{f.emoji}</div>

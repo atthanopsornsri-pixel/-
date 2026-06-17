@@ -91,7 +91,7 @@ export default function RegisterPage() {
         <div className="relative z-10 mt-10 flex flex-col items-center justify-center flex-1">
           <div className="w-full max-w-md text-center mb-10">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-blue-600 text-sm mb-6 border border-blue-100 shadow-sm font-semibold">
-              ✨ ทดลองใช้ฟรี 14 วัน
+              ทดลองใช้ฟรี 14 วัน
             </div>
             <h1 className="text-3xl md:text-4xl font-extrabold mb-4 leading-tight text-slate-900">จัดการหอพักยุคใหม่ <br/><span className="text-blue-600">ง่าย ครบ จบในที่เดียว</span></h1>
             <p className="text-slate-600">
