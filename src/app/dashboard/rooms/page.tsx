@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Wind, RotateCw, LayoutGrid, UserPlus, BedDouble, Trash2 } from "lucide-react";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { QRCodeSVG } from "qrcode.react";
 
 
 
@@ -43,6 +44,7 @@ export default function RoomsPage() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [copiedRoomId, setCopiedRoomId] = useState<string | null>(null);
+  const [printInviteRoom, setPrintInviteRoom] = useState<any | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; number: string; property: string } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -443,23 +445,37 @@ export default function RoomsPage() {
 
 
                   {room.inviteCode && (
-                    <div 
-                      onClick={() => handleCopyInvite(room.id, room.inviteCode)}
-                      className={`p-3 rounded-2xl border mb-4 flex justify-between items-center transition-all duration-200 cursor-pointer select-none ${
-                        copiedRoomId === room.id
-                          ? "bg-green-50 border-green-300 text-green-700 shadow-sm scale-[0.98]"
-                          : "bg-slate-50 border-slate-100 hover:bg-blue-50/50 hover:border-blue-200 group-hover:bg-blue-50/50"
-                      }`}
-                      title="คลิกเพื่อคัดลอกลิงก์เชิญลูกบ้าน"
-                    >
-                      <span className="text-xs font-medium text-slate-500">รหัสเชิญผู้เช่า (Invite Code)</span>
-                      <span className={`font-mono text-sm font-bold bg-white px-2 py-1 rounded-lg border shadow-sm transition-all ${
-                        copiedRoomId === room.id
-                          ? "border-green-400 text-green-700 font-bold"
-                          : "border-slate-200 text-[#34508c]"
-                      }`}>
-                        {copiedRoomId === room.id ? "📋 คัดลอกลิงก์แล้ว!" : room.inviteCode}
-                      </span>
+                    <div className="flex gap-2 mb-4">
+                      <div 
+                        onClick={() => handleCopyInvite(room.id, room.inviteCode)}
+                        className={`flex-1 p-3 rounded-2xl border flex justify-between items-center transition-all duration-200 cursor-pointer select-none ${
+                          copiedRoomId === room.id
+                            ? "bg-green-50 border-green-300 text-green-700 shadow-sm scale-[0.98]"
+                            : "bg-slate-50 border-slate-100 hover:bg-blue-50/50 hover:border-blue-200 group-hover:bg-blue-50/50"
+                        }`}
+                        title="คลิกเพื่อคัดลอกลิงก์เชิญลูกบ้าน"
+                      >
+                        <span className="text-[11px] font-medium text-slate-500">รหัสเชิญผู้เช่า</span>
+                        <span className={`font-mono text-xs font-bold bg-white px-2 py-0.5 rounded-lg border shadow-sm transition-all ${
+                          copiedRoomId === room.id
+                            ? "border-green-400 text-green-700 font-bold"
+                            : "border-slate-200 text-[#34508c]"
+                        }`}>
+                          {copiedRoomId === room.id ? "📋 คัดลอกแล้ว!" : room.inviteCode}
+                        </span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="rounded-2xl border-slate-200 text-slate-600 hover:bg-slate-50 h-11 w-11 shrink-0 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPrintInviteRoom(room);
+                        }}
+                        title="พิมพ์ใบ QR Code สำหรับห้องพัก"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                      </Button>
                     </div>
                   )}
                   
@@ -693,6 +709,87 @@ export default function RoomsPage() {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Print QR Code Modal */}
+      {printInviteRoom && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col print:p-0 print:shadow-none print:border-none print:fixed print:inset-0 print:bg-white print:z-[9999]">
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 print:hidden">
+              <h3 className="font-bold text-[#1D1D1F]">ใบลงทะเบียน QR Code</h3>
+              <button onClick={() => setPrintInviteRoom(null)} className="p-2 bg-white rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shadow-sm border border-slate-200">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            
+            {/* The Card to Print */}
+            <div className="p-8 flex-1 overflow-auto flex flex-col items-center text-center bg-white print:p-12 print:justify-center">
+              {/* Mascot / Brand header */}
+              <div className="flex items-center gap-3 mb-6">
+                <img src="/images/logo-mascot.png" alt="JadHor OS Logo" className="h-10 w-auto" />
+                <div className="text-left">
+                  <h4 className="font-black text-lg text-[#16264c]">JadHor OS</h4>
+                  <p className="text-[10px] uppercase font-bold tracking-[0.05em] text-[#d4a548]">Smart Onboarding</p>
+                </div>
+              </div>
+
+              <div 
+                className="w-full border-2 border-dashed border-[#d4a548]/40 rounded-[24px] p-6 mb-6 flex flex-col items-center"
+                style={{ background: "linear-gradient(150deg, #fdf8ee 0%, #f6ecd6 100%)" }}
+              >
+                <span className="text-xs uppercase font-extrabold tracking-[0.08em] text-[#d4a548] mb-1">ใบลงทะเบียนเข้าพัก</span>
+                <h2 className="text-2xl font-black text-[#16264c] mb-4">ห้อง {printInviteRoom.number}</h2>
+                
+                {/* QR Code Container */}
+                <div className="bg-white p-4 rounded-2xl shadow-md border border-slate-100 mb-4">
+                  <QRCodeSVG 
+                    value={`${window.location.origin}/register/tenant?code=${printInviteRoom.inviteCode}`}
+                    size={160}
+                    level="H"
+                    includeMargin={true}
+                  />
+                </div>
+                
+                <p className="text-[11px] text-[var(--jh-orange-ink)] max-w-[260px] leading-relaxed mb-4">
+                  สแกนเพื่อลงทะเบียนเข้าอยู่ สัญญาเช่า และเชื่อมต่อระบบแจ้งเตือนทาง LINE ของหอพัก {printInviteRoom.property?.name}
+                </p>
+
+                <div className="bg-white/80 border border-white/60 rounded-xl px-4 py-2 text-center shadow-sm w-full">
+                  <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-[0.05em]">รหัสเชิญห้องพัก (Invite Code)</span>
+                  <div className="font-mono text-lg font-black text-[#16264c] mt-0.5 tracking-wider">{printInviteRoom.inviteCode}</div>
+                </div>
+              </div>
+
+              <div className="text-left text-xs text-slate-500 space-y-2.5 max-w-[280px] print:text-slate-600">
+                <div className="flex gap-2">
+                  <span className="h-5 w-5 rounded-full bg-[#16264c] text-white flex items-center justify-center font-bold text-[10px] shrink-0">1</span>
+                  <span>สแกน QR Code ด้านบนเพื่อลงทะเบียนผู้เช่า</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="h-5 w-5 rounded-full bg-[#16264c] text-white flex items-center justify-center font-bold text-[10px] shrink-0">2</span>
+                  <span>ตรวจสอบและกดยอมรับสัญญาเช่า e-Contract</span>
+                </div>
+                <div className="flex gap-2">
+                  <span className="h-5 w-5 rounded-full bg-[#16264c] text-white flex items-center justify-center font-bold text-[10px] shrink-0">3</span>
+                  <span>ผูก LINE เพื่อรับบิล แจ้งเตือน และส่งสลิปได้ทันที!</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 bg-white border-t border-slate-100 flex gap-3 print:hidden">
+              <Button variant="outline" className="flex-1 rounded-full border-slate-200 h-12" onClick={() => setPrintInviteRoom(null)}>
+                ปิด
+              </Button>
+              <Button 
+                className="flex-1 rounded-full bg-[#16264c] hover:bg-[#34508c] text-white font-bold h-12 shadow-sm flex items-center justify-center gap-1.5" 
+                onClick={() => window.print()}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                พิมพ์เอกสาร
+              </Button>
             </div>
           </div>
         </div>

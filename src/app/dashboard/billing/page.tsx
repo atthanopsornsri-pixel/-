@@ -1061,7 +1061,34 @@ export default function BillingPage() {
                         <Input type="number" value={editForm.internetFee} onChange={e => setEF("internetFee", e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
                       </div>
                       <div className="space-y-2">
-                        <Label>อื่นๆ (ค่าปรับ ฯลฯ)</Label>
+                        <div className="flex justify-between items-center">
+                          <Label>อื่นๆ (ค่าปรับ ฯลฯ)</Label>
+                          {editBill.dueDate && new Date(editBill.dueDate) < new Date() && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const due = new Date(editBill.dueDate);
+                                const now = new Date();
+                                now.setHours(0, 0, 0, 0);
+                                const diffTime = now.getTime() - due.getTime();
+                                const diffDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+                                if (diffDays > 0) {
+                                  const rate = window.prompt(`บิลนี้เลยกำหนดชำระแล้ว ${diffDays} วัน\nกรุณากรอกค่าปรับต่อวัน (บาท)\nหรือกดตกลงเพื่อคำนวณวันละ 50 บาท`, "50");
+                                  if (rate !== null) {
+                                    const parsedRate = parseFloat(rate) || 0;
+                                    setEF("otherFee", String(parsedRate * diffDays));
+                                    toast.success(`คำนวณค่าปรับสำเร็จ: ${diffDays} วัน × ฿${parsedRate} = ฿${parsedRate * diffDays}`);
+                                  }
+                                } else {
+                                  toast.info("บิลนี้ยังไม่เลยกำหนดชำระ");
+                                }
+                              }}
+                              className="text-[10px] font-bold text-[var(--jh-blue)] hover:underline cursor-pointer"
+                            >
+                              ⚡ คำนวณค่าปรับ
+                            </button>
+                          )}
+                        </div>
                         <Input type="number" value={editForm.otherFee} onChange={e => setEF("otherFee", e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
                       </div>
                     </div>

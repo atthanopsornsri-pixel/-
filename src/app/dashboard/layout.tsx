@@ -12,6 +12,7 @@ import SignOutButton from "@/components/SignOutButton";
 import SidebarNav from "@/components/SidebarNav";
 import PageWrapper from "@/components/PageWrapper";
 import { Suspense } from "react";
+import PdpaBanner from "@/components/PdpaBanner";
 
 async function AsyncNotificationBell({ userId, role }: { userId: string, role: string }) {
   let hasUnpaidBills = false;
@@ -41,33 +42,34 @@ export default async function DashboardLayout({
   const headersList = await headers();
   const pathname = headersList.get("x-pathname") || "";
 
+  // ดึงข้อมูลผู้ใช้งานในระบบเพื่อตรวจสอบความยินยอม PDPA
+  const dbUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { planTier: true, planExpiresAt: true, pdpaAcceptedAt: true }
+  });
+
+  const showPdpa = !dbUser?.pdpaAcceptedAt;
+
   // >>> PLAN EXPIRATION LOGIC >>>
   let isExpired = false;
   let daysLeft = 999;
   let isFreeTrial = false;
   let planTierLabel = "";
 
-  if (session.user.role === "OWNER") {
-    const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { planTier: true, planExpiresAt: true }
-    });
+  if (session.user.role === "OWNER" && dbUser) {
+    const now = new Date();
+    isFreeTrial = dbUser.planTier === "FREE_TRIAL";
+    planTierLabel = dbUser.planTier ?? "FREE_TRIAL";
 
-    if (dbUser) {
-      const now = new Date();
-      isFreeTrial = dbUser.planTier === "FREE_TRIAL";
-      planTierLabel = dbUser.planTier ?? "FREE_TRIAL";
+    if (dbUser.planExpiresAt) {
+      const expiresAt = new Date(dbUser.planExpiresAt);
+      isExpired = now > expiresAt;
+      daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    }
 
-      if (dbUser.planExpiresAt) {
-        const expiresAt = new Date(dbUser.planExpiresAt);
-        isExpired = now > expiresAt;
-        daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      }
-
-      // Redirect if plan expired AND NOT already on the subscription page (prevent loop)
-      if (isExpired && pathname !== "/dashboard/subscription") {
-        redirect("/dashboard/subscription?expired=true");
-      }
+    // Redirect if plan expired AND NOT already on the subscription page (prevent loop)
+    if (isExpired && pathname !== "/dashboard/subscription") {
+      redirect("/dashboard/subscription?expired=true");
     }
   }
   // <<< END PLAN EXPIRATION LOGIC <<<
@@ -76,6 +78,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen flex font-sans bg-[var(--jh-surface)] text-[var(--jh-ink)]">
+      <PdpaBanner initialShow={showPdpa} />
       {/* Sidebar */}
       <aside className="w-[280px] flex-shrink-0 bg-[var(--jh-surface)] hidden md:flex flex-col border-r border-black/[0.06] relative z-20">
         <div className="px-6 pt-7 pb-3">
