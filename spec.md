@@ -62,8 +62,9 @@ SystemSettings · Invoice/InvoiceItem · SmsAddon · RegistrationCode · (NextAu
 
 ## 7. การทดสอบ (สถานะปัจจุบัน)
 - Vitest (node env) · `npm test` · alias `@ → src/` (ดู `vitest.config.ts`)
-- **81 tests / 9 ไฟล์ ผ่านทั้งหมด** — ดู `tests/lib/*` (pure logic) + `tests/api/*` (route handler, mock Prisma/auth)
+- **179 tests / 18 ไฟล์ ผ่านทั้งหมด** — ดู `tests/lib/*` (pure logic) + `tests/api/*` (route handler, mock Prisma/auth)
 - Pattern: mock `@/lib/prisma` + `@/lib/rate-limit` + `getServerSession`, เรียก handler ตรง (ดู VITEST-API-TESTING-GUIDE.md)
+- after() ใน Next.js mock เป็น `vi.fn((fn) => fn())` เพื่อให้ fire-and-forget รันได้ใน test
 
 ## 8. ข้อจำกัดโครงสร้าง — ห้ามแตะ (จาก AGENTS.md)
 - `vercel.json` ต้องคง `"regions": ["sin1"]` (ไม่งั้น TTFB +1.5s ข้ามแปซิฟิก)
@@ -79,8 +80,8 @@ SystemSettings · Invoice/InvoiceItem · SmsAddon · RegistrationCode · (NextAu
 
 ## 10. Coverage gaps อื่น ๆ (ยังไม่ทำ)
 - **prisma-secure RLS เชิงลึก**: ปัจจุบัน test แค่ auth gate (no-session/invalid-role/ADMIN/OWNER) ยังไม่ได้ test ว่า where-clause ถูก inject `ownerId`/`roomId` จริงต่อ query — ต้องใช้ integration test กับ test DB
-- Routes ที่ยังไม่มี test: `bills/*` (pay/approve/notify), `tenants/[id]` (contract upload/parse), `owner/*` (upgrade/sms), `admin/*`, `webhook/line`, `cron/*`
+- Routes ที่ยังไม่มี test: `tenants/[id]/contract-*`, `owner/*` (upgrade/sms), `admin/*`, `bills/checkin`, `bills/smart-alert`, `parcels/*`, `maintenance/*`
 - ยังไม่มี component test (ต้องเพิ่ม jsdom + @testing-library ถ้าจะทำ)
 
 ---
-*อัปเดตล่าสุด: 2026-06-25 — ตั้ง vitest + 81 tests; ยืนยัน build ผ่าน + tsc 0 errors (หลัง prisma generate)*
+*อัปเดตล่าสุด: 2026-06-25 — เพิ่ม test suite รอบ 2: bills-crud, bills-id, bills-approve-notify, tenants-id, cron-backup (65 tests ใหม่) → รวม 179 tests / 18 files ผ่านหมด*
