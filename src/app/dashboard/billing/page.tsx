@@ -29,7 +29,7 @@ export default function BillingPage() {
   const [otherFee, setOtherFee] = useState("");
 
   // ── โหมดบิล + ฟิลด์บิลเข้าอยู่ (Check-in) ──
-  const [billMode, setBillMode] = useState<"MONTHLY" | "CHECKIN">("MONTHLY");
+  const [billMode, setBillMode] = useState<"MONTHLY" | "CHECKIN" | "BULK">("MONTHLY");
   const [securityDeposit, setSecurityDeposit] = useState("");
   const [advanceRent, setAdvanceRent] = useState("");
   const [keyDeposit, setKeyDeposit] = useState("");
@@ -62,6 +62,18 @@ export default function BillingPage() {
       .then(d => { if (d?.count !== undefined) setAlertCount(d.count); })
       .catch(() => {});
   }, [bills]);
+
+  // ดึงค่าเริ่มต้นของหอเมื่อสลับเป็นโหมดออกยกหอ (BULK)
+  useEffect(() => {
+    if (billMode === "BULK" && propertyId) {
+      const prop = properties.find(p => p.id === propertyId);
+      if (prop) {
+        setCommonFee(prop.defaultCommonFee ? prop.defaultCommonFee.toString() : "");
+        setParkingFee(prop.defaultParkingFee ? prop.defaultParkingFee.toString() : "");
+        setInternetFee(prop.defaultInternetFee ? prop.defaultInternetFee.toString() : "");
+      }
+    }
+  }, [billMode, propertyId, properties]);
 
   const handleSmartAlert = async () => {
     setIsSendingAlert(true);
@@ -234,6 +246,48 @@ export default function BillingPage() {
       toast.error(data.message || "เกิดข้อผิดพลาด");
     }
     setIsLoading(false);
+  };
+
+  const handleBulkSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!propertyId) return toast.error("กรุณาเลือกอพาร์ตเม้นท์");
+    if (!dueDate) return toast.error("กรุณาระบุวันครบกำหนดชำระ");
+
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/bills/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          propertyId,
+          month,
+          year,
+          dueDate,
+          commonFee: commonFee ? Number(commonFee) : undefined,
+          parkingFee: parkingFee ? Number(parkingFee) : undefined,
+          internetFee: internetFee ? Number(internetFee) : undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        let msg = `ออกบิลเสร็จสิ้น: สร้างใหม่ ${data.created?.length || 0} ห้อง`;
+        if (data.skipped?.length > 0) {
+          msg += ` (ข้าม ${data.skipped.length} ห้องที่มีบิลแล้ว)`;
+        }
+        if (data.errors?.length > 0) {
+          msg += ` (มีข้อผิดพลาด ${data.errors.length} ห้อง)`;
+        }
+        toast.success(msg);
+        mutateBills();
+      } else {
+        toast.error(data.message || "เกิดข้อผิดพลาด");
+      }
+    } catch {
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อระบบ");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleWaterUnitsChange = (val: string) => {
@@ -460,26 +514,36 @@ export default function BillingPage() {
           <div className="rounded-[var(--jh-radius-2xl)] border border-black/[0.06] bg-white shadow-[var(--jh-shadow-card)] p-8">
             <h2 className="text-lg font-semibold text-[var(--jh-ink)] mb-4">สร้างบิลใหม่</h2>
 
-            {/* ── Toggle: บิลรายเดือน / บิลเข้าอยู่ ── */}
-            <div className="grid grid-cols-2 gap-1.5 p-1 bg-[var(--jh-surface)] rounded-full border border-black/[0.06] mb-6">
+            {/* ── Toggle: บิลรายเดือน / บิลยกหอ / บิลเข้าอยู่ ── */}
+            <div className="grid grid-cols-3 gap-1.5 p-1 bg-[var(--jh-surface)] rounded-full border border-black/[0.06] mb-6">
               <button
                 type="button"
                 onClick={() => setBillMode("MONTHLY")}
-                className={`h-9 rounded-full text-sm font-semibold transition-all ${billMode === "MONTHLY" ? "bg-white text-[var(--jh-ink)] shadow-[var(--jh-shadow-sm)]" : "text-[var(--jh-ink-tertiary)]"}`}
+                className={`h-9 rounded-full font-semibold transition-all ${billMode === "MONTHLY" ? "bg-white text-[var(--jh-ink)] shadow-[var(--jh-shadow-sm)]" : "text-[var(--jh-ink-tertiary)]"}`}
+                style={{ fontSize: "11px" }}
               >
-                🗓️ บิลรายเดือน
+                🗓️ รายเดือน
+              </button>
+              <button
+                type="button"
+                onClick={() => setBillMode("BULK")}
+                className={`h-9 rounded-full font-semibold transition-all ${billMode === "BULK" ? "bg-white text-[var(--jh-ink)] shadow-[var(--jh-shadow-sm)]" : "text-[var(--jh-ink-tertiary)]"}`}
+                style={{ fontSize: "11px" }}
+              >
+                ⚡ ออกยกหอ
               </button>
               <button
                 type="button"
                 onClick={() => setBillMode("CHECKIN")}
-                className={`h-9 rounded-full text-sm font-semibold transition-all ${billMode === "CHECKIN" ? "bg-white text-[var(--jh-ink)] shadow-[var(--jh-shadow-sm)]" : "text-[var(--jh-ink-tertiary)]"}`}
+                className={`h-9 rounded-full font-semibold transition-all ${billMode === "CHECKIN" ? "bg-white text-[var(--jh-ink)] shadow-[var(--jh-shadow-sm)]" : "text-[var(--jh-ink-tertiary)]"}`}
+                style={{ fontSize: "11px" }}
               >
-                🔑 บิลเข้าอยู่
+                🔑 เข้าอยู่
               </button>
             </div>
 
             {/* ── Shared: เลือกหอ + ห้อง ── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div className={`grid grid-cols-1 ${billMode === "BULK" ? "" : "sm:grid-cols-2"} gap-4 mb-4`}>
               <div className="space-y-2">
                 <Label>อพาร์ตเม้นท์</Label>
                 <select className="flex h-11 w-full rounded-[var(--jh-radius-md)] border border-[var(--jh-border)] bg-white px-3.5 py-2 text-sm focus:border-[var(--jh-blue)] focus:ring-4 focus:ring-[var(--jh-focus-ring)] outline-none transition-shadow" value={propertyId} onChange={handlePropertyChange} required>
@@ -487,13 +551,15 @@ export default function BillingPage() {
                   {properties.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
-              <div className="space-y-2">
-                <Label>ห้องพัก</Label>
-                <select className="flex h-11 w-full rounded-[var(--jh-radius-md)] border border-[var(--jh-border)] bg-white px-3.5 py-2 text-sm focus:border-[var(--jh-blue)] focus:ring-4 focus:ring-[var(--jh-focus-ring)] outline-none transition-shadow disabled:opacity-50" value={roomId} onChange={handleRoomChange} required disabled={!propertyId}>
-                  <option value="" disabled>เลือกห้อง</option>
-                  {rooms.map(r => <option key={r.id} value={r.id}>{r.number} {r.status === "OCCUPIED" ? "(มีผู้เช่า)" : ""}</option>)}
-                </select>
-              </div>
+              {billMode !== "BULK" && (
+                <div className="space-y-2">
+                  <Label>ห้องพัก</Label>
+                  <select className="flex h-11 w-full rounded-[var(--jh-radius-md)] border border-[var(--jh-border)] bg-white px-3.5 py-2 text-sm focus:border-[var(--jh-blue)] focus:ring-4 focus:ring-[var(--jh-focus-ring)] outline-none transition-shadow disabled:opacity-50" value={roomId} onChange={handleRoomChange} required disabled={!propertyId}>
+                    <option value="" disabled>เลือกห้อง</option>
+                    {rooms.map(r => <option key={r.id} value={r.id}>{r.number} {r.status === "OCCUPIED" ? "(มีผู้เช่า)" : ""}</option>)}
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* ════════ โหมดบิลรายเดือน ════════ */}
@@ -579,6 +645,55 @@ export default function BillingPage() {
 
                 <Button type="submit" className="w-full h-11 rounded-full bg-[var(--jh-blue)] hover:bg-[var(--jh-blue-dark)] text-white font-semibold shadow-[var(--jh-shadow-sm)] transition-all active:scale-[0.99]" disabled={isLoading}>
                   {isLoading ? "กำลังบันทึก..." : "ออกใบแจ้งหนี้"}
+                </Button>
+              </form>
+            )}
+
+            {/* ════════ โหมดออกบิลยกหอ (Bulk) ════════ */}
+            {billMode === "BULK" && (
+              <form onSubmit={handleBulkSubmit} className="space-y-4">
+                <div className="rounded-[var(--jh-radius-md)] bg-[var(--jh-blue-tint)] border border-[var(--jh-blue)]/20 px-4 py-3 text-xs text-[var(--jh-blue-dark)] leading-relaxed">
+                  💡 ออกบิลรายเดือนพื้นฐาน (ค่าเช่าและค่าบริการคงที่) ให้กับห้องที่มีผู้เช่าอยู่ทั้งหมดพร้อมกันในคลิกเดียว (ข้ามห้องที่เคยออกบิลแล้วเพื่อป้องกันการซ้ำซ้อน)
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>ประจำเดือน</Label>
+                    <select className="flex h-11 w-full rounded-[var(--jh-radius-md)] border border-[var(--jh-border)] bg-white px-3.5 py-2 text-sm focus:border-[var(--jh-blue)] focus:ring-4 focus:ring-[var(--jh-focus-ring)] outline-none transition-shadow" value={month} onChange={e => setMonth(Number(e.target.value))}>
+                      {[...Array(12)].map((_, i) => <option key={i} value={i+1}>{i+1}</option>)}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>ปี</Label>
+                    <Input type="number" value={year} onChange={e => setYear(Number(e.target.value))} required className="h-11 rounded-[var(--jh-radius-md)]" />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>กำหนดชำระ</Label>
+                  <Input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} required className="h-11 rounded-[var(--jh-radius-md)]" />
+                </div>
+
+                <div className="bg-[var(--jh-surface)] p-4 rounded-[var(--jh-radius-lg)] space-y-4 border border-black/[0.06]">
+                  <p className="font-semibold text-[13px] text-[var(--jh-ink-secondary)] leading-snug">ค่าบริการทั่วไป (ดึงค่าเริ่มต้นของหอพักนี้มาให้ หากต้องการแก้ไขเฉพาะรอบนี้สามารถปรับได้)</p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label>ค่าส่วนกลาง</Label>
+                      <Input type="number" value={commonFee} onChange={e => setCommonFee(e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>ค่าที่จอดรถ</Label>
+                      <Input type="number" value={parkingFee} onChange={e => setParkingFee(e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+                    </div>
+                    <div className="space-y-2 flex-1 col-span-2">
+                      <Label>ค่าอินเทอร์เน็ต</Label>
+                      <Input type="number" value={internetFee} onChange={e => setInternetFee(e.target.value)} className="h-11 rounded-[var(--jh-radius-md)]" />
+                    </div>
+                  </div>
+                </div>
+
+                <Button type="submit" className="w-full h-11 rounded-full bg-[var(--jh-blue)] hover:bg-[var(--jh-blue-dark)] text-white font-semibold shadow-[var(--jh-shadow-sm)] transition-all active:scale-[0.99]" disabled={isLoading}>
+                  {isLoading ? "กำลังออกบิลทั้งหมด..." : "ออกบิลรายเดือนยกหอ ⚡"}
                 </Button>
               </form>
             )}
