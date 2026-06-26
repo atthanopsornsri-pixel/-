@@ -79,9 +79,10 @@ describe("GET /api/cron/bill-reminder", () => {
   it("พบเตือนครบกำหนดชำระ (อีก 3 วัน) และสามารถแจ้งผ่าน LINE สำเร็จ", async () => {
     process.env.CRON_SECRET = "super-secret-key";
     
-    // บิลจะครบกำหนดชำระอีก 3 วัน
+    // บิลจะครบกำหนดชำระอีก 3 วัน (normalize เที่ยงคืน — route วัด diffDays เทียบ todayStart=เที่ยงคืน)
     const due = new Date();
     due.setDate(due.getDate() + 3);
+    due.setHours(0, 0, 0, 0);
 
     const mockUnpaidBill = {
       id: "bill-1",
@@ -134,9 +135,10 @@ describe("GET /api/cron/bill-reminder", () => {
   it("พบเตือนเกินกำหนดชำระ (เลย 2 วัน) เปลี่ยนสถานะบิลเป็น OVERDUE และแจ้งเตือนสำเร็จ", async () => {
     process.env.CRON_SECRET = "super-secret-key";
     
-    // บิลเลยกำหนดแล้ว 2 วัน
+    // บิลเลยกำหนดแล้ว 2 วัน (normalize เที่ยงคืน — กัน time-of-day ทำ diffDays ปัดเพี้ยน)
     const due = new Date();
     due.setDate(due.getDate() - 2);
+    due.setHours(0, 0, 0, 0);
 
     const mockOverdueBill = {
       id: "bill-2",

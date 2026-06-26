@@ -139,7 +139,7 @@ describe("PATCH /api/bills/[id] — แก้ไขบิล", () => {
   it("คำนวณ water/electric ใหม่จาก units×rate เมื่อมี rate", async () => {
     vi.mocked(getServerSession).mockResolvedValue(ownerSession as any);
     setupSecureDb();
-    vi.mocked(prisma.bill.update).mockImplementation(async ({ data }: any) => data as any);
+    vi.mocked(prisma.bill.update).mockImplementation((async ({ data }: any) => data) as any);
     await PATCH(makeReq({ waterUnits: 15, electricUnits: 100 }), { params });
     const updateCall = vi.mocked(prisma.bill.update).mock.calls[0][0];
     // water = 15 × 20 = 300, electric = 100 × 8 = 800

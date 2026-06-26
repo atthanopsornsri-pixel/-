@@ -160,7 +160,7 @@ describe("PATCH /api/tenants/[id] — แก้ไขข้อมูลผู้
   it("idCardNumber ถูก strip dashes/spaces → 200", async () => {
     vi.mocked(getServerSession).mockResolvedValue(ownerSession as any);
     vi.mocked(prisma.tenant.findUnique).mockResolvedValue(mockTenant as any);
-    vi.mocked(prisma.tenant.update).mockImplementation(async ({ data }: any) => data as any);
+    vi.mocked(prisma.tenant.update).mockImplementation((async ({ data }: any) => data) as any);
     await PATCH(makeReq({ idCardNumber: "1-2345-67890-12-3" }), { params });
     const updateCall = vi.mocked(prisma.tenant.update).mock.calls[0][0];
     expect(updateCall.data.idCardNumber).toBe("1234567890123");
@@ -169,7 +169,7 @@ describe("PATCH /api/tenants/[id] — แก้ไขข้อมูลผู้
   it("idCardNumber เป็น null → set null ได้", async () => {
     vi.mocked(getServerSession).mockResolvedValue(ownerSession as any);
     vi.mocked(prisma.tenant.findUnique).mockResolvedValue(mockTenant as any);
-    vi.mocked(prisma.tenant.update).mockImplementation(async ({ data }: any) => data as any);
+    vi.mocked(prisma.tenant.update).mockImplementation((async ({ data }: any) => data) as any);
     await PATCH(makeReq({ idCardNumber: null }), { params });
     const updateCall = vi.mocked(prisma.tenant.update).mock.calls[0][0];
     expect(updateCall.data.idCardNumber).toBeNull();
