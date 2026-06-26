@@ -203,6 +203,70 @@ export default async function DashboardPage() {
             <StatCard icon={Wallet} tone="indigo" label="รายรับเดือนนี้ (ประเมิน)" value={formatIncome(metrics.totalRevenue)} sublabel="จากค่าเช่าและบริการ" delay={240} />
           </div>
 
+          {/* Cashflow Breakdown Section */}
+          <div
+            className="rounded-[var(--jh-radius-2xl)] border border-white/60 p-6 md:p-8 shadow-[var(--jh-shadow-card)] animate-in fade-in duration-500 delay-300"
+            style={{ background: "linear-gradient(150deg, #fdf8ee 0%, #f6ecd6 100%)" }}
+          >
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <div
+                    className="flex h-9 w-9 items-center justify-center rounded-[var(--jh-radius-md)]"
+                    style={{ background: "#d4a548", color: "#fff", boxShadow: "0 8px 18px -6px #d4a548" }}
+                  >
+                    <Wallet className="h-4.5 w-4.5" strokeWidth={2} />
+                  </div>
+                  <h2 className="text-lg font-bold text-[var(--jh-ink)]">สรุปกระแสเงินสด (ประมาณการประจำเดือน)</h2>
+                </div>
+                <p className="text-xs text-[var(--jh-ink-tertiary)] max-w-xl">
+                  * รายจ่ายประมาณการคำนวณจากค่าน้ำ/ค่าไฟต้นทุนจ่ายหลวง (ประมาณ 70% ค่าน้ำ และ 60% ค่าไฟ ของบิลผู้เช่าที่ชำระแล้ว) ร่วมกับค่าบริการรายเดือน SaaS ที่จ่ายแล้วจริงในเดือนนี้
+                </p>
+              </div>
+              
+              <div className="text-right">
+                <div className="text-xs font-semibold text-[var(--jh-ink-secondary)]">กำไรสุทธิประมาณการ (เดือนนี้)</div>
+                <div className="text-3xl font-extrabold text-[var(--jh-orange-ink)] mt-1">
+                  {formatIncome((metrics as any).estNetProfit || 0)}
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-6 border-t border-white/40">
+              <div className="bg-white/50 border border-white/80 rounded-2xl p-4">
+                <span className="text-xs font-semibold text-[var(--jh-ink-secondary)]">รายรับจริง (ที่ชำระแล้ว)</span>
+                <div className="text-xl font-bold text-[var(--jh-green-ink)] mt-1">
+                  + {formatIncome(metrics.totalRevenue)}
+                </div>
+                <p className="text-[11px] text-[var(--jh-ink-tertiary)] mt-1">จากบิลค่าเช่า/บริการที่ผู้เช่าจ่ายแล้ว</p>
+              </div>
+              <div className="bg-white/50 border border-white/80 rounded-2xl p-4">
+                <span className="text-xs font-semibold text-[var(--jh-ink-secondary)]">รายจ่ายประมาณการรวม</span>
+                <div className="text-xl font-bold text-[var(--jh-red)] mt-1">
+                  - {formatIncome((metrics as any).totalEstExpenses || 0)}
+                </div>
+                <p className="text-[11px] text-[var(--jh-ink-tertiary)] mt-1">ค่าไฟหลวง + ค่าน้ำหลวง + SaaS Fee</p>
+              </div>
+              <div className="bg-white/50 border border-white/80 rounded-2xl p-4">
+                <span className="text-xs font-semibold text-[var(--jh-ink-secondary)]">รายละเอียดรายจ่ายประมาณการ</span>
+                <div className="text-xs text-[var(--jh-ink-secondary)] space-y-1.5 mt-2">
+                  <div className="flex justify-between">
+                    <span>⚡ ต้นทุนไฟ (60%):</span>
+                    <span className="font-bold">฿{((metrics as any).estElectricCost || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>💧 ต้นทุนน้ำ (70%):</span>
+                    <span className="font-bold">฿{((metrics as any).estWaterCost || 0).toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>🖥️ SaaS Platform Fee:</span>
+                    <span className="font-bold">฿{((metrics as any).saasExpense || 0).toLocaleString()}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Quick actions */}
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
             <div

@@ -12,7 +12,54 @@ import { Wind, RotateCw, LayoutGrid, UserPlus, BedDouble, Trash2 } from "lucide-
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { QRCodeSVG } from "qrcode.react";
 
+function SecureImage({ src, alt, className }: { src: string; alt?: string; className?: string }) {
+  const [resolvedSrc, setResolvedSrc] = useState<string>("");
 
+  useEffect(() => {
+    if (!src) {
+      setResolvedSrc("");
+      return;
+    }
+    
+    // If it's already a base64 Data URL or standard URL, use it directly
+    if (src.startsWith("data:") || src.startsWith("http://") || src.startsWith("https://")) {
+      setResolvedSrc(src);
+      return;
+    }
+
+    // If it's a Supabase storage path, fetch a signed URL
+    let active = true;
+    async function fetchUrl() {
+      try {
+        const res = await fetch("/api/storage/signed-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filePath: src })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (active && data.signedUrl) {
+            setResolvedSrc(data.signedUrl);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load signed image URL", err);
+      }
+    }
+
+    fetchUrl();
+    return () => {
+      active = false;
+    };
+  }, [src]);
+
+  if (!resolvedSrc) {
+    return <div className={`bg-slate-100 animate-pulse ${className}`} />;
+  }
+
+  // eslint-disable-next-line @next/next/no-img-element
+  return <img src={resolvedSrc} alt={alt} className={className} />;
+}
 
 export default function RoomsPage() {
   const searchParams = useSearchParams();
@@ -33,6 +80,14 @@ export default function RoomsPage() {
   const [editNumber, setEditNumber] = useState("");
   const [editFloor, setEditFloor] = useState("");
   const [editRentPrice, setEditRentPrice] = useState("");
+
+  // Room Gallery image states
+  const [editImageMain, setEditImageMain] = useState("");
+  const [editImageBathroom, setEditImageBathroom] = useState("");
+  const [editImageBalcony, setEditImageBalcony] = useState("");
+  const [editImageFacility, setEditImageFacility] = useState("");
+  const [uploadingImageSlot, setUploadingImageSlot] = useState<string | null>(null);
+  const [activePreviews, setActivePreviews] = useState<Record<string, string>>({});
 
   // New MVP States
   const [editStatus, setEditStatus] = useState("AVAILABLE");
@@ -185,7 +240,42 @@ export default function RoomsPage() {
     setEditHasAircon(room.hasAircon || false);
     setEditHasFan(room.hasFan || false);
     setEditHasFurniture(room.hasFurniture || false);
+    
+    // Set edit image values
+    setEditImageMain(room.imageMain || "");
+    setEditImageBathroom(room.imageBathroom || "");
+    setEditImageBalcony(room.imageBalcony || "");
+    setEditImageFacility(room.imageFacility || "");
     setIsEditModalOpen(true);
+  };
+
+  const handleFileUpload = async (slot: string, file: File) => {
+    setUploadingImageSlot(slot);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      
+      if (res.ok) {
+        const uploadData = await res.json();
+        if (slot === "main") setEditImageMain(uploadData.url);
+        else if (slot === "bathroom") setEditImageBathroom(uploadData.url);
+        else if (slot === "balcony") setEditImageBalcony(uploadData.url);
+        else if (slot === "facility") setEditImageFacility(uploadData.url);
+        toast.success("อัปโหลดรูปภาพสำเร็จ!");
+      } else {
+        const err = await res.json().catch(() => ({}));
+        toast.error(err.message || "อัปโหลดไม่สำเร็จ");
+      }
+    } catch {
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย");
+    } finally {
+      setUploadingImageSlot(null);
+    }
   };
 
   const handleEditSubmit = async (e: React.FormEvent) => {
@@ -204,7 +294,11 @@ export default function RoomsPage() {
           electricMeterStart: parseFloat(editElectricMeter) || 0,
           hasAircon: editHasAircon,
           hasFan: editHasFan,
-          hasFurniture: editHasFurniture
+          hasFurniture: editHasFurniture,
+          imageMain: editImageMain,
+          imageBathroom: editImageBathroom,
+          imageBalcony: editImageBalcony,
+          imageFacility: editImageFacility
         }),
       });
 
@@ -395,13 +489,41 @@ export default function RoomsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {rooms.map((room) => {
               const meta = statusMeta(room.status);
+              
+              // Compile all valid image slots for the room
+              const allImages = [
+                { key: "main", url: room.imageMain, label: "ห้องนอน" },
+                { key: "bathroom", url: room.imageBathroom, label: "ห้องน้ำ" },
+                { key: "balcony", url: room.imageBalcony, label: "ระเบียง" },
+                { key: "facility", url: room.imageFacility, label: "สิ่งอำนวยความสะดวก" }
+              ].filter(img => img.url);
+
+              const currentImage = activePreviews[room.id] || room.imageMain;
+
               return (
               <div key={room.id} className="bg-white rounded-[32px] overflow-hidden shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 group transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] hover:-translate-y-1 flex flex-col">
-                {room.imageMain ? (
-                  <div className="h-40 w-full bg-slate-200 relative overflow-hidden shrink-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={room.imageMain} alt={`Room ${room.number}`} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
+                {currentImage ? (
+                  <div className="h-44 w-full bg-slate-200 relative overflow-hidden shrink-0">
+                    <SecureImage src={currentImage} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
                     <span className="absolute top-0 left-0 h-1.5 w-full" style={{ background: meta.bar }} />
+                    
+                    {/* Hover switch dots if multiple images exist */}
+                    {allImages.length > 1 && (
+                      <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1.5 justify-center bg-black/40 backdrop-blur-sm py-1.5 px-3 rounded-full transition-opacity duration-300 opacity-90 group-hover:opacity-100 z-10">
+                        {allImages.map(img => (
+                          <button
+                            key={img.key}
+                            type="button"
+                            onMouseEnter={() => setActivePreviews(prev => ({ ...prev, [room.id]: img.url! }))}
+                            onClick={() => setActivePreviews(prev => ({ ...prev, [room.id]: img.url! }))}
+                            className={`w-2.5 h-2.5 rounded-full border border-white/60 transition-all ${
+                              currentImage === img.url ? "bg-[#d4a548] scale-110 border-white" : "bg-white/60 hover:bg-white"
+                            }`}
+                            title={img.label}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="h-3 w-full" style={{ background: meta.bar }}></div>
@@ -627,6 +749,176 @@ export default function RoomsPage() {
                       <input type="checkbox" checked={editHasFurniture} onChange={(e) => setEditHasFurniture(e.target.checked)} className="rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
                       เฟอร์นิเจอร์
                     </label>
+                  </div>
+                </div>
+
+                {/* 4. แกลเลอรีรูปภาพห้องพัก */}
+                <div className="space-y-3 mt-6 border-t border-slate-100 pt-4">
+                  <Label className="text-sm font-bold text-slate-800">แกลเลอรีรูปภาพห้องพัก (อัปโหลดเข้าเซิร์ฟเวอร์หลัก)</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Main image */}
+                    <div className="space-y-1.5">
+                      <span className="text-[11px] font-semibold text-slate-500">1. ภาพหลักห้องพัก</span>
+                      <div className="relative border border-slate-200 rounded-xl overflow-hidden bg-slate-50 h-28 flex flex-col items-center justify-center">
+                        {editImageMain ? (
+                          <>
+                            <SecureImage src={editImageMain} className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setEditImageMain("")}
+                              className="absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full text-xs shadow-md z-20 flex items-center justify-center w-5 h-5 font-bold"
+                              title="ลบรูป"
+                            >
+                              ✕
+                            </button>
+                          </>
+                        ) : (
+                          <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full text-slate-400 hover:bg-slate-100 transition-colors">
+                            {uploadingImageSlot === "main" ? (
+                              <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <>
+                                <span className="text-lg">+</span>
+                                <span className="text-[10px]">อัปโหลดรูป</span>
+                              </>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              disabled={!!uploadingImageSlot}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleFileUpload("main", file);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Bathroom image */}
+                    <div className="space-y-1.5">
+                      <span className="text-[11px] font-semibold text-slate-500">2. ภาพห้องน้ำ</span>
+                      <div className="relative border border-slate-200 rounded-xl overflow-hidden bg-slate-50 h-28 flex flex-col items-center justify-center">
+                        {editImageBathroom ? (
+                          <>
+                            <SecureImage src={editImageBathroom} className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setEditImageBathroom("")}
+                              className="absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full text-xs shadow-md z-20 flex items-center justify-center w-5 h-5 font-bold"
+                              title="ลบรูป"
+                            >
+                              ✕
+                            </button>
+                          </>
+                        ) : (
+                          <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full text-slate-400 hover:bg-slate-100 transition-colors">
+                            {uploadingImageSlot === "bathroom" ? (
+                              <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <>
+                                <span className="text-lg">+</span>
+                                <span className="text-[10px]">อัปโหลดรูป</span>
+                              </>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              disabled={!!uploadingImageSlot}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleFileUpload("bathroom", file);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Balcony image */}
+                    <div className="space-y-1.5">
+                      <span className="text-[11px] font-semibold text-slate-500">3. ภาพระเบียง / วิว</span>
+                      <div className="relative border border-slate-200 rounded-xl overflow-hidden bg-slate-50 h-28 flex flex-col items-center justify-center">
+                        {editImageBalcony ? (
+                          <>
+                            <SecureImage src={editImageBalcony} className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setEditImageBalcony("")}
+                              className="absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full text-xs shadow-md z-20 flex items-center justify-center w-5 h-5 font-bold"
+                              title="ลบรูป"
+                            >
+                              ✕
+                            </button>
+                          </>
+                        ) : (
+                          <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full text-slate-400 hover:bg-slate-100 transition-colors">
+                            {uploadingImageSlot === "balcony" ? (
+                              <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <>
+                                <span className="text-lg">+</span>
+                                <span className="text-[10px]">อัปโหลดรูป</span>
+                              </>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              disabled={!!uploadingImageSlot}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleFileUpload("balcony", file);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Facility image */}
+                    <div className="space-y-1.5">
+                      <span className="text-[11px] font-semibold text-slate-500">4. ภาพสิ่งอำนวยความสะดวก</span>
+                      <div className="relative border border-slate-200 rounded-xl overflow-hidden bg-slate-50 h-28 flex flex-col items-center justify-center">
+                        {editImageFacility ? (
+                          <>
+                            <SecureImage src={editImageFacility} className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => setEditImageFacility("")}
+                              className="absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full text-xs shadow-md z-20 flex items-center justify-center w-5 h-5 font-bold"
+                              title="ลบรูป"
+                            >
+                              ✕
+                            </button>
+                          </>
+                        ) : (
+                          <label className="cursor-pointer flex flex-col items-center justify-center w-full h-full text-slate-400 hover:bg-slate-100 transition-colors">
+                            {uploadingImageSlot === "facility" ? (
+                              <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <>
+                                <span className="text-lg">+</span>
+                                <span className="text-[10px]">อัปโหลดรูป</span>
+                              </>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              disabled={!!uploadingImageSlot}
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (file) handleFileUpload("facility", file);
+                              }}
+                              className="hidden"
+                            />
+                          </label>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 

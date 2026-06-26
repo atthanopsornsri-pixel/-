@@ -27,16 +27,26 @@ export async function POST(req: Request) {
     // We check if this file belongs to ANY record that the current user (OWNER or TENANT) is allowed to see.
     // Thanks to Phase 1 (getSecurePrisma), this query will ONLY return results if the user is authorized!
     
-    const [isBillSlip, isPaymentSlip, isTenantSignature, isContractPdf, isPropertySignature, isPropertyImage] = await Promise.all([
+    const [isBillSlip, isPaymentSlip, isTenantSignature, isContractPdf, isPropertySignature, isPropertyImage, isRoomImage] = await Promise.all([
       secureDb.bill.findFirst({ where: { slipUrl: { contains: fileName } } }),
       secureDb.payment.findFirst({ where: { slipUrl: { contains: fileName } } }),
       secureDb.tenant.findFirst({ where: { signatureUrl: { contains: fileName } } }),
       secureDb.tenant.findFirst({ where: { contractPdfUrl: { contains: fileName } } }),
       secureDb.property.findFirst({ where: { signatureUrl: { contains: fileName } } }),
-      secureDb.property.findFirst({ where: { imageUrl: { contains: fileName } } })
+      secureDb.property.findFirst({ where: { imageUrl: { contains: fileName } } }),
+      secureDb.room.findFirst({
+        where: {
+          OR: [
+            { imageMain: { contains: fileName } },
+            { imageBathroom: { contains: fileName } },
+            { imageBalcony: { contains: fileName } },
+            { imageFacility: { contains: fileName } }
+          ]
+        }
+      })
     ]);
 
-    if (!isBillSlip && !isPaymentSlip && !isTenantSignature && !isContractPdf && !isPropertySignature && !isPropertyImage) {
+    if (!isBillSlip && !isPaymentSlip && !isTenantSignature && !isContractPdf && !isPropertySignature && !isPropertyImage && !isRoomImage) {
         // Not found in any secure context, or the user is trying to access a file they don't own!
         return NextResponse.json({ error: "Forbidden: You do not have permission to access this file." }, { status: 403 });
     }

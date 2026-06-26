@@ -1,8 +1,15 @@
 "use server";
 
 import { getSecurePrisma } from "@/lib/prisma-secure";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 const THAI_MONTHS_SHORT = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+
+// Constants for estimated utility cost factors (magic numbers resolved)
+const UTILITY_ELECTRIC_COST_FACTOR = 0.60;
+const UTILITY_WATER_COST_FACTOR = 0.70;
 
 export async function getRevenueAnalytics() {
   try {
@@ -71,6 +78,11 @@ export async function getRevenueAnalytics() {
 
 export async function getDashboardMetrics(month?: number, year?: number) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session || !session.user || session.user.role !== "OWNER") {
+      return { success: false, error: "Unauthorized" };
+    }
+    const ownerId = session.user.id;
     const secureDb = await getSecurePrisma();
 
     // Default to current month/year if not provided
@@ -83,16 +95,21 @@ export async function getDashboardMetrics(month?: number, year?: number) {
       unpaidBillsAggregation,
       totalProperties,
       totalRooms,
-      occupiedRooms
+      occupiedRooms,
+      paidSaaSInvoicesAggregation
     ] = await Promise.all([
-      // 1. Total Revenue (PAID bills)
+      // 1. Total Revenue (PAID bills) with electric and water breakdowns
       secureDb.bill.aggregate({
         where: {
           month: currentMonth,
           year: currentYear,
           status: "PAID"
         },
-        _sum: { totalAmount: true }
+        _sum: {
+          totalAmount: true,
+          electricAmount: true,
+          waterAmount: true
+        }
       }),
       // 2. Outstanding Debt (UNPAID, OVERDUE, or PENDING bills)
       secureDb.bill.aggregate({
@@ -106,11 +123,30 @@ export async function getDashboardMetrics(month?: number, year?: number) {
       // 3. Occupancy Rate & Properties
       secureDb.property.count(),
       secureDb.room.count(),
-      secureDb.room.count({ where: { status: "OCCUPIED" } })
+      secureDb.room.count({ where: { status: "OCCUPIED" } }),
+      // 4. SaaS platform invoices paid by owner (scoped manually by ownerId)
+      prisma.invoice.aggregate({
+        where: {
+          ownerId: ownerId,
+          status: "PAID",
+          month: currentMonth,
+          year: currentYear
+        },
+        _sum: { totalAmount: true }
+      })
     ]);
 
     const totalRevenue = paidBillsAggregation._sum.totalAmount || 0;
     const outstandingDebt = unpaidBillsAggregation._sum.totalAmount || 0;
+    const electricRevenue = paidBillsAggregation._sum.electricAmount || 0;
+    const waterRevenue = paidBillsAggregation._sum.waterAmount || 0;
+    const saasExpense = paidSaaSInvoicesAggregation._sum.totalAmount || 0;
+
+    // Calculate estimated utility cost paid to providers using const factors
+    const estElectricCost = electricRevenue * UTILITY_ELECTRIC_COST_FACTOR;
+    const estWaterCost = waterRevenue * UTILITY_WATER_COST_FACTOR;
+    const totalEstExpenses = estElectricCost + estWaterCost + saasExpense;
+    const estNetProfit = totalRevenue - totalEstExpenses;
 
     const occupancyRate = totalRooms > 0 ? (occupiedRooms / totalRooms) * 100 : 0;
 
@@ -124,7 +160,12 @@ export async function getDashboardMetrics(month?: number, year?: number) {
         outstandingDebt,
         totalRooms,
         occupiedRooms,
-        occupancyRate: Math.round(occupancyRate * 100) / 100 // Round to 2 decimal places
+        occupancyRate: Math.round(occupancyRate * 100) / 100, // Round to 2 decimal places
+        estElectricCost: Math.round(estElectricCost * 100) / 100,
+        estWaterCost: Math.round(estWaterCost * 100) / 100,
+        saasExpense: Math.round(saasExpense * 100) / 100,
+        totalEstExpenses: Math.round(totalEstExpenses * 100) / 100,
+        estNetProfit: Math.round(estNetProfit * 100) / 100
       }
     };
 

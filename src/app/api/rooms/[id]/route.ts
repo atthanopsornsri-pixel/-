@@ -49,7 +49,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const { 
       number, floor, rentPrice, 
       status, waterMeterStart, electricMeterStart,
-      hasAircon, hasFan, hasFurniture
+      hasAircon, hasFan, hasFurniture,
+      imageMain, imageBathroom, imageBalcony, imageFacility
     } = await req.json();
 
     const room = await prisma.room.findUnique({
@@ -72,7 +73,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         electricMeterStart,
         hasAircon,
         hasFan,
-        hasFurniture
+        hasFurniture,
+        imageMain,
+        imageBathroom,
+        imageBalcony,
+        imageFacility
       },
     });
 

@@ -401,3 +401,66 @@ export async function saveBulkMeters(
     return { success: false, error: error.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล" };
   }
 }
+
+/**
+ * 🛠️ ดึงประวัติการจดมิเตอร์ย้อนหลังของอาคารแบบปลอดภัย
+ */
+export async function getMeterHistory(propertyId: string) {
+  try {
+    const prisma = await getSecurePrisma();
+
+    // 1. Scoping validation using findFirst on secure prisma (RLS active) to prevent IDOR
+    const property = await prisma.property.findFirst({
+      where: { id: propertyId },
+      select: { id: true }
+    });
+
+    if (!property) {
+      return { success: false, error: "ไม่พบข้อมูลหอพัก หรือไม่มีสิทธิ์เข้าถึง" };
+    }
+
+    // 2. Query all MONTHLY bills with meter readings for this property
+    const bills = await prisma.bill.findMany({
+      where: {
+        room: { propertyId },
+        type: "MONTHLY",
+        isDeleted: false,
+        OR: [
+          { electricReading: { not: null } },
+          { waterReading: { not: null } }
+        ]
+      },
+      select: {
+        id: true,
+        month: true,
+        year: true,
+        electricReading: true,
+        electricUnits: true,
+        electricAmount: true,
+        waterReading: true,
+        waterUnits: true,
+        waterAmount: true,
+        room: {
+          select: {
+            id: true,
+            number: true
+          }
+        }
+      },
+      orderBy: [
+        { year: "desc" },
+        { month: "desc" },
+        { room: { number: "asc" } }
+      ]
+    });
+
+    return {
+      success: true as const,
+      bills
+    };
+
+  } catch (error: any) {
+    console.error("getMeterHistory error:", error);
+    return { success: false as const, error: error.message || "เกิดข้อผิดพลาดในการดึงประวัติมิเตอร์" };
+  }
+}
