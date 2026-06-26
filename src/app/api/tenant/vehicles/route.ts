@@ -3,6 +3,22 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+/** GET /api/tenant/vehicles — ดูรายการยานพาหนะของตัวเอง */
+export async function GET() {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== "TENANT") {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const tenant = await prisma.tenant.findUnique({
+    where: { userId: session.user.id },
+    include: { vehicles: { orderBy: { createdAt: "desc" } } },
+  });
+  if (!tenant) return NextResponse.json({ message: "Tenant not found" }, { status: 404 });
+
+  return NextResponse.json(tenant.vehicles);
+}
+
 /** POST /api/tenant/vehicles — เพิ่มยานพาหนะ */
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);

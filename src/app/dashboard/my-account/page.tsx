@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Car, Bike, Plus, Trash2, X } from "lucide-react";
 
 export default function MyAccountPage() {
   const [saving, setSaving] = useState(false);
@@ -184,6 +185,214 @@ export default function MyAccountPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* ── Vehicle Management ── */}
+      <VehicleSection />
+    </div>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// Vehicle Management Section
+// ────────────────────────────────────────────────────────────────────────────
+function VehicleSection() {
+  const { data: vehicles = [], isLoading, mutate } = useSWR<any[]>(
+    "/api/tenant/vehicles",
+    jsonFetcher
+  );
+
+  const [showForm, setShowForm] = useState(false);
+  const [licensePlate, setLicensePlate] = useState("");
+  const [brand, setBrand] = useState("");
+  const [color, setColor] = useState("");
+  const [type, setType] = useState<"MOTORCYCLE" | "CAR">("MOTORCYCLE");
+  const [isSaving, setIsSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function handleAdd() {
+    if (!licensePlate.trim()) { toast.error("กรุณากรอกทะเบียนรถ"); return; }
+    setIsSaving(true);
+    try {
+      const res = await fetch("/api/tenant/vehicles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ licensePlate, brand, color, type }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "บันทึกไม่สำเร็จ");
+      toast.success("เพิ่มยานพาหนะเรียบร้อย");
+      mutate();
+      setShowForm(false);
+      setLicensePlate(""); setBrand(""); setColor(""); setType("MOTORCYCLE");
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleDelete(id: string) {
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/tenant/vehicles/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("ลบไม่สำเร็จ");
+      toast.success("ลบยานพาหนะเรียบร้อย");
+      mutate();
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  const VehicleIcon = ({ t }: { t: string }) =>
+    t === "CAR" ? <Car className="w-4 h-4" strokeWidth={2} /> : <Bike className="w-4 h-4" strokeWidth={2} />;
+
+  return (
+    <div
+      className="rounded-[var(--jh-radius-2xl)] border border-white/60 shadow-[var(--jh-shadow-card)] p-6 space-y-4"
+      style={{ background: "linear-gradient(150deg, #fdf8ee 0%, #f6ecd6 100%)" }}
+    >
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[var(--jh-radius-md)]"
+            style={{ background: "#d4a548", color: "#fff", boxShadow: "0 10px 22px -8px #d4a548" }}
+          >
+            <Car className="h-5 w-5" strokeWidth={2} />
+          </div>
+          <div>
+            <h2 className="font-bold text-[var(--jh-ink)]">ยานพาหนะ</h2>
+            <p className="text-xs text-[var(--jh-ink-tertiary)]">รถที่จอดในหอพัก</p>
+          </div>
+        </div>
+        {!showForm && (
+          <button
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-white transition-all hover:-translate-y-0.5"
+            style={{ background: "#d4a548", boxShadow: "0 8px 18px -6px #d4a548" }}
+          >
+            <Plus className="w-3.5 h-3.5" /> เพิ่มรถ
+          </button>
+        )}
+      </div>
+
+      {/* Add form */}
+      {showForm && (
+        <div className="rounded-2xl bg-white/70 border border-white/60 p-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-bold text-[var(--jh-ink)]">เพิ่มยานพาหนะใหม่</p>
+            <button onClick={() => setShowForm(false)} className="w-6 h-6 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200">
+              <X className="w-3.5 h-3.5 text-slate-500" />
+            </button>
+          </div>
+
+          {/* Type selector */}
+          <div className="flex gap-2">
+            {(["MOTORCYCLE", "CAR"] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setType(t)}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-bold border-2 transition-all ${
+                  type === t
+                    ? "border-[#d4a548] bg-amber-50 text-[#d4a548]"
+                    : "border-slate-200 bg-white text-slate-500 hover:border-slate-300"
+                }`}
+              >
+                <VehicleIcon t={t} />
+                {t === "CAR" ? "รถยนต์" : "มอเตอร์ไซค์"}
+              </button>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold text-slate-600">ทะเบียน *</Label>
+              <Input
+                value={licensePlate}
+                onChange={(e) => setLicensePlate(e.target.value.toUpperCase())}
+                placeholder="กก 1234"
+                className="h-9 rounded-xl text-xs"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs font-semibold text-slate-600">ยี่ห้อ</Label>
+              <Input
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+                placeholder="Honda, Toyota"
+                className="h-9 rounded-xl text-xs"
+              />
+            </div>
+            <div className="col-span-2 space-y-1">
+              <Label className="text-xs font-semibold text-slate-600">สี</Label>
+              <Input
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                placeholder="สีขาว, สีดำ"
+                className="h-9 rounded-xl text-xs"
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={handleAdd}
+            disabled={isSaving}
+            className="w-full py-2.5 rounded-full text-sm font-bold text-white disabled:opacity-60 transition-all hover:-translate-y-0.5"
+            style={{ background: "#d4a548", boxShadow: "0 8px 18px -6px #d4a548" }}
+          >
+            {isSaving ? "กำลังบันทึก..." : "บันทึกยานพาหนะ"}
+          </button>
+        </div>
+      )}
+
+      {/* Vehicle list */}
+      {isLoading ? (
+        <div className="space-y-2">
+          {[1, 2].map((i) => <div key={i} className="h-14 rounded-2xl bg-white/50 animate-pulse" />)}
+        </div>
+      ) : vehicles.length === 0 && !showForm ? (
+        <div className="text-center py-6 text-[var(--jh-ink-tertiary)] text-sm">
+          ยังไม่มียานพาหนะที่ลงทะเบียน
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {vehicles.map((v) => (
+            <div
+              key={v.id}
+              className="flex items-center justify-between rounded-2xl bg-white/70 border border-white/60 px-4 py-3"
+            >
+              <div className="flex items-center gap-3">
+                <div
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl"
+                  style={{
+                    background: v.type === "CAR" ? "#5856d6" : "#34508c",
+                    color: "#fff",
+                  }}
+                >
+                  <VehicleIcon t={v.type} />
+                </div>
+                <div>
+                  <p className="font-bold text-sm text-[var(--jh-ink)] font-mono">{v.licensePlate}</p>
+                  <p className="text-xs text-[var(--jh-ink-tertiary)]">
+                    {v.type === "CAR" ? "รถยนต์" : "มอเตอร์ไซค์"}
+                    {v.brand ? ` · ${v.brand}` : ""}
+                    {v.color ? ` · ${v.color}` : ""}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => handleDelete(v.id)}
+                disabled={deletingId === v.id}
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-red-50 hover:bg-red-100 text-red-400 hover:text-red-600 transition-colors disabled:opacity-50"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

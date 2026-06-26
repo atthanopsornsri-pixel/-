@@ -6,7 +6,7 @@ import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Receipt, Send, BellRing, Pencil, Trash2 } from "lucide-react";
+import { Receipt, Send, BellRing, Pencil, Trash2, Download } from "lucide-react";
 
 export default function BillingPage() {
   const [rooms, setRooms] = useState<any[]>([]);
@@ -94,6 +94,51 @@ export default function BillingPage() {
       setIsSendingAlert(false);
     }
   };
+
+  // ── Export CSV ──────────────────────────────────────────────────────────────
+  function exportBillsCsv() {
+    if (bills.length === 0) { toast.info("ไม่มีข้อมูลบิลสำหรับ Export"); return; }
+
+    const thaiMonthsCSV = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+    const statusMap: Record<string, string> = {
+      UNPAID: "รอชำระ", PENDING: "รอตรวจสอบ",
+      PAID: "ชำระแล้ว", OVERDUE: "เลยกำหนด", PARTIAL: "จ่ายบางส่วน",
+    };
+
+    const header = ["ห้อง","ประเภท","งวด","สถานะ","ค่าเช่า","ค่าน้ำ","ค่าไฟ","ค่าส่วนกลาง","ค่าจอดรถ","ค่าเน็ต","อื่นๆ","รวม","ชำระแล้ว","ยังค้าง","กำหนดชำระ"];
+    const rows = bills.map((b: any) => [
+      b.room?.number ?? "-",
+      b.type === "CHECKIN" ? "บิลเข้าอยู่" : "รายเดือน",
+      b.type === "CHECKIN" ? "เข้าอยู่" : `${thaiMonthsCSV[b.month - 1]} ${b.year + 543}`,
+      statusMap[b.status] ?? b.status,
+      b.rentAmount,
+      b.waterAmount,
+      b.electricAmount,
+      b.commonFee,
+      b.parkingFee,
+      b.internetFee,
+      b.otherFee,
+      b.totalAmount,
+      b.paidAmount,
+      Math.max(0, b.totalAmount - b.paidAmount).toFixed(2),
+      new Date(b.dueDate).toLocaleDateString("th-TH"),
+    ]);
+
+    const csvContent = [header, ...rows]
+      .map(row => row.map((v: any) => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
+
+    // BOM for Thai UTF-8 in Excel
+    const bom = "\uFEFF";
+    const blob = new Blob([bom + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `bills_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`📊 Export สำเร็จ ${bills.length} รายการ`);
+  }
 
   const handleSendAllLine = async () => {
     const lineableBills = bills.filter(b => b.room?.tenants?.[0]?.lineUserId);
@@ -794,6 +839,17 @@ export default function BillingPage() {
                     : `ส่ง LINE ทั้งหมด (${bills.filter(b => b.room?.tenants?.[0]?.lineUserId).length} ห้อง)`}
                 </Button>
               )}
+              {/* Export CSV button */}
+              <Button
+                size="sm"
+                variant="outline"
+                className="rounded-full h-9 px-4 gap-2 font-semibold text-xs border-slate-200 hover:bg-slate-50 transition-all hover:-translate-y-0.5"
+                onClick={exportBillsCsv}
+                title="Export เป็น CSV"
+              >
+                <Download className="w-3.5 h-3.5" strokeWidth={2} />
+                Export CSV
+              </Button>
               </div>
             </div>
             <div className="overflow-x-auto">

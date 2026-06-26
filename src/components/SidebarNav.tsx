@@ -120,6 +120,12 @@ export default function SidebarNav({ role }: SidebarNavProps) {
             </div>
             ระบบพัสดุ
           </Link>
+          <Link href="/dashboard/vehicles" className={`flex items-center px-4 py-3 rounded-xl transition-all group font-medium ${pathname.startsWith("/dashboard/vehicles") ? "bg-amber-50 text-amber-700" : "text-slate-600 hover:bg-amber-50 hover:text-amber-700"}`}>
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname.startsWith("/dashboard/vehicles") ? "bg-amber-100 text-amber-600" : "bg-amber-50 text-amber-500 group-hover:bg-amber-100"}`}>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 17H5a2 2 0 01-2-2v-5l2-4h10l2 4v5a2 2 0 01-2 2h-3m-4 0v1m0-1h4m-4 0H8" /><circle cx="7.5" cy="17.5" r="1.5" stroke="currentColor" strokeWidth={2} /><circle cx="16.5" cy="17.5" r="1.5" stroke="currentColor" strokeWidth={2} /></svg>
+            </div>
+            ยานพาหนะ / ที่จอดรถ
+          </Link>
         </>
       )}
 

@@ -20,6 +20,7 @@ import {
   Wallet,
   KeyRound,
   Car,
+  Printer,
 } from "lucide-react";
 
 // ── Status tone mapping ──────────────────────────────────────────────────────
@@ -79,6 +80,10 @@ export default function MyBillsPage() {
   const [isUploading, setIsUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // ── PDF Receipt state ──────────────────────────────────────────────────
+  const [receiptBill, setReceiptBill] = useState<any | null>(null);
+  const receiptRef = useRef<HTMLDivElement>(null);
+
   // Success popup state
   const [successPopup, setSuccessPopup] = useState<{ open: boolean; title: string; message?: string }>({
     open: false, title: "",
@@ -94,6 +99,13 @@ export default function MyBillsPage() {
     setPayBill(null);
     setSlipFile(null);
     setSlipPreview(null);
+  }
+
+  function handlePrintReceipt(bill: any) {
+    setReceiptBill(bill);
+    setTimeout(() => {
+      window.print();
+    }, 300);
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -277,11 +289,12 @@ export default function MyBillsPage() {
                   )}
 
                   {bill.status === "PAID" && (
-                    <div className="flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold"
-                      style={{ background: "#e0f7e9", color: "#34c759" }}>
-                      <CheckCircle2 className="w-4 h-4" />
-                      ชำระเงินเสร็จสิ้น — ขอบคุณ 🙏
-                    </div>
+                    <button
+                      onClick={() => handlePrintReceipt(bill)}
+                      className="mt-2 w-full flex items-center justify-center gap-2 py-2 rounded-full text-xs font-semibold border border-emerald-200 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-colors"
+                    >
+                      <Printer className="w-3.5 h-3.5" /> พิมพ์ใบเสร็จรับเงิน
+                    </button>
                   )}
                 </div>
               </div>
@@ -424,6 +437,19 @@ export default function MyBillsPage() {
         onClose={() => setSuccessPopup({ open: false, title: "" })}
         mascotType="payment"
       />
+
+      {/* ── Print Receipt (hidden, only visible on print) ── */}
+      {receiptBill && (
+        <div ref={receiptRef} className="hidden print:block">
+          <PrintReceipt bill={receiptBill} />
+        </div>
+      )}
+      <style>{`
+        @media print {
+          body > * { display: none !important; }
+          .print\\:block { display: block !important; }
+        }
+      `}</style>
     </div>
   );
 }
@@ -437,6 +463,125 @@ function Row({ label, value, icon }: { label: string; value: number; icon?: Reac
         {label}
       </span>
       <span className="text-xs font-semibold text-[var(--jh-ink)]">{thb(value)}</span>
+    </div>
+  );
+}
+
+// ── PrintReceipt ── ใบเสร็จรับเงิน สำหรับ @media print ───────────────────
+const MONTH_NAMES_RECEIPT = [
+  "มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
+  "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม",
+];
+
+function PrintReceipt({ bill }: { bill: any }) {
+  const isCheckin = bill.type === "CHECKIN";
+  const periodLabel = isCheckin
+    ? "บิลเข้าอยู่ (Check-in)"
+    : `${MONTH_NAMES_RECEIPT[bill.month - 1]} ${bill.year + 543}`;
+
+  const printDate = new Date().toLocaleDateString("th-TH", {
+    day: "numeric", month: "long", year: "numeric",
+  });
+
+  const rows: { label: string; value: number }[] = [];
+  if (isCheckin) {
+    if (bill.securityDeposit > 0) rows.push({ label: "เงินประกันห้อง", value: bill.securityDeposit });
+    if (bill.advanceRent > 0) rows.push({ label: "ค่าเช่าล่วงหน้า", value: bill.advanceRent });
+    if (bill.keyDeposit > 0) rows.push({ label: "ค่ามัดจำกุญแจ/คีย์การ์ด", value: bill.keyDeposit });
+    if (bill.vehicleFee > 0) rows.push({ label: "ค่าลงทะเบียนที่จอดรถ", value: bill.vehicleFee });
+  } else {
+    rows.push({ label: "ค่าเช่าห้อง", value: bill.rentAmount });
+    if (bill.waterAmount > 0) rows.push({ label: `ค่าน้ำ${bill.waterUnits ? ` (${bill.waterUnits} หน่วย)` : ""}`, value: bill.waterAmount });
+    if (bill.electricAmount > 0) rows.push({ label: `ค่าไฟ${bill.electricUnits ? ` (${bill.electricUnits} หน่วย)` : ""}`, value: bill.electricAmount });
+    if (bill.commonFee > 0) rows.push({ label: "ค่าส่วนกลาง", value: bill.commonFee });
+    if (bill.parkingFee > 0) rows.push({ label: "ค่าที่จอดรถ", value: bill.parkingFee });
+    if (bill.internetFee > 0) rows.push({ label: "ค่าอินเทอร์เน็ต", value: bill.internetFee });
+    if (bill.otherFee > 0) rows.push({ label: "ค่าบริการอื่นๆ", value: bill.otherFee });
+    if (bill.balanceForward > 0) rows.push({ label: "ยอดค้างยกมา", value: bill.balanceForward });
+  }
+
+  return (
+    <div style={{
+      fontFamily: "'Sarabun', 'Tahoma', sans-serif",
+      maxWidth: "520px",
+      margin: "40px auto",
+      padding: "40px",
+      border: "2px solid #16264c",
+      borderRadius: "12px",
+    }}>
+      {/* Header */}
+      <div style={{ textAlign: "center", marginBottom: "24px", borderBottom: "2px solid #d4a548", paddingBottom: "20px" }}>
+        <div style={{ fontSize: "24px", fontWeight: "900", color: "#16264c", letterSpacing: "-0.5px" }}>
+          🏠 {bill.room?.property?.name ?? "JadHor"}
+        </div>
+        <div style={{ fontSize: "13px", color: "#666", marginTop: "4px" }}>ใบเสร็จรับเงิน / Payment Receipt</div>
+        <div style={{
+          display: "inline-block",
+          marginTop: "8px",
+          padding: "4px 16px",
+          background: "#d4a548",
+          color: "#fff",
+          borderRadius: "20px",
+          fontSize: "12px",
+          fontWeight: "700",
+        }}>
+          ✅ ชำระเงินแล้ว
+        </div>
+      </div>
+
+      {/* Info */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "20px", fontSize: "13px" }}>
+        <div>
+          <div style={{ color: "#666", fontSize: "11px", marginBottom: "2px" }}>ห้อง / Room</div>
+          <div style={{ fontWeight: "700", color: "#16264c" }}>{bill.room?.number ?? "-"}</div>
+        </div>
+        <div>
+          <div style={{ color: "#666", fontSize: "11px", marginBottom: "2px" }}>งวด / Period</div>
+          <div style={{ fontWeight: "700", color: "#16264c" }}>{periodLabel}</div>
+        </div>
+        <div>
+          <div style={{ color: "#666", fontSize: "11px", marginBottom: "2px" }}>วันออกใบเสร็จ</div>
+          <div style={{ fontWeight: "600" }}>{printDate}</div>
+        </div>
+        {bill.paymentDate && (
+          <div>
+            <div style={{ color: "#666", fontSize: "11px", marginBottom: "2px" }}>วันชำระเงิน</div>
+            <div style={{ fontWeight: "600" }}>
+              {new Date(bill.paymentDate).toLocaleDateString("th-TH", { day: "numeric", month: "long", year: "numeric" })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Breakdown */}
+      <div style={{ borderTop: "1px solid #eee", paddingTop: "16px", marginBottom: "16px" }}>
+        {rows.map((r, i) => (
+          <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", padding: "5px 0", borderBottom: "1px dashed #f0f0f0" }}>
+            <span style={{ color: "#444" }}>{r.label}</span>
+            <span style={{ fontWeight: "600" }}>{thb(r.value)}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Total */}
+      <div style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        background: "#f3f5fa",
+        borderRadius: "8px",
+        padding: "14px 16px",
+        marginBottom: "24px",
+      }}>
+        <span style={{ fontWeight: "800", fontSize: "15px", color: "#16264c" }}>ยอดรวมทั้งสิ้น</span>
+        <span style={{ fontWeight: "900", fontSize: "22px", color: "#16264c" }}>{thb(bill.totalAmount)}</span>
+      </div>
+
+      {/* Footer */}
+      <div style={{ textAlign: "center", color: "#999", fontSize: "11px" }}>
+        <p>ขอบคุณที่ใช้บริการ | Powered by JadHor OS</p>
+        <p style={{ marginTop: "4px" }}>เอกสารนี้ออกโดยระบบ JadHor — jadhor.vercel.app</p>
+      </div>
     </div>
   );
 }
