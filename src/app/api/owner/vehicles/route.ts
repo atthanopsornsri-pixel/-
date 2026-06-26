@@ -27,7 +27,8 @@ export async function GET(req: Request) {
       where: {
         property: propertyFilter,
         isDeleted: false,
-        status: "OCCUPIED",
+        // ไม่กรอง status: ใช้ tenants(isDeleted:false) เป็นตัวจำกัด — ห้องที่มีผู้เช่าจริง
+        // (รวมห้อง MAINTENANCE ที่ยังมีคนอยู่) ห้องว่างจะไม่มีรถผ่าน flatMap อยู่แล้ว
       },
       include: {
         tenants: {

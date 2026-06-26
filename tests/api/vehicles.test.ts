@@ -52,6 +52,8 @@ describe('GET /api/owner/vehicles — isolation', () => {
     await ownerGET(new Request('http://localhost/api/owner/vehicles?propertyId=prop_X'));
     const where = mocks.roomFindMany.mock.calls[0][0].where;
     expect(where.property).toEqual({ id: 'prop_X', ownerId: 'owner_1' });
+    // #4: ไม่กรอง status แล้ว (ห้อง MAINTENANCE ที่ยังมีผู้เช่าต้องเห็นรถด้วย)
+    expect(where.status).toBeUndefined();
   });
 
   it('flatten vehicles + แนบ room/property', async () => {
