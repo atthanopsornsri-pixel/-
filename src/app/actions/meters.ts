@@ -2,6 +2,8 @@
 
 import { getSecurePrisma } from "@/lib/prisma-secure";
 import { revalidatePath } from "next/cache";
+import { createDbNotification } from "./notifications";
+import { prisma } from "@/lib/prisma";
 
 // ฟังก์ชันผู้ช่วย: คำนวณหาเดือนและปีดั้งเดิมก่อนหน้าแบบระบุตรงตัว (O(1) Direct Pointer)
 function getPreviousPeriod(month: number, year: number) {
@@ -226,6 +228,33 @@ export async function saveBulkMeterReadings(
       }
     }
   });
+
+  // ส่งแจ้งเตือนลูกบ้านนอก transaction
+  try {
+    const THAI_MONTHS_NAMES = [
+      "มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน",
+      "กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม",
+    ];
+    const roomIds = readings.map((r) => r.roomId);
+    const tenants = await prisma.tenant.findMany({
+      where: { roomId: { in: roomIds }, isDeleted: false },
+      select: { userId: true, room: { select: { number: true } } }
+    });
+
+    for (const t of tenants) {
+      if (t.userId) {
+        const typeLabel = type === "ELECTRIC" ? "ไฟฟ้า" : "ประปา";
+        await createDbNotification(
+          t.userId,
+          `จดบันทึกมิเตอร์${typeLabel} ห้อง ${t.room?.number || ""}`,
+          `เลขมิเตอร์${typeLabel} รอบเดือน ${THAI_MONTHS_NAMES[month - 1]} ${year + 543} ได้รับการจดบันทึกแล้ว`,
+          "BILL"
+        );
+      }
+    }
+  } catch (err) {
+    console.error("Failed to send meter reading notifications:", err);
+  }
 
   revalidatePath("/dashboard/billing");
   revalidatePath("/dashboard/meters");

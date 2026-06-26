@@ -38,6 +38,7 @@ model User {
   invoices          Invoice[] // ใบแจ้งหนี้ค่าบริการ SaaS (สำหรับ Owner)
   smsAddon          SmsAddon? // แพ็กเกจเสริม SMS (สำหรับ Owner)
   registrationCodes RegistrationCode[] // โค้ดที่ User คนนี้สร้าง หรือใช้งาน
+  notifications     Notification[]
 }
 
 enum Role {
@@ -429,6 +430,18 @@ model RegistrationCode {
   isUsed    Boolean  @default(false)
   usedById  String?
   usedBy    User?    @relation(fields: [usedById], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      String   // SYSTEM, BILL, MAINTENANCE, PARCEL
+  read      Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendLineOAMessage } from "@/lib/line";
 import { sendSmsWithAddon } from "@/lib/sms";
+import { createDbNotification } from "@/app/actions/notifications";
 
 export async function POST(req: Request) {
   try {
@@ -48,8 +49,19 @@ export async function POST(req: Request) {
     // Notify Tenant via LINE + SMS (fire-and-forget)
     const tenant = await prisma.tenant.findFirst({
       where: { roomId },
-      select: { lineUserId: true, phoneNumber: true }
+      select: { lineUserId: true, phoneNumber: true, userId: true }
     });
+
+    if (tenant?.userId) {
+      after(() =>
+        createDbNotification(
+          tenant.userId,
+          `พัสดุเข้าใหม่ 📦`,
+          `ห้อง ${parcel.room.number} มีพัสดุจัดส่งถึงคุณ ผู้รับ: ${recipientName || "-"} (เลขติดตามพัสดุ: ${trackingNumber || "-"})`,
+          "PARCEL"
+        )
+      );
+    }
 
     const parcelMsg = `มีพัสดุมาส่ง! ห้อง ${parcel.room.number} | ผู้รับ: ${recipientName || "-"} | เลขพัสดุ: ${trackingNumber || "-"}`;
 

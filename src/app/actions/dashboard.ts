@@ -11,7 +11,7 @@ const THAI_MONTHS_SHORT = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","�
 const UTILITY_ELECTRIC_COST_FACTOR = 0.60;
 const UTILITY_WATER_COST_FACTOR = 0.70;
 
-export async function getRevenueAnalytics() {
+export async function getRevenueAnalytics(propertyId?: string) {
   try {
     const secureDb = await getSecurePrisma();
     const now = new Date();
@@ -30,11 +30,21 @@ export async function getRevenueAnalytics() {
       months.map(async ({ month, year, label }) => {
         const [paid, outstanding] = await Promise.all([
           secureDb.bill.aggregate({
-            where: { month, year, status: "PAID" },
+            where: {
+              month,
+              year,
+              status: "PAID",
+              ...(propertyId && { room: { propertyId } }),
+            },
             _sum: { totalAmount: true },
           }),
           secureDb.bill.aggregate({
-            where: { month, year, status: { in: ["UNPAID", "OVERDUE", "PENDING"] } },
+            where: {
+              month,
+              year,
+              status: { in: ["UNPAID", "OVERDUE", "PENDING"] },
+              ...(propertyId && { room: { propertyId } }),
+            },
             _sum: { totalAmount: true },
           }),
         ]);
@@ -76,7 +86,7 @@ export async function getRevenueAnalytics() {
   }
 }
 
-export async function getDashboardMetrics(month?: number, year?: number) {
+export async function getDashboardMetrics(month?: number, year?: number, propertyId?: string) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || !session.user || session.user.role !== "OWNER") {
@@ -103,7 +113,8 @@ export async function getDashboardMetrics(month?: number, year?: number) {
         where: {
           month: currentMonth,
           year: currentYear,
-          status: "PAID"
+          status: "PAID",
+          ...(propertyId && { room: { propertyId } })
         },
         _sum: {
           totalAmount: true,
@@ -116,31 +127,43 @@ export async function getDashboardMetrics(month?: number, year?: number) {
         where: {
           month: currentMonth,
           year: currentYear,
-          status: { in: ["UNPAID", "OVERDUE", "PENDING"] }
+          status: { in: ["UNPAID", "OVERDUE", "PENDING"] },
+          ...(propertyId && { room: { propertyId } })
         },
         _sum: { totalAmount: true }
       }),
       // 3. Occupancy Rate & Properties
-      secureDb.property.count(),
-      secureDb.room.count(),
-      secureDb.room.count({ where: { status: "OCCUPIED" } }),
-      // 4. SaaS platform invoices paid by owner (scoped manually by ownerId)
-      prisma.invoice.aggregate({
+      secureDb.property.count({
+        ...(propertyId && { where: { id: propertyId } })
+      }),
+      secureDb.room.count({
+        ...(propertyId && { where: { propertyId } })
+      }),
+      secureDb.room.count({
         where: {
-          ownerId: ownerId,
-          status: "PAID",
-          month: currentMonth,
-          year: currentYear
-        },
-        _sum: { totalAmount: true }
-      })
+          status: "OCCUPIED",
+          ...(propertyId && { propertyId })
+        }
+      }),
+      // 4. SaaS platform invoices paid by owner (only needed if NOT filtering by property)
+      !propertyId
+        ? prisma.invoice.aggregate({
+            where: {
+              ownerId: ownerId,
+              status: "PAID",
+              month: currentMonth,
+              year: currentYear
+            },
+            _sum: { totalAmount: true }
+          })
+        : Promise.resolve({ _sum: { totalAmount: null } })
     ]);
 
     const totalRevenue = paidBillsAggregation._sum.totalAmount || 0;
     const outstandingDebt = unpaidBillsAggregation._sum.totalAmount || 0;
     const electricRevenue = paidBillsAggregation._sum.electricAmount || 0;
     const waterRevenue = paidBillsAggregation._sum.waterAmount || 0;
-    const saasExpense = paidSaaSInvoicesAggregation._sum.totalAmount || 0;
+    const saasExpense = !propertyId ? (paidSaaSInvoicesAggregation._sum.totalAmount || 0) : 0;
 
     // Calculate estimated utility cost paid to providers using const factors
     const estElectricCost = electricRevenue * UTILITY_ELECTRIC_COST_FACTOR;
@@ -164,6 +187,7 @@ export async function getDashboardMetrics(month?: number, year?: number) {
         estElectricCost: Math.round(estElectricCost * 100) / 100,
         estWaterCost: Math.round(estWaterCost * 100) / 100,
         saasExpense: Math.round(saasExpense * 100) / 100,
+        saasExpenseHidden: !!propertyId,
         totalEstExpenses: Math.round(totalEstExpenses * 100) / 100,
         estNetProfit: Math.round(estNetProfit * 100) / 100
       }

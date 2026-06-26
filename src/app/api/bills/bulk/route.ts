@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getSecurePrisma } from "@/lib/prisma-secure";
 import { sendLineOAMessage } from "@/lib/line";
 import { sendSmsWithAddon } from "@/lib/sms";
+import { createDbNotification } from "@/app/actions/notifications";
 
 /**
  * POST /api/bills/bulk
@@ -56,6 +57,7 @@ export async function POST(req: Request) {
             firstName: true,
             lastName: true,
             phoneNumber: true,
+            userId: true,
           },
           take: 1,
         },
@@ -127,6 +129,16 @@ export async function POST(req: Request) {
         // แจ้ง LINE + SMS (fire-and-forget)
         const tenant = room.tenants[0];
         if (tenant) {
+          if (tenant.userId) {
+            after(() =>
+              createDbNotification(
+                tenant.userId,
+                "มีใบแจ้งหนี้รอบใหม่",
+                `บิลประจำเดือน ${month}/${yearBE} ห้อง ${room.number} ยอด ฿${totalAmount.toLocaleString()} ถูกสร้างขึ้นแล้ว`,
+                "BILL"
+              ).catch(() => {})
+            );
+          }
           const tenantName =
             [tenant.firstName, tenant.lastName].filter(Boolean).join(" ") ||
             tenant.phoneNumber ||

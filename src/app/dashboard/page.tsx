@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { CountUpValue } from "@/components/count-up-value";
 import { CircularProgress } from "@/components/circular-progress";
+import { PropertySwitcher } from "@/components/PropertySwitcher";
 
 type Tone = "blue" | "green" | "orange" | "indigo" | "purple" | "red";
 
@@ -91,13 +92,17 @@ function StatCard({
   );
 }
 
-export default async function DashboardPage() {
+export default async function DashboardPage(props: {
+  searchParams?: Promise<any> | any;
+}) {
   const session = await getServerSession(authOptions);
 
   if (!session || !session.user) {
     redirect("/login");
   }
 
+  const rawSearchParams = props.searchParams ? (typeof props.searchParams.then === 'function' ? await props.searchParams : props.searchParams) : {};
+  const propertyId = rawSearchParams?.propertyId || "";
   const role = session.user.role;
 
   // ==========================================
@@ -146,13 +151,20 @@ export default async function DashboardPage() {
     occupancyRate: 0,
     outstandingDebt: 0,
     totalRevenue: 0,
+    saasExpenseHidden: false,
   };
 
+  let ownerProperties: any[] = [];
+
   if (role === "OWNER") {
-    const result = await getDashboardMetrics();
+    const result = await getDashboardMetrics(undefined, undefined, propertyId || undefined);
     if (result.success && result.data) {
-      metrics = result.data;
+      metrics = result.data as any;
     }
+    ownerProperties = await prisma.property.findMany({
+      where: { ownerId: session.user.id, isDeleted: false },
+      select: { id: true, name: true }
+    });
   }
 
   const formatIncome = (amount: number) => {
@@ -178,11 +190,14 @@ export default async function DashboardPage() {
           </div>
         </div>
         {role === "OWNER" && (
-          <Link href="/dashboard/properties">
-            <Button className="rounded-full bg-[var(--jh-blue)] px-6 font-semibold text-white shadow-[var(--jh-shadow-sm)] transition-all hover:bg-[var(--jh-blue-dark)] hover:-translate-y-0.5">
-              + เพิ่มหอพักใหม่
-            </Button>
-          </Link>
+          <div className="flex flex-wrap items-center gap-3">
+            <PropertySwitcher properties={ownerProperties} currentValue={propertyId} />
+            <Link href="/dashboard/properties">
+              <Button className="rounded-full bg-[var(--jh-blue)] px-6 font-semibold text-white shadow-[var(--jh-shadow-sm)] transition-all hover:bg-[var(--jh-blue-dark)] hover:-translate-y-0.5 cursor-pointer">
+                + เพิ่มหอพักใหม่
+              </Button>
+            </Link>
+          </div>
         )}
       </div>
 
@@ -220,7 +235,7 @@ export default async function DashboardPage() {
                   <h2 className="text-lg font-bold text-[var(--jh-ink)]">สรุปกระแสเงินสด (ประมาณการประจำเดือน)</h2>
                 </div>
                 <p className="text-xs text-[var(--jh-ink-tertiary)] max-w-xl">
-                  * รายจ่ายประมาณการคำนวณจากค่าน้ำ/ค่าไฟต้นทุนจ่ายหลวง (ประมาณ 70% ค่าน้ำ และ 60% ค่าไฟ ของบิลผู้เช่าที่ชำระแล้ว) ร่วมกับค่าบริการรายเดือน SaaS ที่จ่ายแล้วจริงในเดือนนี้
+                  * รายจ่ายประมาณการคำนวณจากค่าน้ำ/ค่าไฟต้นทุนจ่ายหลวง (ประมาณ 70% ค่าน้ำ และ 60% ค่าไฟ ของบิลผู้เช่าที่ชำระแล้ว){metrics.saasExpenseHidden ? " (ระบบไม่นำค่าบริการรายเดือน SaaS มารวมคำนวณ เนื่องจากกรองแบบรายหอพัก)" : " ร่วมกับค่าบริการรายเดือน SaaS ที่จ่ายแล้วจริงในเดือนนี้"}
                 </p>
               </div>
               
@@ -245,7 +260,9 @@ export default async function DashboardPage() {
                 <div className="text-xl font-bold text-[var(--jh-red)] mt-1">
                   - {formatIncome((metrics as any).totalEstExpenses || 0)}
                 </div>
-                <p className="text-[11px] text-[var(--jh-ink-tertiary)] mt-1">ค่าไฟหลวง + ค่าน้ำหลวง + SaaS Fee</p>
+                <p className="text-[11px] text-[var(--jh-ink-tertiary)] mt-1">
+                  {metrics.saasExpenseHidden ? "ค่าไฟหลวง + ค่าน้ำหลวง (ไม่รวมค่าฟี SaaS)" : "ค่าไฟหลวง + ค่าน้ำหลวง + SaaS Fee"}
+                </p>
               </div>
               <div className="bg-white/50 border border-white/80 rounded-2xl p-4">
                 <span className="text-xs font-semibold text-[var(--jh-ink-secondary)]">รายละเอียดรายจ่ายประมาณการ</span>
@@ -260,7 +277,11 @@ export default async function DashboardPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>🖥️ SaaS Platform Fee:</span>
-                    <span className="font-bold">฿{((metrics as any).saasExpense || 0).toLocaleString()}</span>
+                    {metrics.saasExpenseHidden ? (
+                      <span className="font-bold text-slate-400 italic">ไม่รวม (ยอดส่วนกลาง)</span>
+                    ) : (
+                      <span className="font-bold">฿{((metrics as any).saasExpense || 0).toLocaleString()}</span>
+                    )}
                   </div>
                 </div>
               </div>

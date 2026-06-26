@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { sendLineOAMessage } from "@/lib/line";
 import { sendSmsWithAddon } from "@/lib/sms";
 import { categorizeMaintenance } from "@/lib/ai";
+import { createDbNotification } from "@/app/actions/notifications";
 
 export async function POST(req: Request) {
   try {
@@ -90,8 +91,20 @@ export async function POST(req: Request) {
       },
     });
 
-    // ส่ง LINE แจ้งเจ้าของ (fire-and-forget — ไม่ await เพื่อ response เร็ว)
+    // ส่งการแจ้งเตือนเข้าระบบ (Database Notification)
     const owner = tenant.room?.property?.owner;
+    if (owner?.id) {
+      after(() =>
+        createDbNotification(
+          owner.id,
+          `แจ้งซ่อมใหม่จากห้อง ${tenant.room?.number || ""}`,
+          `ผู้เช่าแจ้งปัญหา: ${title}`,
+          "MAINTENANCE"
+        )
+      );
+    }
+
+    // ส่ง LINE แจ้งเจ้าของ (fire-and-forget — ไม่ await เพื่อ response เร็ว)
     if (owner?.lineChannelAccessToken && owner?.lineUserId) {
       const propertyName = tenant.room?.property?.name || "หอพัก";
       const roomNumber = tenant.room?.number || "-";
@@ -263,8 +276,30 @@ export async function PATCH(req: Request) {
     const owner = maintReq.room.property.owner;
     const tenant = await prisma.tenant.findFirst({
       where: { roomId: request.roomId },
-      select: { lineUserId: true, phoneNumber: true }
+      select: { lineUserId: true, phoneNumber: true, userId: true }
     });
+
+    if (tenant?.userId) {
+      let notiTitle = "";
+      let notiMsg = "";
+      if (status === "IN_PROGRESS" && scheduledAt) {
+        const apptDate = new Date(scheduledAt);
+        const dateStr = apptDate.toLocaleDateString("th-TH");
+        const timeStr = apptDate.toLocaleTimeString("th-TH", { hour: "2-digit", minute: "2-digit" });
+        notiTitle = `นัดหมายเข้าซ่อม: ${maintReq.title}`;
+        notiMsg = `ช่างมีกำหนดเข้าซ่อมในวันที่ ${dateStr} เวลา ${timeStr} น.`;
+      } else if (status === "COMPLETED") {
+        notiTitle = `งานแจ้งซ่อมเสร็จสิ้น: ${maintReq.title}`;
+        notiMsg = `รายการแจ้งซ่อมของคุณดำเนินการเสร็จสิ้นเรียบร้อยแล้ว`;
+      } else {
+        notiTitle = `อัปเดตสถานะงานแจ้งซ่อม: ${maintReq.title}`;
+        notiMsg = `สถานะปัจจุบัน: ${status === "IN_PROGRESS" ? "กำลังซ่อม" : status === "PENDING" ? "รอดำเนินการ" : status}`;
+      }
+
+      after(() =>
+        createDbNotification(tenant.userId, notiTitle, notiMsg, "MAINTENANCE")
+      );
+    }
 
     const roomNumber = request.room.number;
     const reqTitle = maintReq.title;

@@ -20,6 +20,9 @@ import {
   Building,
   CalendarClock,
   X,
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 type StatusKey = "PENDING" | "IN_PROGRESS" | "COMPLETED";
@@ -87,6 +90,11 @@ export default function MaintenancePage() {
   const [successPopup, setSuccessPopup] = useState<{ open: boolean; title: string; message?: string }>({
     open: false, title: "",
   });
+
+  // ── ปฏิทินและสลับมุมมอง ──
+  const [viewMode, setViewMode] = useState<"LIST" | "CALENDAR">("LIST");
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState<number | null>(new Date().getDate());
 
   const role = session?.user?.role;
 
@@ -209,6 +217,54 @@ export default function MaintenancePage() {
   };
   const filteredRequests = filter === "ALL" ? requests : requests.filter((r) => r.status === filter);
 
+  // ── ปฏิทิน Helpers ──
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const prevMonth = () => {
+    setCurrentDate(new Date(year, month - 1, 1));
+    setSelectedDay(null);
+  };
+
+  const nextMonth = () => {
+    setCurrentDate(new Date(year, month + 1, 1));
+    setSelectedDay(null);
+  };
+
+  const firstDayIndex = new Date(year, month, 1).getDay();
+  const totalDays = new Date(year, month + 1, 0).getDate();
+
+  const daysArray: (number | null)[] = [];
+  for (let i = 0; i < firstDayIndex; i++) {
+    daysArray.push(null);
+  }
+  for (let i = 1; i <= totalDays; i++) {
+    daysArray.push(i);
+  }
+
+  const getRequestsForDate = (day: number) => {
+    return filteredRequests.filter((req) => {
+      const targetDateStr = req.scheduledAt || req.preferredAt;
+      if (!targetDateStr) return false;
+      const d = new Date(targetDateStr);
+      return (
+        d.getDate() === day &&
+        d.getMonth() === month &&
+        d.getFullYear() === year
+      );
+    });
+  };
+
+  // งานที่ยังไม่ได้ระบุนัดหมาย (scheduledAt เป็น null)
+  const unscheduledRequests = filteredRequests.filter((req) => !req.scheduledAt);
+
+  const THAI_MONTHS = [
+    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+    "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+  ];
+  const thaiYear = year + 543;
+  const monthTitle = `${THAI_MONTHS[month]} ${thaiYear}`;
+
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       <PageHeader
@@ -288,6 +344,38 @@ export default function MaintenancePage() {
           })}
         </div>
       )}
+
+      {/* ── View switcher ── */}
+      <div className="flex justify-between items-center mb-6 bg-white/40 p-2.5 rounded-[var(--jh-radius-lg)] border border-slate-200/50 backdrop-blur-sm">
+        <div className="text-slate-700 text-xs font-bold pl-2 flex items-center gap-1.5">
+          <Calendar className="w-3.5 h-3.5 text-[var(--jh-blue)]" />
+          มุมมองปัจจุบัน: <span className="text-[var(--jh-blue)]">{viewMode === "LIST" ? "รายการจดแจ้ง" : "ปฏิทินงานซ่อม"}</span>
+        </div>
+        <div className="bg-slate-100/80 p-0.5 rounded-xl inline-flex shadow-inner">
+          <button
+            type="button"
+            onClick={() => setViewMode("LIST")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              viewMode === "LIST"
+                ? "bg-white text-slate-800 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            📋 แบบรายการ
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("CALENDAR")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              viewMode === "CALENDAR"
+                ? "bg-white text-slate-800 shadow-sm"
+                : "text-slate-500 hover:text-slate-700"
+            }`}
+          >
+            📅 แบบปฏิทิน
+          </button>
+        </div>
+      </div>
 
       <div className={`grid grid-cols-1 gap-6 ${role === "TENANT" ? "lg:grid-cols-3" : ""}`}>
 
@@ -387,194 +475,463 @@ export default function MaintenancePage() {
         )}
 
         {/* ── Request cards ── */}
-        <div className={role === "TENANT" ? "lg:col-span-2" : ""}>
-          {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="rounded-[var(--jh-radius-2xl)] border border-slate-100 overflow-hidden">
-                  <Skeleton className="h-24 w-full rounded-none" />
-                  <div className="p-4 space-y-3">
-                    <Skeleton className="h-5 w-3/4" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-1/2" />
-                    <div className="flex gap-2 pt-1">
-                      <Skeleton className="h-8 w-24 rounded-full" />
-                      <Skeleton className="h-8 w-24 rounded-full" />
+        <div className={role === "TENANT" ? "lg:col-span-2" : "w-full"}>
+          {viewMode === "CALENDAR" ? (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                {/* Calendar Grid card */}
+                <div className="lg:col-span-2 bg-white rounded-[var(--jh-radius-xl)] border border-slate-200/60 p-5 shadow-[var(--jh-shadow-card)]">
+                  {/* Calendar Header */}
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-bold text-slate-800 text-base flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-[var(--jh-blue)]" />
+                      {monthTitle}
+                    </h3>
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={prevMonth}
+                        className="p-1.5 rounded-full hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={nextMonth}
+                        className="p-1.5 rounded-full hover:bg-slate-100 text-slate-600 transition-colors cursor-pointer"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
+
+                  {/* Days of Week */}
+                  <div className="grid grid-cols-7 gap-1 text-center mb-2">
+                    {["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"].map((dayName, idx) => (
+                      <div key={idx} className="text-[10px] font-bold text-slate-400 py-1">
+                        {dayName}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Days Grid */}
+                  <div className="grid grid-cols-7 gap-1.5">
+                    {daysArray.map((day, idx) => {
+                      if (day === null) {
+                        return <div key={`empty-${idx}`} className="aspect-square bg-slate-50/20 rounded-lg"></div>;
+                      }
+
+                      const isToday =
+                        day === new Date().getDate() &&
+                        month === new Date().getMonth() &&
+                        year === new Date().getFullYear();
+
+                      const isSelected = selectedDay === day;
+
+                      const dayRequests = getRequestsForDate(day);
+
+                      const hasPending = dayRequests.some((r) => r.status === "PENDING");
+                      const hasInProgress = dayRequests.some((r) => r.status === "IN_PROGRESS");
+                      const hasCompleted = dayRequests.some((r) => r.status === "COMPLETED");
+
+                      return (
+                        <button
+                          key={`day-${day}`}
+                          type="button"
+                          onClick={() => setSelectedDay(day)}
+                          className={`aspect-square relative flex flex-col justify-between p-1.5 rounded-lg border transition-all cursor-pointer ${
+                            isSelected
+                              ? "border-[var(--jh-blue)] bg-blue-50/50 text-[var(--jh-blue)] font-bold shadow-sm"
+                              : isToday
+                              ? "border-orange-200 bg-orange-50/30 text-[var(--jh-orange-ink)] font-bold"
+                              : "border-slate-100 hover:border-slate-200 bg-white text-slate-700"
+                          }`}
+                        >
+                          <span className="text-xs">{day}</span>
+
+                          {/* Dots indicators */}
+                          <div className="flex justify-center gap-1 mt-auto">
+                            {hasPending && <span className="w-1.5 h-1.5 bg-[#d4a548] rounded-full"></span>}
+                            {hasInProgress && <span className="w-1.5 h-1.5 bg-[#34508c] rounded-full"></span>}
+                            {hasCompleted && <span className="w-1.5 h-1.5 bg-[#34c759] rounded-full"></span>}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              ))}
+
+                {/* Unscheduled bin ("ถังยังไม่นัดหมาย") */}
+                <div className="lg:col-span-1 bg-white rounded-[var(--jh-radius-xl)] border border-slate-200/60 p-5 shadow-[var(--jh-shadow-card)] flex flex-col h-[300px] lg:h-auto">
+                  <h3 className="font-bold text-slate-800 text-sm mb-3 flex items-center gap-1.5">
+                    <Clock className="w-4 h-4 text-orange-500" />
+                    รอนัดหมายเข้าซ่อม ({unscheduledRequests.length})
+                  </h3>
+                  <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                    {unscheduledRequests.map((req) => (
+                      <div
+                        key={req.id}
+                        onClick={() => {
+                          if (req.preferredAt) {
+                            const d = new Date(req.preferredAt);
+                            setCurrentDate(d);
+                            setSelectedDay(d.getDate());
+                          } else {
+                            openApptModal(req.id, req.title);
+                          }
+                        }}
+                        className="p-3 rounded-xl border border-slate-100 hover:border-slate-200 bg-slate-50/40 hover:bg-slate-50 transition-all cursor-pointer text-left"
+                      >
+                        <div className="flex justify-between items-start gap-1">
+                          <h4 className="font-bold text-xs text-slate-800 truncate">{req.title}</h4>
+                          <span className="bg-orange-100 text-orange-600 text-[9px] px-1.5 py-0.5 rounded font-bold shrink-0">รอนัด</span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">{req.description}</p>
+                        <p className="text-[9px] text-slate-400 mt-1">ห้อง {req.room?.number}</p>
+                        {req.preferredAt && (
+                          <div className="mt-1.5 text-[9px] text-amber-600 font-semibold bg-amber-50 px-2 py-0.5 rounded-lg inline-block">
+                            📅 วันที่สะดวก: {new Date(req.preferredAt).toLocaleDateString("th-TH")}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {unscheduledRequests.length === 0 && (
+                      <div className="text-center py-12 text-slate-400 text-xs">
+                        ไม่มีงานค้างนัดหมาย 🎉
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Selected Day requests list */}
+              {selectedDay !== null && (
+                <div className="bg-slate-50/50 rounded-[var(--jh-radius-xl)] border border-slate-200/40 p-5">
+                  <h3 className="font-bold text-slate-800 text-sm mb-4">
+                    งานแจ้งซ่อมวันที่ {selectedDay} {THAI_MONTHS[month]} {thaiYear} ({getRequestsForDate(selectedDay).length})
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {getRequestsForDate(selectedDay).map((req) => {
+                      const meta = STATUS_META[req.status as StatusKey] ?? STATUS_META.PENDING;
+                      const isUpdating = updatingId === req.id;
+                      const hasAppt = !!req.scheduledAt;
+                      const apptStr = hasAppt
+                        ? new Date(req.scheduledAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })
+                        : null;
+
+                      return (
+                        <div
+                          key={req.id}
+                          className="group rounded-[var(--jh-radius-2xl)] border border-white/60 shadow-[var(--jh-shadow-card)] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
+                          style={{ background: `linear-gradient(150deg, ${meta.gradFrom} 0%, ${meta.gradTo} 100%)` }}
+                        >
+                          <div className="p-4">
+                            <div className="flex justify-between items-start gap-2 mb-2">
+                              <h3 className="font-bold text-[var(--jh-ink)] leading-tight text-sm">{req.title}</h3>
+                              <div className="flex flex-col items-end gap-1">
+                                <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full ${meta.bg} ${meta.color}`}>
+                                  {meta.label}
+                                </span>
+                                {!hasAppt && req.status === "PENDING" && (
+                                  <span className="bg-orange-100/80 text-orange-700 text-[9px] px-2 py-0.5 rounded-full font-bold">
+                                    รอนัดหมาย (ตามวันสะดวก)
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {role === "OWNER" && (
+                              <p className="text-xs font-semibold mb-1" style={{ color: meta.solid }}>
+                                ห้อง {req.room?.number}{req.room?.property?.name ? ` · ${req.room.property.name}` : ""}
+                              </p>
+                            )}
+                            <p className="text-[10px] text-slate-400 mb-2">
+                              {new Date(req.createdAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}
+                            </p>
+                            <p className="text-xs text-slate-600 whitespace-pre-wrap line-clamp-3 leading-relaxed">
+                              {req.description}
+                            </p>
+
+                            {/* Scheduled info */}
+                            {hasAppt && (
+                              <div
+                                className="mt-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[10px] font-semibold"
+                                style={{ background: "#e4eaf5", color: "#34508c" }}
+                              >
+                                <CalendarClock className="w-3.5 h-3.5 shrink-0" />
+                                <span>เวลาเข้าซ่อม: {apptStr}</span>
+                                {req.scheduledNote && <span className="text-blue-500">· {req.scheduledNote}</span>}
+                              </div>
+                            )}
+
+                            {!hasAppt && req.preferredAt && (
+                              <div
+                                className="mt-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-[10px] font-semibold"
+                                style={{ background: "#fdf8ee", color: "#d4a548" }}
+                              >
+                                <CalendarClock className="w-3.5 h-3.5 shrink-0" />
+                                <span>ผู้เช่าสะดวก: {new Date(req.preferredAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}</span>
+                              </div>
+                            )}
+
+                            {/* Action buttons */}
+                            {role === "OWNER" && req.status !== "COMPLETED" && (
+                              <div className="mt-4 pt-3 border-t border-black/5 flex flex-col gap-2">
+                                {req.status === "PENDING" && (
+                                  <button
+                                    type="button"
+                                    onClick={() => openApptModal(req.id, req.title)}
+                                    disabled={isUpdating}
+                                    className="w-full py-2 rounded-full text-xs font-bold text-white transition-all duration-300 hover:-translate-y-0.5 cursor-pointer shadow-sm"
+                                    style={{ background: "#34508c" }}
+                                  >
+                                    📅 ยืนยันการนัดหมาย
+                                  </button>
+                                )}
+                                {req.status === "IN_PROGRESS" && !hasAppt && (
+                                  <button
+                                    type="button"
+                                    onClick={() => openApptModal(req.id, req.title)}
+                                    disabled={isUpdating}
+                                    className="w-full py-2 rounded-full text-xs font-bold text-white transition-all duration-300 hover:-translate-y-0.5 cursor-pointer shadow-sm"
+                                    style={{ background: "#5856d6" }}
+                                  >
+                                    📅 นัดหมายวันเข้าซ่อม
+                                  </button>
+                                )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateStatus(req.id, "COMPLETED")}
+                                  disabled={isUpdating}
+                                  className="w-full py-2 rounded-full text-xs font-bold text-white transition-all duration-300 hover:-translate-y-0.5 cursor-pointer shadow-sm"
+                                  style={{ background: "#34c759" }}
+                                >
+                                  ✅ ซ่อมเสร็จสิ้น
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                    {getRequestsForDate(selectedDay).length === 0 && (
+                      <div className="col-span-full text-center py-8 text-slate-400 text-xs">
+                        ไม่มีงานแจ้งซ่อมในวันนี้ 🍃
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredRequests.map((req) => {
-              const meta = STATUS_META[req.status as StatusKey] ?? STATUS_META.PENDING;
-              const isUpdating = updatingId === req.id;
-              const hasAppt = !!req.scheduledAt;
-              const apptStr = hasAppt
-                ? new Date(req.scheduledAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })
-                : null;
-
-              return (
-                <div key={req.id}
-                  className="group rounded-[var(--jh-radius-2xl)] border border-white/60 shadow-[var(--jh-shadow-card)] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
-                  style={{ background: `linear-gradient(150deg, ${meta.gradFrom} 0%, ${meta.gradTo} 100%)` }}>
-
-                  {(req.hasImage || req.imageUrl) && (
-                    <div className="h-44 w-full overflow-hidden">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={`/api/maintenance/${req.id}/image`} alt={req.title} loading="lazy"
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+            <>
+              {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="rounded-[var(--jh-radius-2xl)] border border-slate-100 overflow-hidden">
+                      <Skeleton className="h-24 w-full rounded-none" />
+                      <div className="p-4 space-y-3">
+                        <Skeleton className="h-5 w-3/4" />
+                        <Skeleton className="h-4 w-full" />
+                        <Skeleton className="h-4 w-1/2" />
+                        <div className="flex gap-2 pt-1">
+                          <Skeleton className="h-8 w-24 rounded-full" />
+                          <Skeleton className="h-8 w-24 rounded-full" />
+                        </div>
+                      </div>
                     </div>
-                  )}
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredRequests.map((req) => {
+                    const meta = STATUS_META[req.status as StatusKey] ?? STATUS_META.PENDING;
+                    const isUpdating = updatingId === req.id;
+                    const hasAppt = !!req.scheduledAt;
+                    const apptStr = hasAppt
+                      ? new Date(req.scheduledAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })
+                      : null;
 
-                  <div className="p-4">
-                    <div className="flex justify-between items-start gap-2 mb-2">
-                      <h3 className="font-bold text-[var(--jh-ink)] leading-tight">{req.title}</h3>
-                      <span className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${meta.bg} ${meta.color}`}>
-                        {meta.label}
-                      </span>
-                    </div>
-
-                    {role === "OWNER" && (
-                      <p className="text-xs font-semibold mb-1" style={{ color: meta.solid }}>
-                        ห้อง {req.room?.number}{req.room?.property?.name ? ` · ${req.room.property.name}` : ""}
-                      </p>
-                    )}
-                    <p className="text-xs text-slate-400 mb-2">
-                      {new Date(req.createdAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}
-                    </p>
-                    <p className="text-sm text-slate-600 whitespace-pre-wrap line-clamp-3 leading-relaxed">
-                      {req.description}
-                    </p>
-
-                    {/* ผู้เช่าแจ้งวันสะดวก — แสดงให้เจ้าของเห็น */}
-                    {role === "OWNER" && req.preferredAt && req.status !== "COMPLETED" && (
+                    return (
                       <div
-                        className="mt-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold"
-                        style={{ background: "#fdf8ee", color: "#d4a548" }}
+                        key={req.id}
+                        className="group rounded-[var(--jh-radius-2xl)] border border-white/60 shadow-[var(--jh-shadow-card)] overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--jh-shadow-md)]"
+                        style={{ background: `linear-gradient(150deg, ${meta.gradFrom} 0%, ${meta.gradTo} 100%)` }}
                       >
-                        <CalendarClock className="w-3.5 h-3.5 shrink-0" />
-                        <span>
-                          ผู้เช่าสะดวก:{" "}
-                          {new Date(req.preferredAt).toLocaleString("th-TH", {
-                            dateStyle: "short",
-                            timeStyle: "short",
-                          })}
-                        </span>
-                      </div>
-                    )}
+                        {(req.hasImage || req.imageUrl) && (
+                          <div className="h-44 w-full overflow-hidden">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={`/api/maintenance/${req.id}/image`}
+                              alt={req.title}
+                              loading="lazy"
+                              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            />
+                          </div>
+                        )}
 
-                    {/* แสดงวันนัดหมาย */}
-                    {hasAppt && req.status === "IN_PROGRESS" && (
-                      <div className="mt-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold"
-                        style={{ background: "#e4eaf5", color: "#34508c" }}>
-                        <CalendarClock className="w-3.5 h-3.5 shrink-0" />
-                        <span>นัดหมาย: {apptStr}</span>
-                        {req.scheduledNote && <span className="text-blue-400">· {req.scheduledNote}</span>}
-                      </div>
-                    )}
+                        <div className="p-4">
+                          <div className="flex justify-between items-start gap-2 mb-2">
+                            <h3 className="font-bold text-[var(--jh-ink)] leading-tight">{req.title}</h3>
+                            <span className={`shrink-0 text-xs font-bold px-2.5 py-1 rounded-full ${meta.bg} ${meta.color}`}>
+                              {meta.label}
+                            </span>
+                          </div>
 
-                    {/* ผลการวิเคราะห์ระบบโดยย่อ (ไม่ระบุคำว่า AI) */}
-                    {role === "OWNER" && (req.aiCategory || req.aiUrgency || req.aiTechnician) && (
-                      <div className="mt-3 p-3 rounded-2xl bg-white/50 border border-white/60 text-xs flex flex-col gap-2">
-                        <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">ระบบช่วยคัดกรองห้องพักอัตโนมัติ</div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {req.aiCategory && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-medium">
-                              📂 {req.aiCategory}
-                            </span>
+                          {role === "OWNER" && (
+                            <p className="text-xs font-semibold mb-1" style={{ color: meta.solid }}>
+                              ห้อง {req.room?.number}{req.room?.property?.name ? ` · ${req.room.property.name}` : ""}
+                            </p>
                           )}
-                          {req.aiUrgency && (
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-lg font-bold ${
-                              req.aiUrgency === "สูง" ? "bg-red-50 text-red-600 border border-red-100" :
-                              req.aiUrgency === "กลาง" ? "bg-amber-50 text-amber-600 border border-amber-100" :
-                              "bg-green-50 text-green-600 border border-green-100"
-                            }`}>
-                              ⚡ ด่วน: {req.aiUrgency}
-                            </span>
+                          <p className="text-xs text-slate-400 mb-2">
+                            {new Date(req.createdAt).toLocaleString("th-TH", { dateStyle: "short", timeStyle: "short" })}
+                          </p>
+                          <p className="text-sm text-slate-600 whitespace-pre-wrap line-clamp-3 leading-relaxed">
+                            {req.description}
+                          </p>
+
+                          {role === "OWNER" && req.preferredAt && req.status !== "COMPLETED" && (
+                            <div
+                              className="mt-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold"
+                              style={{ background: "#fdf8ee", color: "#d4a548" }}
+                            >
+                              <CalendarClock className="w-3.5 h-3.5 shrink-0" />
+                              <span>
+                                ผู้เช่าสะดวก:{" "}
+                                {new Date(req.preferredAt).toLocaleString("th-TH", {
+                                  dateStyle: "short",
+                                  timeStyle: "short",
+                                })}
+                              </span>
+                            </div>
                           )}
-                          {req.aiTechnician && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-medium">
-                              🔧 ช่างแนะนำ: {req.aiTechnician}
-                            </span>
+
+                          {hasAppt && req.status === "IN_PROGRESS" && (
+                            <div
+                              className="mt-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold"
+                              style={{ background: "#e4eaf5", color: "#34508c" }}
+                            >
+                              <CalendarClock className="w-3.5 h-3.5 shrink-0" />
+                              <span>นัดหมาย: {apptStr}</span>
+                              {req.scheduledNote && <span className="text-blue-400">· {req.scheduledNote}</span>}
+                            </div>
+                          )}
+
+                          {role === "OWNER" && (req.aiCategory || req.aiUrgency || req.aiTechnician) && (
+                            <div className="mt-3 p-3 rounded-2xl bg-white/50 border border-white/60 text-xs flex flex-col gap-2">
+                              <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">ระบบช่วยคัดกรองห้องพักอัตโนมัติ</div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {req.aiCategory && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 font-medium">
+                                    📂 {req.aiCategory}
+                                  </span>
+                                )}
+                                {req.aiUrgency && (
+                                  <span
+                                    className={`inline-flex items-center px-2 py-0.5 rounded-lg font-bold ${
+                                      req.aiUrgency === "สูง"
+                                        ? "bg-red-50 text-red-600 border border-red-100"
+                                        : req.aiUrgency === "กลาง"
+                                        ? "bg-amber-50 text-amber-600 border border-amber-100"
+                                        : "bg-green-50 text-green-600 border border-green-100"
+                                    }`}
+                                  >
+                                    ⚡ ด่วน: {req.aiUrgency}
+                                  </span>
+                                )}
+                                {req.aiTechnician && (
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-lg bg-indigo-50 text-indigo-700 font-medium">
+                                    🔧 ช่างแนะนำ: {req.aiTechnician}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {role === "OWNER" && req.status !== "COMPLETED" && (
+                            <div className="mt-4 pt-3 border-t border-black/5 flex flex-col gap-2">
+                              {req.status === "PENDING" && (
+                                <button
+                                  type="button"
+                                  onClick={() => openApptModal(req.id, req.title)}
+                                  disabled={isUpdating}
+                                  className="w-full py-2.5 rounded-full text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-60 disabled:translate-y-0 cursor-pointer"
+                                  style={{ background: "#34508c", boxShadow: "0 8px 18px -6px #34508c" }}
+                                >
+                                  {isUpdating ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                      <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                      กำลังอัปเดต...
+                                    </span>
+                                  ) : (
+                                    "📅 รับเรื่องและนัดหมายเข้าซ่อม"
+                                  )}
+                                </button>
+                              )}
+                              {req.status === "IN_PROGRESS" && !hasAppt && (
+                                <button
+                                  type="button"
+                                  onClick={() => openApptModal(req.id, req.title)}
+                                  disabled={isUpdating}
+                                  className="w-full py-2.5 rounded-full text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-60 cursor-pointer"
+                                  style={{ background: "#5856d6", boxShadow: "0 8px 18px -6px #5856d6" }}
+                                >
+                                  📅 นัดหมายวันเข้าซ่อม
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateStatus(req.id, "COMPLETED")}
+                                disabled={isUpdating}
+                                className="w-full py-2.5 rounded-full text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-60 cursor-pointer"
+                                style={{ background: "#34c759", boxShadow: "0 8px 18px -6px #34c759" }}
+                              >
+                                {isUpdating ? (
+                                  <span className="flex items-center justify-center gap-2">
+                                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    กำลังอัปเดต...
+                                  </span>
+                                ) : (
+                                  "✅ ซ่อมเสร็จ — แจ้งผู้เช่าทาง LINE"
+                                )}
+                              </button>
+                            </div>
+                          )}
+
+                          {req.status === "COMPLETED" && (
+                            <div className="mt-3 pt-3 border-t border-black/5 text-center">
+                              <p className="text-xs text-green-600 font-semibold">✅ ดำเนินการเสร็จสิ้นแล้ว</p>
+                            </div>
                           )}
                         </div>
                       </div>
-                    )}
+                    );
+                  })}
 
-                    {/* ── Owner action buttons ── */}
-                    {role === "OWNER" && req.status !== "COMPLETED" && (
-                      <div className="mt-4 pt-3 border-t border-black/5 flex flex-col gap-2">
-                        {req.status === "PENDING" && (
-                          <button
-                            onClick={() => openApptModal(req.id, req.title)}
-                            disabled={isUpdating}
-                            className="w-full py-2.5 rounded-full text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-60 disabled:translate-y-0"
-                            style={{ background: "#34508c", boxShadow: "0 8px 18px -6px #34508c" }}>
-                            {isUpdating ? (
-                              <span className="flex items-center justify-center gap-2">
-                                <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                กำลังอัปเดต...
-                              </span>
-                            ) : "📅 รับเรื่องและนัดหมายเข้าซ่อม"}
-                          </button>
-                        )}
-                        {req.status === "IN_PROGRESS" && !hasAppt && (
-                          <button
-                            onClick={() => openApptModal(req.id, req.title)}
-                            disabled={isUpdating}
-                            className="w-full py-2.5 rounded-full text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-60"
-                            style={{ background: "#5856d6", boxShadow: "0 8px 18px -6px #5856d6" }}>
-                            📅 นัดหมายวันเข้าซ่อม
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleUpdateStatus(req.id, "COMPLETED")}
-                          disabled={isUpdating}
-                          className="w-full py-2.5 rounded-full text-sm font-bold text-white transition-all duration-300 hover:-translate-y-0.5 disabled:opacity-60"
-                          style={{ background: "#34c759", boxShadow: "0 8px 18px -6px #34c759" }}>
-                          {isUpdating ? (
-                            <span className="flex items-center justify-center gap-2">
-                              <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                              กำลังอัปเดต...
-                            </span>
-                          ) : "✅ ซ่อมเสร็จ — แจ้งผู้เช่าทาง LINE"}
-                        </button>
-                      </div>
-                    )}
-
-                    {req.status === "COMPLETED" && (
-                      <div className="mt-3 pt-3 border-t border-black/5 text-center">
-                        <p className="text-xs text-green-600 font-semibold">✅ ดำเนินการเสร็จสิ้นแล้ว</p>
-                      </div>
-                    )}
-                  </div>
+                  {filteredRequests.length === 0 && (
+                    <div className="col-span-full text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200 p-6 max-w-md mx-auto shadow-sm">
+                      <img
+                        src="/images/mascot/maintenance_guide.png"
+                        alt="ไม่มีงานซ่อม"
+                        className="w-32 h-32 mx-auto mb-4 jh-float-soft drop-shadow-[0_8px_16px_rgba(0,0,0,0.06)] object-contain"
+                      />
+                      <p className="font-bold text-slate-800 text-base">
+                        {filter === "ALL"
+                          ? "ไม่มีรายการแจ้งซ่อม"
+                          : `ไม่มีรายการ "${STATUS_META[filter as StatusKey]?.label ?? filter}"`}
+                      </p>
+                      <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                        {role === "TENANT"
+                          ? "หากมีอุปกรณ์เสียหายหรือชำรุดในห้องพัก สามารถส่งเรื่องแจ้งซ่อมผ่านฟอร์มได้ทันทีเลยนะคะ 🔧"
+                          : "ระบบทำงานเรียบร้อยดี ไม่มีเรื่องค้างคาหรือคิวรอช่างเข้าซ่อมเลยค่ะ 🎉"}
+                      </p>
+                    </div>
+                  )}
                 </div>
-              );
-            })}
-
-            {filteredRequests.length === 0 && (
-              <div className="col-span-full text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200 p-6 max-w-md mx-auto shadow-sm">
-                <img
-                  src="/images/mascot/maintenance_guide.png"
-                  alt="ไม่มีงานซ่อม"
-                  className="w-32 h-32 mx-auto mb-4 jh-float-soft drop-shadow-[0_8px_16px_rgba(0,0,0,0.06)] object-contain"
-                />
-                <p className="font-bold text-slate-800 text-base">
-                  {filter === "ALL"
-                    ? "ไม่มีรายการแจ้งซ่อม"
-                    : `ไม่มีรายการ "${STATUS_META[filter as StatusKey]?.label ?? filter}"`}
-                </p>
-                <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
-                  {role === "TENANT"
-                    ? "หากมีอุปกรณ์เสียหายหรือชำรุดในห้องพัก สามารถส่งเรื่องแจ้งซ่อมผ่านฟอร์มได้ทันทีเลยนะคะ 🔧"
-                    : "ระบบทำงานเรียบร้อยดี ไม่มีเรื่องค้างคาหรือคิวรอช่างเข้าซ่อมเลยค่ะ 🎉"}
-                </p>
-              </div>
-            )}
-          </div>
-          )} {/* end isLoading */}
+              )}
+            </>
+          )}
         </div>
       </div>
 

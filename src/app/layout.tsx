@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Kanit } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
+import { OfflineRegister } from "@/components/OfflineRegister";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -51,7 +52,10 @@ export default function RootLayout({
       className={`${inter.variable} ${kanit.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col overflow-x-hidden" style={{ fontFamily: 'var(--font-inter), var(--font-kanit), sans-serif' }}>
-        <Providers>{children}</Providers>
+        <Providers>
+          {children}
+          <OfflineRegister />
+        </Providers>
         <Toaster position="top-center" richColors closeButton />
       </body>
     </html>
