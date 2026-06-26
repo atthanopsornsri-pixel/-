@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+const VEHICLE_TYPES = ["CAR", "MOTORCYCLE", "OTHER"] as const;
+
 /** GET /api/tenant/vehicles — ดูรายการยานพาหนะของตัวเอง */
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -10,13 +12,18 @@ export async function GET() {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const tenant = await prisma.tenant.findUnique({
-    where: { userId: session.user.id },
-    include: { vehicles: { orderBy: { createdAt: "desc" } } },
-  });
-  if (!tenant) return NextResponse.json({ message: "Tenant not found" }, { status: 404 });
+  try {
+    const tenant = await prisma.tenant.findUnique({
+      where: { userId: session.user.id },
+      include: { vehicles: { orderBy: { createdAt: "desc" } } },
+    });
+    if (!tenant) return NextResponse.json({ message: "Tenant not found" }, { status: 404 });
 
-  return NextResponse.json(tenant.vehicles);
+    return NextResponse.json(tenant.vehicles);
+  } catch (e) {
+    console.error("[TENANT_VEHICLES_GET]", e);
+    return NextResponse.json({ message: "ดึงข้อมูลยานพาหนะไม่สำเร็จ" }, { status: 500 });
+  }
 }
 
 /** POST /api/tenant/vehicles — เพิ่มยานพาหนะ */
@@ -26,24 +33,31 @@ export async function POST(req: Request) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const { licensePlate, brand, color, type } = await req.json();
+  try {
+    const { licensePlate, brand, color, type } = await req.json();
 
-  if (!licensePlate?.trim()) {
-    return NextResponse.json({ message: "กรุณากรอกทะเบียนรถ" }, { status: 400 });
+    if (!licensePlate?.trim()) {
+      return NextResponse.json({ message: "กรุณากรอกทะเบียนรถ" }, { status: 400 });
+    }
+    // กันค่า type มั่ว (ไม่งั้น Prisma enum violation → 500) → fallback MOTORCYCLE
+    const vehicleType = VEHICLE_TYPES.includes(type) ? type : "MOTORCYCLE";
+
+    const tenant = await prisma.tenant.findUnique({ where: { userId: session.user.id } });
+    if (!tenant) return NextResponse.json({ message: "Tenant not found" }, { status: 404 });
+
+    const vehicle = await prisma.vehicle.create({
+      data: {
+        tenantId:     tenant.id,
+        licensePlate: licensePlate.trim().toUpperCase(),
+        brand:        brand?.trim() || null,
+        color:        color?.trim() || null,
+        type:         vehicleType,
+      },
+    });
+
+    return NextResponse.json(vehicle, { status: 201 });
+  } catch (e) {
+    console.error("[TENANT_VEHICLES_POST]", e);
+    return NextResponse.json({ message: "เพิ่มยานพาหนะไม่สำเร็จ" }, { status: 500 });
   }
-
-  const tenant = await prisma.tenant.findUnique({ where: { userId: session.user.id } });
-  if (!tenant) return NextResponse.json({ message: "Tenant not found" }, { status: 404 });
-
-  const vehicle = await prisma.vehicle.create({
-    data: {
-      tenantId:     tenant.id,
-      licensePlate: licensePlate.trim().toUpperCase(),
-      brand:        brand?.trim() || null,
-      color:        color?.trim() || null,
-      type:         type || "MOTORCYCLE",
-    },
-  });
-
-  return NextResponse.json(vehicle, { status: 201 });
 }

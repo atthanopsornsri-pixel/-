@@ -17,40 +17,45 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const propertyId = searchParams.get("propertyId");
 
-  // ดึง properties ของ owner นี้
+  // ดึง properties ของ owner นี้ (ผูก ownerId เสมอ กันดูข้อมูลหอคนอื่น)
   const propertyFilter = propertyId
     ? { id: propertyId, ownerId: session.user.id }
     : { ownerId: session.user.id };
 
-  const rooms = await prisma.room.findMany({
-    where: {
-      property: propertyFilter,
-      isDeleted: false,
-      status: "OCCUPIED",
-    },
-    include: {
-      tenants: {
-        where: { isDeleted: false },
-        include: {
-          vehicles: { orderBy: { createdAt: "desc" } },
-          user: { select: { name: true } },
-        },
+  try {
+    const rooms = await prisma.room.findMany({
+      where: {
+        property: propertyFilter,
+        isDeleted: false,
+        status: "OCCUPIED",
       },
-      property: { select: { name: true } },
-    },
-  });
+      include: {
+        tenants: {
+          where: { isDeleted: false },
+          include: {
+            vehicles: { orderBy: { createdAt: "desc" } },
+            user: { select: { name: true } },
+          },
+        },
+        property: { select: { name: true } },
+      },
+    });
 
-  // Flatten vehicles กับข้อมูลห้องพัก
-  const vehicles = rooms.flatMap((room) =>
-    room.tenants.flatMap((tenant) =>
-      tenant.vehicles.map((v) => ({
-        ...v,
-        tenantName: tenant.user?.name ?? tenant.firstName ?? "-",
-        roomNumber: room.number,
-        propertyName: room.property.name,
-      }))
-    )
-  );
+    // Flatten vehicles กับข้อมูลห้องพัก
+    const vehicles = rooms.flatMap((room) =>
+      room.tenants.flatMap((tenant) =>
+        tenant.vehicles.map((v) => ({
+          ...v,
+          tenantName: tenant.user?.name ?? tenant.firstName ?? "-",
+          roomNumber: room.number,
+          propertyName: room.property.name,
+        }))
+      )
+    );
 
-  return NextResponse.json(vehicles);
+    return NextResponse.json(vehicles);
+  } catch (e) {
+    console.error("[OWNER_VEHICLES_GET]", e);
+    return NextResponse.json({ message: "ดึงข้อมูลยานพาหนะไม่สำเร็จ" }, { status: 500 });
+  }
 }
