@@ -68,6 +68,11 @@ export default function PropertiesPage() {
   const [defaultParkingFee, setDefaultParkingFee] = useState("");
   const [defaultInternetFee, setDefaultInternetFee] = useState("");
 
+  // Tenant self-report settings
+  const [enableTenantReport, setEnableTenantReport] = useState(false);
+  const [reportStartDay, setReportStartDay] = useState(20);
+  const [reportEndDay, setReportEndDay] = useState(24);
+
   // Check-in (บิลเข้าอยู่) defaults
   const [defaultSecurityDeposit, setDefaultSecurityDeposit] = useState("");
   const [defaultAdvanceRent, setDefaultAdvanceRent] = useState("");
@@ -162,6 +167,10 @@ export default function PropertiesPage() {
     setDefaultKeyDeposit(prop.defaultKeyDeposit?.toString() || "");
     setDefaultCarFee(prop.defaultCarFee?.toString() || "");
     setDefaultMotorcycleFee(prop.defaultMotorcycleFee?.toString() || "");
+
+    setEnableTenantReport(prop.enableTenantReport ?? false);
+    setReportStartDay(prop.reportStartDay ?? 20);
+    setReportEndDay(prop.reportEndDay ?? 24);
   };
 
   const handleSaveSettings = async (e: React.FormEvent) => {
@@ -175,6 +184,9 @@ export default function PropertiesPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           taxId, companyName, promptPayNo, promptPayName, signatureUrl,
+          enableTenantReport,
+          reportStartDay: parseInt(String(reportStartDay)) || 20,
+          reportEndDay: parseInt(String(reportEndDay)) || 24,
           electricRate: electricRate ? parseFloat(electricRate) : null,
           waterRate: waterRate ? parseFloat(waterRate) : null,
           defaultCommonFee: defaultCommonFee ? parseFloat(defaultCommonFee) : null,
@@ -464,6 +476,49 @@ export default function PropertiesPage() {
                     <Input type="number" value={defaultInternetFee} onChange={(e) => setDefaultInternetFee(e.target.value)} className="rounded-2xl h-12 bg-slate-50 border-slate-200" />
                   </div>
                 </div>
+              </div>
+
+              {/* Section 4: Tenant Self-Reporting Settings */}
+              <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-200/60 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-bold text-[#34508c] text-sm">ระบบจดมิเตอร์โดยผู้เช่า (Self-Reporting)</h4>
+                    <p className="text-[11px] text-slate-500">เปิดให้ผู้เช่ารายงานมิเตอร์น้ำ/ไฟด้วยตนเองผ่านระบบ/LINE OA</p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={enableTenantReport}
+                    onChange={(e) => setEnableTenantReport(e.target.checked)}
+                    className="h-4 w-4 rounded border-slate-300 text-[#34508c] focus:ring-[#34508c] cursor-pointer"
+                  />
+                </div>
+
+                {enableTenantReport && (
+                  <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-600">เริ่มส่งได้ (วันที่ของเดือน)</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={31}
+                        value={reportStartDay}
+                        onChange={(e) => setReportStartDay(parseInt(e.target.value) || 20)}
+                        className="rounded-xl h-10 bg-white border-slate-200 text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-slate-600">สิ้นสุดการส่ง (วันที่ของเดือน)</Label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={31}
+                        value={reportEndDay}
+                        onChange={(e) => setReportEndDay(parseInt(e.target.value) || 24)}
+                        className="rounded-xl h-10 bg-white border-slate-200 text-xs"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* ── ค่าเริ่มต้นบิลเข้าอยู่ (Check-in) ── */}

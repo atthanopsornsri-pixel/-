@@ -105,6 +105,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         defaultKeyDeposit: body.defaultKeyDeposit !== undefined ? body.defaultKeyDeposit : property.defaultKeyDeposit,
         defaultCarFee: body.defaultCarFee !== undefined ? body.defaultCarFee : property.defaultCarFee,
         defaultMotorcycleFee: body.defaultMotorcycleFee !== undefined ? body.defaultMotorcycleFee : property.defaultMotorcycleFee,
+        // ── จดบันทึกมิเตอร์ด้วยตัวเอง ──
+        enableTenantReport: body.enableTenantReport !== undefined ? body.enableTenantReport : property.enableTenantReport,
+        reportStartDay: body.reportStartDay !== undefined ? body.reportStartDay : property.reportStartDay,
+        reportEndDay: body.reportEndDay !== undefined ? body.reportEndDay : property.reportEndDay,
       },
     });
 

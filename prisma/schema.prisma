@@ -82,6 +82,10 @@ model Property {
   defaultCarFee          Float? // ค่าลงทะเบียน/ที่จอด รถยนต์ (0 = ฟรี)
   defaultMotorcycleFee   Float? // ค่าลงทะเบียน/ที่จอด มอเตอร์ไซค์ (0 = ฟรี)
 
+  enableTenantReport  Boolean @default(false)
+  reportStartDay      Int     @default(20)
+  reportEndDay        Int     @default(24)
+
   ownerId   String
   owner     User     @relation(fields: [ownerId], references: [id])
   rooms     Room[]
@@ -106,6 +110,7 @@ model Room {
   bills         Bill[]
   maintenance   MaintenanceRequest[]
   parcels       Parcel[]
+  meterSubmissions MeterSubmission[]
   status        RoomStatus           @default(AVAILABLE)
 
   // Amenities
@@ -153,6 +158,7 @@ model Tenant {
   profileCompleted Boolean   @default(false) // กรอกข้อมูลครบแล้วหรือยัง
 
   vehicles Vehicle[] // ยานพาหนะที่ลงทะเบียน
+  meterSubmissions MeterSubmission[]
 
   // E-Contract Fields
   signatureUrl      String?   @db.Text
@@ -444,4 +450,35 @@ model Notification {
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model MeterSubmission {
+  id         String           @id @default(cuid())
+  roomId     String
+  room       Room             @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  tenantId   String
+  tenant     Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  month      Int
+  year       Int
+  type       MeterType        // WATER or ELECTRIC
+  reading    Float
+  photoUrl   String?
+  status     SubmissionStatus @default(PENDING)
+  note       String?
+  approvedAt DateTime?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  @@unique([roomId, month, year, type])
+}
+
+enum MeterType {
+  WATER
+  ELECTRIC
+}
+
+enum SubmissionStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
