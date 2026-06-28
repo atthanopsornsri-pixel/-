@@ -65,10 +65,13 @@ describe("Tenant Self-Reporting Meter System Tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env = { ...originalEnv };
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-06-15T12:00:00Z"));
   });
 
   afterEach(() => {
     process.env = originalEnv;
+    vi.useRealTimers();
   });
 
   describe("Server Actions - submitMeterReading", () => {

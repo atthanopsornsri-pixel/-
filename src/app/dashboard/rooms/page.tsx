@@ -1008,9 +1008,15 @@ export default function RoomsPage() {
 
       {/* Print QR Code Modal */}
       {printInviteRoom && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col print:p-0 print:shadow-none print:border-none print:fixed print:inset-0 print:bg-white print:z-[9999]">
-            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 print:hidden">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 cursor-pointer"
+          onClick={() => setPrintInviteRoom(null)}
+        >
+          <div 
+            className="bg-white rounded-[32px] shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col print:p-0 print:shadow-none print:border-none print:fixed print:inset-0 print:bg-white print:z-[9999] cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 print:hidden shrink-0">
               <h3 className="font-bold text-[#1D1D1F]">ใบลงทะเบียน QR Code</h3>
               <button onClick={() => setPrintInviteRoom(null)} className="p-2 bg-white rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shadow-sm border border-slate-200">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -1071,7 +1077,7 @@ export default function RoomsPage() {
               </div>
             </div>
 
-            <div className="p-4 bg-white border-t border-slate-100 flex gap-3 print:hidden">
+            <div className="p-4 bg-white border-t border-slate-100 flex gap-3 print:hidden shrink-0">
               <Button variant="outline" className="flex-1 rounded-full border-slate-200 h-12" onClick={() => setPrintInviteRoom(null)}>
                 ปิด
               </Button>
