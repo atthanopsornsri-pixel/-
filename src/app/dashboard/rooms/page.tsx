@@ -353,7 +353,8 @@ export default function RoomsPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out relative">
+    <>
+      <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out relative print:hidden">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
         <div className="flex items-center gap-3">
           <div
@@ -1005,6 +1006,7 @@ export default function RoomsPage() {
           </div>
         </div>
       )}
+      </div>
 
       {/* Print QR Code Modal */}
       {printInviteRoom && (
@@ -1092,7 +1094,6 @@ export default function RoomsPage() {
           </div>
         </div>
       )}
-
-    </div>
+    </>
   );
 }
