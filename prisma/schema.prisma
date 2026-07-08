@@ -222,6 +222,7 @@ model Bill {
   dueDate        DateTime
   slipUrl        String? // ลิงก์/รูปสลิปโอนเงิน
   paymentDate    DateTime? // วันที่ผู้เช่าส่งสลิป
+  slipTransRef   String?    @unique // เลขอ้างอิงรายการโอนเงินสลิป (กันซ้ำข้ามบิลทั้งระบบ)
   payments       Payment[]
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt

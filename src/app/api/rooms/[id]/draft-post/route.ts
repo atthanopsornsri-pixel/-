@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { draftVacancyListing } from "@/lib/ai";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,26 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
 
     if (!room || room.property.ownerId !== session.user.id) {
       return NextResponse.json({ message: "Not found or forbidden" }, { status: 403 });
+    }
+
+    // Rate Limiting by Plan Tier: Free Trial (5/hr), Starter (15/hr), Growth (50/hr), Enterprise (100/hr)
+    let maxQuota = 5;
+    const tier = session?.user?.planTier;
+    if (tier === "GROWTH") maxQuota = 50;
+    else if (tier === "STARTER") maxQuota = 15;
+    else if (tier === "ENTERPRISE") maxQuota = 100;
+
+    const limitKey = `ai_draft:${session.user.id}`;
+    const limitResult = await rateLimit(limitKey, maxQuota, 3600 * 1000); // 1 hour window
+    if (!limitResult.allowed) {
+      const minutesRemaining = Math.ceil(limitResult.retryAfterMs / 60000);
+      return NextResponse.json(
+        {
+          message: `คุณใช้งานระบบร่างประกาศห้องว่างด้วย AI เกินโควตาที่กำหนดสำหรับแพ็กเกจของคุณแล้ว (${maxQuota} ครั้ง/ชั่วโมง) กรุณารออีกประมาณ ${minutesRemaining} นาที`,
+          code: "RATE_LIMIT_EXCEEDED",
+        },
+        { status: 429 }
+      );
     }
 
     if (room.status !== "AVAILABLE") {

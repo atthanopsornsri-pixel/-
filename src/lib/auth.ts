@@ -25,6 +25,14 @@ function createCustomAdapter(): Adapter {
   };
 }
 
+const isProd = process.env.NODE_ENV === "production";
+const cookieOptions = {
+  httpOnly: true,
+  sameSite: (isProd ? "none" : "lax") as "none" | "lax",
+  secure: isProd,
+  path: "/",
+};
+
 export const authOptions: NextAuthOptions = {
   adapter: createCustomAdapter() as any,
   session: {
@@ -32,6 +40,32 @@ export const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: "/login",
+  },
+  cookies: {
+    sessionToken: {
+      name: isProd ? `__Secure-next-auth.session-token` : `next-auth.session-token`,
+      options: cookieOptions,
+    },
+    callbackUrl: {
+      name: isProd ? `__Secure-next-auth.callback-url` : `next-auth.callback-url`,
+      options: {
+        sameSite: (isProd ? "none" : "lax") as "none" | "lax",
+        secure: isProd,
+        path: "/",
+      },
+    },
+    csrfToken: {
+      name: isProd ? `__Host-next-auth.csrf-token` : `next-auth.csrf-token`,
+      options: cookieOptions,
+    },
+    pkceCodeVerifier: {
+      name: isProd ? `__Secure-next-auth.pkce.code_verifier` : `next-auth.pkce.code_verifier`,
+      options: cookieOptions,
+    },
+    state: {
+      name: isProd ? `__Secure-next-auth.state` : `next-auth.state`,
+      options: cookieOptions,
+    },
   },
   providers: [
     LineProvider({
