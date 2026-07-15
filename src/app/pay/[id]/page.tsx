@@ -160,7 +160,18 @@ export default function PayBillPage() {
           </div>
 
           {/* Status and Action */}
-          {bill.status === "UNPAID" && !isSuccess ? (
+          {bill.status === "WAIVED" ? (
+            <div className="text-center p-6 rounded-2xl border" style={{ background: "#f6f6ff", borderColor: "#e8e7fb" }}>
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: "#e8e7fb", color: "#5856d6" }}>
+                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" /></svg>
+              </div>
+              <h3 className="text-xl font-bold mb-2" style={{ color: "#5856d6" }}>บิลนี้ได้รับการยกเว้นแล้ว</h3>
+              <p className="text-slate-600 text-sm">เจ้าของหอพักยกเว้นบิลนี้ให้ ไม่ต้องชำระเงิน</p>
+              {bill.waivedReason && (
+                <p className="text-slate-500 text-xs mt-2">เหตุผล: {bill.waivedReason}</p>
+              )}
+            </div>
+          ) : bill.status === "UNPAID" && !isSuccess ? (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="p-4 border border-dashed border-slate-300 rounded-2xl bg-slate-50 text-center">
                 <Label htmlFor="slip" className="cursor-pointer block">

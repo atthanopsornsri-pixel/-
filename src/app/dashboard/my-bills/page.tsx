@@ -21,10 +21,11 @@ import {
   KeyRound,
   Car,
   Printer,
+  Ban,
 } from "lucide-react";
 
 // ── Status tone mapping ──────────────────────────────────────────────────────
-type StatusKey = "UNPAID" | "PENDING" | "PAID" | "OVERDUE" | "PARTIAL";
+type StatusKey = "UNPAID" | "PENDING" | "PAID" | "OVERDUE" | "PARTIAL" | "WAIVED";
 
 const STATUS_META: Record<
   StatusKey,
@@ -54,6 +55,11 @@ const STATUS_META: Record<
     label: "ชำระแล้ว", gradFrom: "#f3fcf6", gradTo: "#e0f7e9",
     solid: "#34c759", ink: "var(--jh-green-ink)",
     icon: <CheckCircle2 className="h-5 w-5" strokeWidth={2} />,
+  },
+  WAIVED: {
+    label: "ได้รับการยกเว้น", gradFrom: "#f6f6ff", gradTo: "#e8e7fb",
+    solid: "#5856d6", ink: "var(--jh-indigo)",
+    icon: <Ban className="h-5 w-5" strokeWidth={2} />,
   },
 };
 
@@ -285,6 +291,19 @@ export default function MyBillsPage() {
                       style={{ background: "#fdf8ee", color: "#d4a548" }}>
                       <Clock className="w-4 h-4" />
                       รอเจ้าของหอตรวจสอบสลิป
+                    </div>
+                  )}
+
+                  {bill.status === "WAIVED" && (
+                    <div className="flex flex-col items-center gap-1 py-2.5 rounded-2xl text-sm font-semibold text-center px-3"
+                      style={{ background: "#f6f6ff", color: "#5856d6" }}>
+                      <div className="flex items-center gap-2">
+                        <Ban className="w-4 h-4" />
+                        เจ้าของหอยกเว้นบิลนี้ให้ ไม่ต้องชำระเงิน
+                      </div>
+                      {bill.waivedReason && (
+                        <div className="text-xs font-normal opacity-80">เหตุผล: {bill.waivedReason}</div>
+                      )}
                     </div>
                   )}
 

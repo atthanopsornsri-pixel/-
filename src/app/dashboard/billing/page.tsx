@@ -2,13 +2,17 @@
 import { toast } from "sonner";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Receipt, Send, BellRing, Pencil, Trash2, Download } from "lucide-react";
+import { Receipt, Send, BellRing, Pencil, Trash2, Download, Ban } from "lucide-react";
+import { waiveBill } from "@/app/actions/payment-approval";
 
 export default function BillingPage() {
+  const { data: session } = useSession();
+  const role = session?.user?.role;
   const [rooms, setRooms] = useState<any[]>([]);
   
   const [propertyId, setPropertyId] = useState("");
@@ -49,6 +53,7 @@ export default function BillingPage() {
   const [editForm, setEditForm] = useState<Record<string, string>>({});
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [waivingId, setWaivingId] = useState<string | null>(null);
 
   const [isSendingLineMap, setIsSendingLineMap] = useState<Record<string, boolean>>({});
   const [isSendingAll, setIsSendingAll] = useState(false);
@@ -103,6 +108,7 @@ export default function BillingPage() {
     const statusMap: Record<string, string> = {
       UNPAID: "รอชำระ", PENDING: "รอตรวจสอบ",
       PAID: "ชำระแล้ว", OVERDUE: "เลยกำหนด", PARTIAL: "จ่ายบางส่วน",
+      WAIVED: "ยกเว้น",
     };
 
     const header = ["ห้อง","ประเภท","งวด","สถานะ","ค่าเช่า","ค่าน้ำ","ค่าไฟ","ค่าส่วนกลาง","ค่าจอดรถ","ค่าเน็ต","อื่นๆ","รวม","ชำระแล้ว","ยังค้าง","กำหนดชำระ"];
@@ -538,6 +544,31 @@ export default function BillingPage() {
     }
   };
 
+  const handleWaiveBill = async (bill: any) => {
+    const reason = window.prompt(
+      `ยกเว้นบิลห้อง ${bill.room.number}${bill.type === "CHECKIN" ? " (บิลเข้าอยู่)" : ` รอบ ${bill.month}/${bill.year + 543}`} — ต่างจากลบ: ประวัติจะยังอยู่ และลูกบ้านจะเห็นว่าได้รับการยกเว้น\n\nระบุเหตุผล (บังคับกรอก):`
+    );
+    if (reason === null) return; // กดยกเลิก
+    if (!reason.trim()) {
+      toast.error("กรุณาระบุเหตุผลที่ยกเว้นบิลนี้");
+      return;
+    }
+    setWaivingId(bill.id);
+    try {
+      const result = await waiveBill(bill.id, reason);
+      if (result.success) {
+        toast.success("ยกเว้นบิลสำเร็จ");
+        mutateBills();
+      } else {
+        toast.error(result.error || "ยกเว้นบิลไม่สำเร็จ");
+      }
+    } catch {
+      toast.error("เกิดข้อผิดพลาดในการเชื่อมต่อ");
+    } finally {
+      setWaivingId(null);
+    }
+  };
+
   return (
     <div>
       <div className="mb-8 flex items-center gap-3">
@@ -898,11 +929,18 @@ export default function BillingPage() {
                             ? "bg-[var(--jh-orange-tint)] text-[var(--jh-orange-ink)]"
                             : bill.status === "UNPAID"
                             ? "bg-[var(--jh-red-tint)] text-[var(--jh-red)]"
+                            : bill.status === "WAIVED"
+                            ? "bg-[var(--jh-indigo-tint)] text-[var(--jh-indigo)]"
                             : "bg-[var(--jh-surface)] text-[var(--jh-ink-secondary)]"
                         }`}>
                           <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                          {bill.status === "PAID" ? "ชำระแล้ว" : bill.status === "PENDING" ? "รอตรวจสอบ" : bill.status === "UNPAID" ? "ยังไม่ชำระ" : bill.status}
+                          {bill.status === "PAID" ? "ชำระแล้ว" : bill.status === "PENDING" ? "รอตรวจสอบ" : bill.status === "UNPAID" ? "ยังไม่ชำระ" : bill.status === "WAIVED" ? "ยกเว้นแล้ว" : bill.status}
                         </span>
+                        {bill.status === "WAIVED" && bill.waivedReason && (
+                          <div className="text-[10px] text-[var(--jh-ink-tertiary)] mt-1 max-w-[160px] truncate" title={bill.waivedReason}>
+                            เหตุผล: {bill.waivedReason}
+                          </div>
+                        )}
                       </td>
                       <td className="px-5 py-3.5 text-right">
                         <div className="flex items-center justify-end gap-2 flex-wrap">
@@ -915,7 +953,7 @@ export default function BillingPage() {
                             <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                             พิมพ์
                           </Button>
-                          {bill.status !== "PAID" && (
+                          {bill.status !== "PAID" && bill.status !== "WAIVED" && (
                             <>
                               <Button
                                 variant="outline"
@@ -926,6 +964,18 @@ export default function BillingPage() {
                                 <Pencil className="w-3.5 h-3.5 mr-1" strokeWidth={2} />
                                 แก้ไข
                               </Button>
+                              {role === "OWNER" && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="rounded-full border-[var(--jh-indigo)]/30 text-[var(--jh-indigo)] text-xs h-8 px-3 hover:bg-[var(--jh-indigo-tint)]"
+                                  onClick={() => handleWaiveBill(bill)}
+                                  disabled={waivingId === bill.id}
+                                >
+                                  <Ban className="w-3.5 h-3.5 mr-1" strokeWidth={2} />
+                                  {waivingId === bill.id ? "กำลังยกเว้น..." : "ยกเว้น"}
+                                </Button>
+                              )}
                               <Button
                                 variant="outline"
                                 size="sm"

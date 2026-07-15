@@ -251,6 +251,11 @@ model Bill {
   slipUrl        String? // ลิงก์/รูปสลิปโอนเงิน
   paymentDate    DateTime? // วันที่ผู้เช่าส่งสลิป
   slipTransRef   String?    @unique // เลขอ้างอิงรายการโอนเงินสลิป (กันซ้ำข้ามบิลทั้งระบบ)
+
+  // ── ยกเว้น/ละเว้นบิล (Waive) — ต่างจากลบ: เก็บประวัติไว้ ผู้เช่าเห็นว่าได้รับการยกเว้น ──
+  waivedAt     DateTime? // เวลาที่ยกเว้นบิล
+  waivedReason String?   @db.Text // เหตุผลที่ยกเว้น (บังคับกรอกตอนกดยกเว้น)
+
   payments       Payment[]
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
@@ -307,6 +312,7 @@ enum BillStatus {
   PARTIAL // จ่ายไม่ครบ
   PAID
   OVERDUE
+  WAIVED // เจ้าของหอยกเว้นให้ ไม่ต้องชำระ (เก็บประวัติไว้ ต่างจากลบบิล)
 }
 
 model Payment {
