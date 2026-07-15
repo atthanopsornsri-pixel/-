@@ -4,6 +4,9 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getRoomLimit } from "@/lib/pricing";
 
+// สร้างห้องใหม่กระทบ plan-limit ของ OWNER โดยตรง — คงเป็น owner-only ไปก่อน
+// (STAFF ไม่มี planTier ของตัวเอง การเช็ค limit จะผิดถ้าเปิดให้ตรงนี้)
+
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
@@ -81,7 +84,7 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -89,9 +92,14 @@ export async function GET(req: Request) {
     const propertyId = searchParams.get("propertyId");
     const status = searchParams.get("status");
 
+    const propertyScope =
+      session.user.role === "OWNER"
+        ? { ownerId: session.user.id }
+        : { id: { in: session.user.assignedPropertyIds ?? [] } };
+
     let whereClause: any = {
       isDeleted: false,
-      property: { ownerId: session.user.id },
+      property: propertyScope,
     };
 
     if (propertyId) {

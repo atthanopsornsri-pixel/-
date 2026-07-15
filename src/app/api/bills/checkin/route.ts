@@ -14,7 +14,7 @@ import { sendLineOAMessage } from "@/lib/line";
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -73,12 +73,19 @@ export async function POST(req: Request) {
     const month = now.getMonth() + 1;
     const year = now.getFullYear();
 
+    // ผู้เช่าปัจจุบันของห้อง — ผูก tenantId กับบิล (ประวัติไม่ปนกับผู้เช่าคนถัดไป)
+    const tenant = await secureDb.tenant.findFirst({
+      where: { roomId, isDeleted: false },
+      select: { id: true, lineUserId: true },
+    });
+
     const bill = await prisma.bill.create({
       data: {
         type: "CHECKIN",
         month,
         year,
         roomId,
+        tenantId: tenant?.id ?? null,
         rentAmount: 0,
         waterAmount: 0,
         electricAmount: 0,
@@ -93,10 +100,6 @@ export async function POST(req: Request) {
     });
 
     // sync เงินประกัน + วันเริ่มสัญญา → Tenant (ใช้ต่อในสัญญาเช่า)
-    const tenant = await secureDb.tenant.findFirst({
-      where: { roomId },
-      select: { id: true, lineUserId: true },
-    });
     if (tenant) {
       await prisma.tenant.update({
         where: { id: tenant.id },

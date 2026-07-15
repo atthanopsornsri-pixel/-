@@ -3,11 +3,12 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendLineOAMessage } from "@/lib/line";
+import { canAccessProperty } from "@/lib/staff-auth";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -30,7 +31,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       },
     });
 
-    if (!bill || bill.room.property.ownerId !== session.user.id) {
+    if (!bill || !(await canAccessProperty(session.user.role, session.user.id, bill.room.property.ownerId, bill.room.propertyId))) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 

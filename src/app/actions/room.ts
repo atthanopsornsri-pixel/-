@@ -4,11 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { canAccessProperty } from "@/lib/staff-auth";
 
 export async function updateRoomMVP(formData: FormData) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || (session.user.role !== "OWNER" && session.user.role !== "ADMIN")) {
+    if (!session || !["OWNER", "STAFF", "ADMIN"].includes(session.user.role)) {
       throw new Error("Unauthorized");
     }
 
@@ -31,7 +32,10 @@ export async function updateRoomMVP(formData: FormData) {
 
     if (!room) throw new Error("Room not found");
 
-    if (session.user.role === "OWNER" && room.property.ownerId !== session.user.id) {
+    if (
+      session.user.role !== "ADMIN" &&
+      !(await canAccessProperty(session.user.role, session.user.id, room.property.ownerId, room.propertyId))
+    ) {
       throw new Error("Unauthorized: You do not own this property");
     }
 

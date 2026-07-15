@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { parseLeaseContractImage } from "@/lib/ai";
+import { canAccessProperty } from "@/lib/staff-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -12,7 +13,7 @@ export async function POST(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -38,7 +39,7 @@ export async function POST(
       return NextResponse.json({ message: "ไม่พบข้อมูลลูกบ้าน" }, { status: 404 });
     }
 
-    if (!tenant.room || tenant.room.property.ownerId !== session.user.id) {
+    if (!tenant.room || !(await canAccessProperty(session.user.role, session.user.id, tenant.room.property.ownerId, tenant.room.propertyId))) {
       return NextResponse.json({ message: "ไม่มีสิทธิ์จัดการอาคารนี้" }, { status: 403 });
     }
 

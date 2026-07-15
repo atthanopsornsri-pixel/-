@@ -146,6 +146,107 @@ export async function getSecurePrisma() {
     });
   }
 
+  // STAFF Policy — พนักงานคุมตึก: scope ด้วย propertyId ที่ได้รับมอบหมาย (แทน ownerId)
+  // property = read-only (สร้าง/แก้ตึก + ตั้งค่า owner-only); ที่เหลือจัดการงานประจำวันได้ (scoped)
+  // assignedPropertyIds ว่าง → { in: [] } = ไม่เห็น/แตะอะไรเลย (deny-all by default)
+  if (session.user.role === "STAFF") {
+    const assignedPropertyIds = session.user.assignedPropertyIds ?? [];
+    const roomScope = { propertyId: { in: assignedPropertyIds } };
+    const nestedRoomScope = { room: { propertyId: { in: assignedPropertyIds } } };
+
+    return softDeletePrisma.$extends({
+      query: {
+        property: {
+          async $allOperations({ operation, args, query }) {
+            const anyArgs = args as any;
+            if (!['findMany', 'findFirst', 'findUnique', 'findUniqueOrThrow', 'count'].includes(operation)) {
+              throw new Error(`Forbidden: STAFF cannot execute ${operation} on property`);
+            }
+            if (['findMany', 'findFirst', 'count'].includes(operation)) {
+              anyArgs.where = { ...anyArgs.where, id: { in: assignedPropertyIds } };
+            }
+            if (operation === 'findUnique' || operation === 'findUniqueOrThrow') {
+              const result = await softDeletePrisma.property.findFirst({ ...anyArgs, where: { ...anyArgs.where, id: { in: assignedPropertyIds } } });
+              if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
+              return result as any;
+            }
+            return query(args);
+          }
+        },
+        room: {
+          async $allOperations({ operation, args, query }) {
+            const anyArgs = args as any;
+            if (['findMany', 'findFirst', 'update', 'updateMany', 'delete', 'deleteMany', 'count'].includes(operation)) {
+              anyArgs.where = { ...anyArgs.where, ...roomScope };
+            }
+            if (operation === 'findUnique' || operation === 'findUniqueOrThrow') {
+              const result = await softDeletePrisma.room.findFirst({ ...anyArgs, where: { ...anyArgs.where, ...roomScope } });
+              if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
+              return result as any;
+            }
+            return query(args);
+          }
+        },
+        tenant: {
+          async $allOperations({ operation, args, query }) {
+            const anyArgs = args as any;
+            if (['findMany', 'findFirst', 'update', 'updateMany', 'delete', 'deleteMany', 'count'].includes(operation)) {
+              anyArgs.where = { ...anyArgs.where, ...nestedRoomScope };
+            }
+            if (operation === 'findUnique' || operation === 'findUniqueOrThrow') {
+              const result = await softDeletePrisma.tenant.findFirst({ ...anyArgs, where: { ...anyArgs.where, ...nestedRoomScope } });
+              if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
+              return result as any;
+            }
+            return query(args);
+          }
+        },
+        bill: {
+          async $allOperations({ operation, args, query }) {
+            const anyArgs = args as any;
+            if (['findMany', 'findFirst', 'update', 'updateMany', 'delete', 'deleteMany', 'count'].includes(operation)) {
+              anyArgs.where = { ...anyArgs.where, ...nestedRoomScope };
+            }
+            if (operation === 'findUnique' || operation === 'findUniqueOrThrow') {
+              const result = await softDeletePrisma.bill.findFirst({ ...anyArgs, where: { ...anyArgs.where, ...nestedRoomScope } });
+              if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
+              return result as any;
+            }
+            return query(args);
+          }
+        },
+        maintenanceRequest: {
+          async $allOperations({ operation, args, query }) {
+            const anyArgs = args as any;
+            if (['findMany', 'findFirst', 'update', 'updateMany', 'delete', 'deleteMany', 'count'].includes(operation)) {
+              anyArgs.where = { ...anyArgs.where, ...nestedRoomScope };
+            }
+            if (operation === 'findUnique' || operation === 'findUniqueOrThrow') {
+              const result = await softDeletePrisma.maintenanceRequest.findFirst({ ...anyArgs, where: { ...anyArgs.where, ...nestedRoomScope } });
+              if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
+              return result as any;
+            }
+            return query(args);
+          }
+        },
+        parcel: {
+          async $allOperations({ operation, args, query }) {
+            const anyArgs = args as any;
+            if (['findMany', 'findFirst', 'update', 'updateMany', 'delete', 'deleteMany', 'count'].includes(operation)) {
+              anyArgs.where = { ...anyArgs.where, ...nestedRoomScope };
+            }
+            if (operation === 'findUnique' || operation === 'findUniqueOrThrow') {
+              const result = await softDeletePrisma.parcel.findFirst({ ...anyArgs, where: { ...anyArgs.where, ...nestedRoomScope } });
+              if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
+              return result as any;
+            }
+            return query(args);
+          }
+        }
+      }
+    });
+  }
+
   // TENANT Policy
   if (session.user.role === "TENANT") {
     const userId = session.user.id;

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { canAccessProperty } from "@/lib/staff-auth";
 
 // คืนรูปแจ้งซ่อมเป็นไฟล์ภาพจริง (decode จาก base64 ใน DB)
 // แยกจาก list เพื่อให้เบราว์เซอร์โหลดเฉพาะรูปที่เห็นบนจอ + cache ได้
@@ -22,7 +23,7 @@ export async function GET(
       select: {
         imageUrl: true,
         roomId: true,
-        room: { select: { property: { select: { ownerId: true } } } },
+        room: { select: { propertyId: true, property: { select: { ownerId: true } } } },
       },
     });
 
@@ -30,9 +31,9 @@ export async function GET(
       return NextResponse.json({ message: "Not found" }, { status: 404 });
     }
 
-    // สิทธิ์: เจ้าของตึกของห้องนั้น หรือผู้เช่าห้องนั้นเท่านั้น
-    if (session.user.role === "OWNER") {
-      if (item.room.property.ownerId !== session.user.id) {
+    // สิทธิ์: เจ้าของ/พนักงานตึกของห้องนั้น หรือผู้เช่าห้องนั้นเท่านั้น
+    if (session.user.role === "OWNER" || session.user.role === "STAFF") {
+      if (!(await canAccessProperty(session.user.role, session.user.id, item.room.property.ownerId, item.room.propertyId))) {
         return NextResponse.json({ message: "Forbidden" }, { status: 403 });
       }
     } else if (session.user.role === "TENANT") {

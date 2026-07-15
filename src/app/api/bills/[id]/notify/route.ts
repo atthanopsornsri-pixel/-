@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { sendLineOAMessage } from "@/lib/line";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { canAccessProperty } from "@/lib/staff-auth";
 
 /** แปลง Date → วันที่ไทย พ.ศ. แบบอ่านง่าย เช่น "5 กรกฎาคม 2569" */
 function toThaiDate(d: Date | string | null | undefined): string {
@@ -21,7 +22,7 @@ export async function POST(
 ) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -54,7 +55,7 @@ export async function POST(
     if (!bill)
       return NextResponse.json({ message: "ไม่พบข้อมูลบิล" }, { status: 404 });
 
-    if (bill.room.property.ownerId !== session.user.id) {
+    if (!(await canAccessProperty(session.user.role, session.user.id, bill.room.property.ownerId, bill.room.propertyId))) {
       return NextResponse.json(
         { message: "Unauthorized: bill does not belong to your property" },
         { status: 403 }

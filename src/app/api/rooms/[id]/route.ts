@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { canAccessProperty } from "@/lib/staff-auth";
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -41,13 +42,13 @@ export const dynamic = "force-dynamic";
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
-    const { 
-      number, floor, rentPrice, 
+    const {
+      number, floor, rentPrice,
       status, waterMeterStart, electricMeterStart,
       hasAircon, hasFan, hasFurniture,
       imageMain, imageBathroom, imageBalcony, imageFacility
@@ -58,7 +59,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       include: { property: true }
     });
 
-    if (!room || room.property.ownerId !== session.user.id) {
+    if (!room || !(await canAccessProperty(session.user.role, session.user.id, room.property.ownerId, room.propertyId))) {
       return NextResponse.json({ message: "Not found or forbidden" }, { status: 403 });
     }
 

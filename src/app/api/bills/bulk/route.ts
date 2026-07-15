@@ -6,6 +6,7 @@ import { getSecurePrisma } from "@/lib/prisma-secure";
 import { sendLineOAMessage } from "@/lib/line";
 import { sendSmsWithAddon } from "@/lib/sms";
 import { createDbNotification } from "@/app/actions/notifications";
+import { canAccessProperty } from "@/lib/staff-auth";
 
 /**
  * POST /api/bills/bulk
@@ -19,7 +20,7 @@ import { createDbNotification } from "@/app/actions/notifications";
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
       include: { owner: true },
     });
 
-    if (!property || property.ownerId !== session.user.id) {
+    if (!property || !(await canAccessProperty(session.user.role, session.user.id, property.ownerId, propertyId))) {
       return NextResponse.json({ message: "ไม่พบหอพักหรือไม่มีสิทธิ์" }, { status: 403 });
     }
 
@@ -53,6 +54,7 @@ export async function POST(req: Request) {
         tenants: {
           where: { isDeleted: false },
           select: {
+            id: true,
             lineUserId: true,
             firstName: true,
             lastName: true,
@@ -111,6 +113,7 @@ export async function POST(req: Request) {
             month: Number(month),
             year: Number(year),
             roomId: room.id,
+            tenantId: room.tenants[0]?.id ?? null,
             rentAmount,
             waterAmount: 0,
             electricAmount: 0,

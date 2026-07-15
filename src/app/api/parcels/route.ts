@@ -5,11 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { sendLineOAMessage } from "@/lib/line";
 import { sendSmsWithAddon } from "@/lib/sms";
 import { createDbNotification } from "@/app/actions/notifications";
+import { canAccessProperty } from "@/lib/staff-auth";
 
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -31,7 +32,7 @@ export async function POST(req: Request) {
       },
     });
 
-    if (!room || room.property.ownerId !== session.user.id) {
+    if (!room || !(await canAccessProperty(session.user.role, session.user.id, room.property.ownerId, room.propertyId))) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
@@ -109,11 +110,15 @@ export async function GET(req: Request) {
         where: { roomId: tenant.roomId, isDeleted: false },
         orderBy: { receivedAt: "desc" },
       });
-    } else if (session.user.role === "OWNER") {
+    } else if (session.user.role === "OWNER" || session.user.role === "STAFF") {
+      const propertyScope =
+        session.user.role === "OWNER"
+          ? { ownerId: session.user.id }
+          : { id: { in: session.user.assignedPropertyIds ?? [] } };
       parcels = await prisma.parcel.findMany({
         where: {
           isDeleted: false,
-          room: { property: { ownerId: session.user.id } }
+          room: { property: propertyScope }
         },
         include: {
           room: { select: { number: true, property: { select: { name: true } } } }
@@ -131,7 +136,7 @@ export async function GET(req: Request) {
 export async function PATCH(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -151,7 +156,7 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ message: "Parcel not found" }, { status: 404 });
     }
 
-    if (existingParcel.room.property.ownerId !== session.user.id) {
+    if (!(await canAccessProperty(session.user.role, session.user.id, existingParcel.room.property.ownerId, existingParcel.room.propertyId))) {
       return NextResponse.json({ message: "Unauthorized: You do not own this property" }, { status: 403 });
     }
 

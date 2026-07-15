@@ -2,6 +2,8 @@
 
 import { getSecurePrisma } from "@/lib/prisma-secure";
 import { revalidatePath } from "next/cache";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 /**
  * 💰 ดึงรายการเงินประกัน/มัดจำทั้งหมด ของอาคารพัก
@@ -56,6 +58,12 @@ export async function getActiveDeposits(propertyId?: string) {
  */
 export async function processDepositRefund(tenantId: string, amount: number, note?: string) {
   try {
+    // คืนเงินประกัน = เงินเคลื่อนไหวจริง — จำกัดเฉพาะ OWNER (เหมือน checkout refund gate)
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "OWNER") {
+      return { success: false, error: "เฉพาะเจ้าของหอพักเท่านั้นที่คืนเงินประกันได้" };
+    }
+
     const prisma = await getSecurePrisma();
 
     if (amount <= 0) {
@@ -100,6 +108,12 @@ export async function processDepositRefund(tenantId: string, amount: number, not
  */
 export async function processDepositDeduction(tenantId: string, amount: number, reason: string) {
   try {
+    // หักเงินประกัน = เงินเคลื่อนไหวจริง — จำกัดเฉพาะ OWNER (เหมือน checkout refund gate)
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== "OWNER") {
+      return { success: false, error: "เฉพาะเจ้าของหอพักเท่านั้นที่หักเงินประกันได้" };
+    }
+
     const prisma = await getSecurePrisma();
 
     if (amount <= 0) {

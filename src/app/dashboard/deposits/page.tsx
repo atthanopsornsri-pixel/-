@@ -70,10 +70,10 @@ export default function DepositsPage() {
   );
 
   const role = session?.user?.role;
-  if (role !== "OWNER") {
+  if (role !== "OWNER" && role !== "STAFF") {
     return (
       <div className="p-8 text-center text-slate-500">
-        คุณไม่มีสิทธิ์เข้าถึงหน้านี้ เฉพาะเจ้าของหอพักเท่านั้น
+        คุณไม่มีสิทธิ์เข้าถึงหน้านี้ เฉพาะเจ้าของหอพัก/พนักงานเท่านั้น
       </div>
     );
   }
@@ -337,26 +337,30 @@ export default function DepositsPage() {
                         ฿{currentDep.toLocaleString("th-TH", { minimumFractionDigits: 2 })}
                       </td>
                       <td className="p-4 text-center pr-6">
-                        <div className="flex justify-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => handleOpenRefund(t)}
-                            disabled={currentDep <= 0}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-green-50 text-green-700 font-bold hover:bg-green-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                          >
-                            <RefreshCcw className="w-3.5 h-3.5" />
-                            คืนประกัน
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleOpenDeduct(t)}
-                            disabled={currentDep <= 0}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-red-50 text-red-700 font-bold hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                          >
-                            <Scissors className="w-3.5 h-3.5" />
-                            หักค่าเสียหาย
-                          </button>
-                        </div>
+                        {role === "OWNER" ? (
+                          <div className="flex justify-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenRefund(t)}
+                              disabled={currentDep <= 0}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-green-50 text-green-700 font-bold hover:bg-green-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                            >
+                              <RefreshCcw className="w-3.5 h-3.5" />
+                              คืนประกัน
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenDeduct(t)}
+                              disabled={currentDep <= 0}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-red-50 text-red-700 font-bold hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                            >
+                              <Scissors className="w-3.5 h-3.5" />
+                              หักค่าเสียหาย
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-slate-400">เจ้าของหอเท่านั้น</span>
+                        )}
                       </td>
                     </tr>
                   );

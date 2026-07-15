@@ -20,7 +20,7 @@ function resolveSlipUrl(raw: string): "inline" | "storage" {
 export default async function ApprovalsDashboardPage() {
   const session = await getServerSession(authOptions);
   
-  if (!session || (session.user.role !== "OWNER" && session.user.role !== "ADMIN")) {
+  if (!session || !["OWNER", "STAFF", "ADMIN"].includes(session.user.role)) {
     redirect("/dashboard");
   }
 

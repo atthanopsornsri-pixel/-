@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { canAccessProperty } from "@/lib/staff-auth";
 
 export async function POST(
   request: Request,
@@ -10,7 +11,7 @@ export async function POST(
   try {
     const session = await getServerSession(authOptions);
 
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
@@ -36,7 +37,7 @@ export async function POST(
       return new NextResponse("Tenant not found", { status: 404 });
     }
 
-    if (!tenant.room || tenant.room.property.ownerId !== session.user.id) {
+    if (!tenant.room || !(await canAccessProperty(session.user.role, session.user.id, tenant.room.property.ownerId, tenant.room.propertyId))) {
       return new NextResponse("Unauthorized: You do not own this property", { status: 403 });
     }
 

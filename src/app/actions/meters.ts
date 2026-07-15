@@ -207,9 +207,16 @@ export async function saveBulkMeterReadings(
         const dueDate = new Date();
         dueDate.setDate(dueDate.getDate() + 7);
 
+        // ผู้เช่าปัจจุบันของห้อง — ผูก tenantId กับบิล (ประวัติไม่ปนกับผู้เช่าคนถัดไป)
+        const activeTenant = await tx.tenant.findFirst({
+          where: { roomId: reading.roomId, isDeleted: false },
+          select: { id: true },
+        });
+
         await tx.bill.create({
           data: {
             roomId: reading.roomId,
+            tenantId: activeTenant?.id ?? null,
             month: month,
             year: year,
             type: "MONTHLY", // ระบุ explicit ป้องกัน default เปลี่ยน

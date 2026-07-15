@@ -6,6 +6,7 @@ import { sendLineOAMessage } from "@/lib/line";
 import { sendSmsWithAddon } from "@/lib/sms";
 import { categorizeMaintenance } from "@/lib/ai";
 import { createDbNotification } from "@/app/actions/notifications";
+import { canAccessProperty } from "@/lib/staff-auth";
 
 export async function POST(req: Request) {
   try {
@@ -188,13 +189,18 @@ export async function GET(req: Request) {
       });
       if (!tenant?.roomId) return NextResponse.json([]);
       whereClause = { roomId: tenant.roomId, isDeleted: false };
-    } else if (session.user.role === "OWNER") {
+    } else if (session.user.role === "OWNER" || session.user.role === "STAFF") {
       const { searchParams } = new URL(req.url);
       const propertyId = searchParams.get("propertyId");
 
+      const propertyScope =
+        session.user.role === "OWNER"
+          ? { ownerId: session.user.id }
+          : { id: { in: session.user.assignedPropertyIds ?? [] } };
+
       whereClause = {
         isDeleted: false,
-        room: { property: { ownerId: session.user.id } },
+        room: { property: propertyScope },
       };
       if (propertyId) {
         whereClause.room.propertyId = propertyId;
@@ -208,7 +214,7 @@ export async function GET(req: Request) {
         where: whereClause,
         select: {
           ...listSelect,
-          ...(session.user.role === "OWNER" && {
+          ...((session.user.role === "OWNER" || session.user.role === "STAFF") && {
             room: { select: { number: true, property: { select: { name: true } } } },
           }),
         },
@@ -233,7 +239,7 @@ export async function GET(req: Request) {
 export async function PATCH(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -256,7 +262,7 @@ export async function PATCH(req: Request) {
     if (!maintReq) {
       return NextResponse.json({ message: "Maintenance request not found" }, { status: 404 });
     }
-    if (maintReq.room.property.ownerId !== session.user.id) {
+    if (!(await canAccessProperty(session.user.role, session.user.id, maintReq.room.property.ownerId, maintReq.room.propertyId))) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 

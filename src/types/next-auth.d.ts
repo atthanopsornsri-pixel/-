@@ -15,6 +15,7 @@ declare module "next-auth" {
       tenantId?: string;
       roomId?: string;
       isBound?: boolean;
+      assignedPropertyIds?: string[]; // STAFF: ตึกที่ได้รับมอบหมาย (scope ของ prisma-secure)
     };
   }
 }
@@ -31,5 +32,7 @@ declare module "next-auth/jwt" {
     roomId?: string;
     isBound?: boolean;
     lineCheckedAt?: number;
+    assignedPropertyIds?: string[]; // STAFF: ตึกที่ได้รับมอบหมาย
+    staffCheckedAt?: number; // timestamp สำหรับ periodic STAFF assignment refresh
   }
 }

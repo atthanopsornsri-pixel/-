@@ -154,7 +154,7 @@ export async function submitMeterReading(reading: number, type: "WATER" | "ELECT
 export async function getPendingSubmissions(propertyId?: string) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return { success: false, error: "Unauthorized" };
     }
 
@@ -250,7 +250,7 @@ export async function getPendingSubmissions(propertyId?: string) {
 export async function approveMeterSubmission(id: string) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return { success: false, error: "Unauthorized" };
     }
 
@@ -332,7 +332,7 @@ export async function approveMeterSubmission(id: string) {
 export async function rejectMeterSubmission(id: string, note: string) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return { success: false, error: "Unauthorized" };
     }
 

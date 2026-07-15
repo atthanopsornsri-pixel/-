@@ -12,9 +12,9 @@ export default function SidebarNav({ role }: SidebarNavProps) {
   const pathname = usePathname() || "";
   const [pendingMaintenance, setPendingMaintenance] = useState(0);
 
-  // โหลด badge จำนวนงานซ่อมรอดำเนินการ (เฉพาะ OWNER)
+  // โหลด badge จำนวนงานซ่อมรอดำเนินการ (OWNER/STAFF)
   useEffect(() => {
-    if (role !== "OWNER") return;
+    if (role !== "OWNER" && role !== "STAFF") return;
     async function loadCounts() {
       try {
         const res = await fetch("/api/maintenance/counts");
@@ -41,47 +41,61 @@ export default function SidebarNav({ role }: SidebarNavProps) {
         {role === "TENANT" ? "หน้าหลัก" : "ภาพรวมระบบ"}
       </Link>
 
-      {role === "OWNER" && (
+      {(role === "OWNER" || role === "STAFF") && (
         <>
           <div className="pt-6 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">การจัดการ</div>
-          
-          <Link href="/dashboard/properties" className={`flex items-center px-4 py-3 rounded-xl transition-all group font-medium ${pathname.startsWith("/dashboard/properties") ? "bg-purple-50 text-purple-700" : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"}`}>
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname.startsWith("/dashboard/properties") ? "bg-purple-100 text-purple-600" : "bg-purple-50 text-purple-500 group-hover:bg-purple-100"}`}>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
-            </div>
-            หอพักของฉัน
-          </Link>
+
+          {role === "OWNER" && (
+            <Link href="/dashboard/properties" className={`flex items-center px-4 py-3 rounded-xl transition-all group font-medium ${pathname.startsWith("/dashboard/properties") ? "bg-purple-50 text-purple-700" : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"}`}>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname.startsWith("/dashboard/properties") ? "bg-purple-100 text-purple-600" : "bg-purple-50 text-purple-500 group-hover:bg-purple-100"}`}>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+              </div>
+              หอพักของฉัน
+            </Link>
+          )}
           <Link href="/dashboard/rooms" className={`flex items-center px-4 py-3 rounded-xl transition-all group font-medium ${pathname.startsWith("/dashboard/rooms") ? "bg-emerald-50 text-emerald-700" : "text-slate-600 hover:bg-emerald-50 hover:text-emerald-700"}`}>
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname.startsWith("/dashboard/rooms") ? "bg-emerald-100 text-emerald-600" : "bg-emerald-50 text-emerald-500 group-hover:bg-emerald-100"}`}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
             </div>
             จัดการห้องพัก
           </Link>
-          <Link href="/dashboard/settings/contract" className={`flex items-center px-4 py-3 rounded-xl transition-all group font-medium ${pathname.startsWith("/dashboard/settings/contract") ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-indigo-50 hover:text-indigo-700"}`}>
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname.startsWith("/dashboard/settings/contract") ? "bg-indigo-100 text-indigo-600" : "bg-indigo-50 text-indigo-500 group-hover:bg-indigo-100"}`}>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            </div>
-            ตั้งค่าสัญญาเช่า
-          </Link>
+          {role === "OWNER" && (
+            <Link href="/dashboard/settings/contract" className={`flex items-center px-4 py-3 rounded-xl transition-all group font-medium ${pathname.startsWith("/dashboard/settings/contract") ? "bg-indigo-50 text-indigo-700" : "text-slate-600 hover:bg-indigo-50 hover:text-indigo-700"}`}>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname.startsWith("/dashboard/settings/contract") ? "bg-indigo-100 text-indigo-600" : "bg-indigo-50 text-indigo-500 group-hover:bg-indigo-100"}`}>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              </div>
+              ตั้งค่าสัญญาเช่า
+            </Link>
+          )}
           <Link href="/dashboard/tenants" className={`flex items-center px-4 py-3 rounded-xl transition-all group font-medium ${pathname.startsWith("/dashboard/tenants") ? "bg-amber-50 text-amber-700" : "text-slate-600 hover:bg-amber-50 hover:text-amber-700"}`}>
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname.startsWith("/dashboard/tenants") ? "bg-amber-100 text-amber-600" : "bg-amber-50 text-amber-500 group-hover:bg-amber-100"}`}>
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
             </div>
             รายชื่อผู้เช่า
           </Link>
-          <Link href="/dashboard/subscription" className={`flex items-center px-4 py-3 rounded-xl transition-all group font-medium ${pathname.startsWith("/dashboard/subscription") ? "bg-rose-50 text-rose-700" : "text-slate-600 hover:bg-rose-50 hover:text-rose-700"}`}>
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname.startsWith("/dashboard/subscription") ? "bg-rose-100 text-rose-600" : "bg-rose-50 text-rose-500 group-hover:bg-rose-100"}`}>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
-            </div>
-            แพ็กเกจการใช้งาน
-          </Link>
-          
-          <Link href="/dashboard/analytics" className={`flex items-center px-4 py-3 rounded-xl transition-all group font-medium ${pathname.startsWith("/dashboard/analytics") ? "bg-violet-50 text-violet-700" : "text-slate-600 hover:bg-violet-50 hover:text-violet-700"}`}>
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname.startsWith("/dashboard/analytics") ? "bg-violet-100 text-violet-600" : "bg-violet-50 text-violet-500 group-hover:bg-violet-100"}`}>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10l2 2 4-4" /></svg>
-            </div>
-            <span className="flex-1">วิเคราะห์รายได้</span>
-          </Link>
+          {role === "OWNER" && (
+            <>
+              <Link href="/dashboard/owner/staff" className={`flex items-center px-4 py-3 rounded-xl transition-all group font-medium ${pathname.startsWith("/dashboard/owner/staff") ? "bg-teal-50 text-teal-700" : "text-slate-600 hover:bg-teal-50 hover:text-teal-700"}`}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname.startsWith("/dashboard/owner/staff") ? "bg-teal-100 text-teal-600" : "bg-teal-50 text-teal-500 group-hover:bg-teal-100"}`}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m5-4a4 4 0 100-8 4 4 0 000 8zm6 4a4 4 0 00-3-3.87m-9.5 0a4 4 0 00-3 3.87" /></svg>
+                </div>
+                จัดการพนักงาน
+              </Link>
+              <Link href="/dashboard/subscription" className={`flex items-center px-4 py-3 rounded-xl transition-all group font-medium ${pathname.startsWith("/dashboard/subscription") ? "bg-rose-50 text-rose-700" : "text-slate-600 hover:bg-rose-50 hover:text-rose-700"}`}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname.startsWith("/dashboard/subscription") ? "bg-rose-100 text-rose-600" : "bg-rose-50 text-rose-500 group-hover:bg-rose-100"}`}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                </div>
+                แพ็กเกจการใช้งาน
+              </Link>
+
+              <Link href="/dashboard/analytics" className={`flex items-center px-4 py-3 rounded-xl transition-all group font-medium ${pathname.startsWith("/dashboard/analytics") ? "bg-violet-50 text-violet-700" : "text-slate-600 hover:bg-violet-50 hover:text-violet-700"}`}>
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center mr-3 group-hover:scale-105 transition-transform ${pathname.startsWith("/dashboard/analytics") ? "bg-violet-100 text-violet-600" : "bg-violet-50 text-violet-500 group-hover:bg-violet-100"}`}>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10l2 2 4-4" /></svg>
+                </div>
+                <span className="flex-1">วิเคราะห์รายได้</span>
+              </Link>
+            </>
+          )}
 
           <div className="pt-6 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">การเงิน & แจ้งซ่อม</div>
           

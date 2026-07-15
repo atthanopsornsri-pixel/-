@@ -2,11 +2,12 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { canAccessProperty } from "@/lib/staff-auth";
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -15,11 +16,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
       where: { id },
       include: {
         user: { select: { name: true, email: true } },
-        room: { select: { number: true, rentPrice: true, property: { select: { name: true, address: true, leaseTemplate: true, ownerId: true } } } },
+        room: { select: { number: true, rentPrice: true, propertyId: true, property: { select: { name: true, address: true, leaseTemplate: true, ownerId: true } } } },
       },
     });
 
-    if (!tenant || tenant.room?.property?.ownerId !== session.user.id) {
+    if (!tenant?.room || !(await canAccessProperty(session.user.role, session.user.id, tenant.room.property.ownerId, tenant.room.propertyId))) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
@@ -32,7 +33,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -50,7 +51,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       }
     });
 
-    if (!tenant || tenant.room?.property?.ownerId !== session.user.id) {
+    if (!tenant?.room || !(await canAccessProperty(session.user.role, session.user.id, tenant.room.property.ownerId, tenant.room.propertyId))) {
       return NextResponse.json({ message: "Unauthorized or not found" }, { status: 403 });
     }
 

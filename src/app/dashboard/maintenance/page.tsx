@@ -100,7 +100,7 @@ export default function MaintenancePage() {
 
   // ── SWR: properties (OWNER only, cached) ─────────────────────────
   const { data: properties = [] } = useSWR<any[]>(
-    role === "OWNER" ? "/api/properties" : null,
+    (role === "OWNER" || role === "STAFF") ? "/api/properties" : null,
     jsonFetcher
   );
 
@@ -274,7 +274,7 @@ export default function MaintenancePage() {
       />
 
       {/* ── Owner: Property filter (ถ้ามีหลายตึก) ── */}
-      {role === "OWNER" && properties.length > 1 && (
+      {(role === "OWNER" || role === "STAFF") && properties.length > 1 && (
         <div className="mb-5 flex items-center gap-3">
           <div
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg"
@@ -313,7 +313,7 @@ export default function MaintenancePage() {
       )}
 
       {/* ── Owner: Status filter tabs ── */}
-      {role === "OWNER" && (
+      {(role === "OWNER" || role === "STAFF") && (
         <div className="flex flex-wrap gap-2 mb-7">
           {FILTER_TABS.map(({ key, label, icon }) => {
             const isActive = filter === key;
@@ -641,7 +641,7 @@ export default function MaintenancePage() {
                               </div>
                             </div>
 
-                            {role === "OWNER" && (
+                            {(role === "OWNER" || role === "STAFF") && (
                               <p className="text-xs font-semibold mb-1" style={{ color: meta.solid }}>
                                 ห้อง {req.room?.number}{req.room?.property?.name ? ` · ${req.room.property.name}` : ""}
                               </p>
@@ -676,7 +676,7 @@ export default function MaintenancePage() {
                             )}
 
                             {/* Action buttons */}
-                            {role === "OWNER" && req.status !== "COMPLETED" && (
+                            {(role === "OWNER" || role === "STAFF") && req.status !== "COMPLETED" && (
                               <div className="mt-4 pt-3 border-t border-black/5 flex flex-col gap-2">
                                 {req.status === "PENDING" && (
                                   <button
@@ -779,7 +779,7 @@ export default function MaintenancePage() {
                             </span>
                           </div>
 
-                          {role === "OWNER" && (
+                          {(role === "OWNER" || role === "STAFF") && (
                             <p className="text-xs font-semibold mb-1" style={{ color: meta.solid }}>
                               ห้อง {req.room?.number}{req.room?.property?.name ? ` · ${req.room.property.name}` : ""}
                             </p>
@@ -791,7 +791,7 @@ export default function MaintenancePage() {
                             {req.description}
                           </p>
 
-                          {role === "OWNER" && req.preferredAt && req.status !== "COMPLETED" && (
+                          {(role === "OWNER" || role === "STAFF") && req.preferredAt && req.status !== "COMPLETED" && (
                             <div
                               className="mt-2 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold"
                               style={{ background: "#fdf8ee", color: "#d4a548" }}
@@ -818,7 +818,7 @@ export default function MaintenancePage() {
                             </div>
                           )}
 
-                          {role === "OWNER" && (req.aiCategory || req.aiUrgency || req.aiTechnician) && (
+                          {(role === "OWNER" || role === "STAFF") && (req.aiCategory || req.aiUrgency || req.aiTechnician) && (
                             <div className="mt-3 p-3 rounded-2xl bg-white/50 border border-white/60 text-xs flex flex-col gap-2">
                               <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">ระบบช่วยคัดกรองห้องพักอัตโนมัติ</div>
                               <div className="flex flex-wrap gap-1.5">
@@ -849,7 +849,7 @@ export default function MaintenancePage() {
                             </div>
                           )}
 
-                          {role === "OWNER" && req.status !== "COMPLETED" && (
+                          {(role === "OWNER" || role === "STAFF") && req.status !== "COMPLETED" && (
                             <div className="mt-4 pt-3 border-t border-black/5 flex flex-col gap-2">
                               {req.status === "PENDING" && (
                                 <button

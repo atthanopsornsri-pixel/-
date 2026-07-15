@@ -33,7 +33,7 @@ export default function ParcelsPage() {
 
   // ── SWR: properties (OWNER only) ──────────────────────────────────
   const { data: properties = [] } = useSWR<any[]>(
-    role === "OWNER" ? "/api/properties" : null,
+    (role === "OWNER" || role === "STAFF") ? "/api/properties" : null,
     jsonFetcher
   );
 
@@ -91,11 +91,11 @@ export default function ParcelsPage() {
         icon={Package}
         tone="orange"
         title="ระบบจัดการพัสดุ"
-        subtitle={role === "OWNER" ? "บันทึกพัสดุที่เข้ามาและแจ้งลูกบ้านมารับ" : "ติดตามพัสดุของคุณที่หอพักรับไว้"}
+        subtitle={(role === "OWNER" || role === "STAFF") ? "บันทึกพัสดุที่เข้ามาและแจ้งลูกบ้านมารับ" : "ติดตามพัสดุของคุณที่หอพักรับไว้"}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {role === "OWNER" && (
+        {(role === "OWNER" || role === "STAFF") && (
           <div className="lg:col-span-1">
             <Card>
               <CardHeader>
@@ -140,7 +140,7 @@ export default function ParcelsPage() {
           </div>
         )}
 
-        <div className={role === "OWNER" ? "lg:col-span-2" : "lg:col-span-3"}>
+        <div className={(role === "OWNER" || role === "STAFF") ? "lg:col-span-2" : "lg:col-span-3"}>
           <Card>
             <CardHeader>
               <CardTitle>รายการพัสดุ</CardTitle>
@@ -155,7 +155,7 @@ export default function ParcelsPage() {
                   />
                   <p className="font-bold text-slate-800 text-base">ไม่พบข้อมูลพัสดุในขณะนี้</p>
                   <p className="text-xs text-slate-400 mt-1.5 leading-relaxed max-w-sm mx-auto">
-                    {role === "OWNER"
+                    {(role === "OWNER" || role === "STAFF")
                       ? "ยังไม่มีการบันทึกรับพัสดุใหม่เข้ามาเลยค่ะ คุณสามารถเพิ่มรายการพัสดุใหม่ได้จากฟอร์มด้านซ้าย"
                       : "ขณะนี้ยังไม่มีพัสดุมาส่งถึงห้องของคุณเลยค่ะ หากมีพัสดุเข้ามาระบบจะแจ้งเตือนให้ทราบทันทีนะคะ 📦"}
                   </p>
@@ -165,29 +165,29 @@ export default function ParcelsPage() {
                   <table className="w-full text-sm text-left">
                     <thead className="text-xs text-slate-500 uppercase bg-slate-50 border-b">
                       <tr>
-                        {role === "OWNER" && <th className="px-4 py-3">ห้อง / หอพัก</th>}
+                        {(role === "OWNER" || role === "STAFF") && <th className="px-4 py-3">ห้อง / หอพัก</th>}
                         <th className="px-4 py-3">ชื่อผู้รับ</th>
                         <th className="px-4 py-3">เลขพัสดุ</th>
                         <th className="px-4 py-3">วันที่รับของ</th>
                         <th className="px-4 py-3">สถานะ</th>
-                        {role === "OWNER" && <th className="px-4 py-3 text-right">จัดการ</th>}
+                        {(role === "OWNER" || role === "STAFF") && <th className="px-4 py-3 text-right">จัดการ</th>}
                       </tr>
                     </thead>
                     <tbody>
                       {isLoading
                         ? Array.from({ length: 4 }).map((_, i) => (
                             <tr key={i} className="border-b animate-pulse">
-                              {role === "OWNER" && <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>}
+                              {(role === "OWNER" || role === "STAFF") && <td className="px-4 py-3"><Skeleton className="h-4 w-20" /></td>}
                               <td className="px-4 py-3"><Skeleton className="h-4 w-24" /></td>
                               <td className="px-4 py-3"><Skeleton className="h-4 w-32" /></td>
                               <td className="px-4 py-3"><Skeleton className="h-4 w-28" /></td>
                               <td className="px-4 py-3"><Skeleton className="h-6 w-20 rounded-full" /></td>
-                              {role === "OWNER" && <td className="px-4 py-3"><Skeleton className="h-8 w-20 ml-auto" /></td>}
+                              {(role === "OWNER" || role === "STAFF") && <td className="px-4 py-3"><Skeleton className="h-8 w-20 ml-auto" /></td>}
                             </tr>
                           ))
                         : parcels.map(parcel => (
                         <tr key={parcel.id} className="border-b hover:bg-slate-50">
-                          {role === "OWNER" && (
+                          {(role === "OWNER" || role === "STAFF") && (
                             <td className="px-4 py-3 font-bold text-slate-700">
                               ห้อง {parcel.room?.number}
                               <div className="text-xs text-slate-400 font-normal">{parcel.room?.property?.name}</div>
@@ -205,7 +205,7 @@ export default function ParcelsPage() {
                               {parcel.status === "PICKED_UP" ? "รับของแล้ว" : "รอมารับ"}
                             </span>
                           </td>
-                          {role === "OWNER" && (
+                          {(role === "OWNER" || role === "STAFF") && (
                             <td className="px-4 py-3 text-right">
                               {parcel.status === "PENDING" && (
                                 <Button variant="outline" size="sm" onClick={() => handleUpdateStatus(parcel.id, "PICKED_UP")} className="text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200">

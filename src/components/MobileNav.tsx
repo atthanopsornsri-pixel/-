@@ -64,25 +64,36 @@ export default function MobileNav({ role }: MobileNavProps) {
             ภาพรวมระบบ
           </Link>
 
-          {role === "OWNER" && (
+          {(role === "OWNER" || role === "STAFF") && (
             <>
               <div className="pt-6 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">การจัดการ</div>
-              <Link href="/dashboard/properties" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-all font-medium">
-                หอพักของฉัน
-              </Link>
+              {role === "OWNER" && (
+                <Link href="/dashboard/properties" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-purple-50 hover:text-purple-700 transition-all font-medium">
+                  หอพักของฉัน
+                </Link>
+              )}
               <Link href="/dashboard/rooms" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 transition-all font-medium">
                 จัดการห้องพัก
               </Link>
-              <Link href="/dashboard/settings/contract" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 transition-all font-medium">
-                ตั้งค่าสัญญาเช่า
-              </Link>
+              {role === "OWNER" && (
+                <Link href="/dashboard/settings/contract" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-indigo-50 hover:text-indigo-700 transition-all font-medium">
+                  ตั้งค่าสัญญาเช่า
+                </Link>
+              )}
               <Link href="/dashboard/tenants" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-amber-50 hover:text-amber-700 transition-all font-medium">
                 รายชื่อผู้เช่า
               </Link>
-              <Link href="/dashboard/subscription" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-rose-50 hover:text-rose-700 transition-all font-medium">
-                แพ็กเกจการใช้งาน
-              </Link>
-              
+              {role === "OWNER" && (
+                <Link href="/dashboard/owner/staff" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-teal-50 hover:text-teal-700 transition-all font-medium">
+                  จัดการพนักงาน
+                </Link>
+              )}
+              {role === "OWNER" && (
+                <Link href="/dashboard/subscription" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-rose-50 hover:text-rose-700 transition-all font-medium">
+                  แพ็กเกจการใช้งาน
+                </Link>
+              )}
+
               <div className="pt-6 pb-2 px-4 text-[11px] font-bold text-slate-400 uppercase tracking-wider">การเงิน & แจ้งซ่อม</div>
               <Link href="/dashboard/meters" onClick={closeNav} className="flex items-center px-4 py-3 rounded-xl text-slate-600 hover:bg-blue-50 hover:text-blue-700 transition-all font-medium">
                 จดมิเตอร์แบบเร็ว

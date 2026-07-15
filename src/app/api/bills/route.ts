@@ -11,7 +11,7 @@ import { detectBillAnomaly, draftBillNotification } from "@/lib/ai";
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -94,12 +94,19 @@ export async function POST(req: Request) {
       Number(internetFee || 0) +
       Number(otherFee || 0);
 
+    // ผู้เช่าปัจจุบันของห้อง — ผูก tenantId กับบิล (ประวัติไม่ปนกับผู้เช่าคนถัดไป)
+    const activeTenant = await prisma.tenant.findFirst({
+      where: { roomId, isDeleted: false },
+      select: { id: true },
+    });
+
     // secureDb doesn't filter create by default to avoid issues, we verified room ownership above.
     const bill = await prisma.bill.create({
       data: {
         month: Number(month),
         year: Number(year),
         roomId,
+        tenantId: activeTenant?.id ?? null,
         rentAmount: Number(rentAmount),
         waterAmount: verifiedWaterAmount,
         waterUnits: safeWaterUnits,
@@ -255,7 +262,7 @@ export async function GET(req: Request) {
     const propertyId = searchParams.get("propertyId");
 
     let whereClause: any = { isDeleted: false };
-    if (propertyId && session.user.role === "OWNER") {
+    if (propertyId && (session.user.role === "OWNER" || session.user.role === "STAFF")) {
       whereClause = { isDeleted: false, room: { propertyId } };
     }
 

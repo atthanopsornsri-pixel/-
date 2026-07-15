@@ -150,9 +150,31 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
+      // 5. STAFF: sync รายชื่อตึกที่ได้รับมอบหมาย (rate-limited ทุก 5 นาที เหมือน role)
+      //    ใช้เป็น scope หลักของ prisma-secure สำหรับ role STAFF — ต้องสดพอควร
+      if (token.role === "STAFF" && token.id) {
+        const STAFF_TTL = 5 * 60 * 1000;
+        const staffLastChecked = (token.staffCheckedAt as number) ?? 0;
+        if (Date.now() - staffLastChecked > STAFF_TTL || !token.assignedPropertyIds) {
+          try {
+            const rows = await prisma.propertyStaff.findMany({
+              where: { userId: token.id as string },
+              select: { propertyId: true },
+            });
+            token.assignedPropertyIds = rows.map((r) => r.propertyId);
+            token.staffCheckedAt = Date.now();
+          } catch (error) {
+            console.error("JWT STAFF sync error:", error);
+          }
+        }
+      } else if (token.role !== "STAFF") {
+        // เปลี่ยน role ออกจาก STAFF → ล้าง scope กันสิทธิ์ค้าง
+        token.assignedPropertyIds = undefined;
+      }
+
       return token;
     },
-    
+
     async session({ token, session }) {
       if (token && session.user) {
         session.user.id = token.id as string;
@@ -163,6 +185,7 @@ export const authOptions: NextAuthOptions = {
         session.user.tenantId = token.tenantId as string | undefined;
         session.user.roomId = token.roomId as string | undefined;
         session.user.isBound = token.isBound as boolean | undefined;
+        session.user.assignedPropertyIds = token.assignedPropertyIds as string[] | undefined;
       }
       return session;
     },

@@ -119,6 +119,94 @@ describe('RLS · invalid roomId profile → Forbidden', () => {
   });
 });
 
+describe('RLS · STAFF scope (inject assignedPropertyIds — cross-property isolation)', () => {
+  beforeEach(() => {
+    h.getServerSession.mockResolvedValue({
+      user: { id: 'staff_1', role: 'STAFF', assignedPropertyIds: ['prop_A'] },
+    });
+  });
+
+  it('room.findMany → where.propertyId.in = เฉพาะตึกที่ได้รับมอบหมาย', async () => {
+    await getSecurePrisma();
+    const q = await runModelHook(h.rec.rls, 'room', 'findMany', { where: {} });
+    expect(q.mock.calls[0][0].where.propertyId.in).toEqual(['prop_A']);
+  });
+
+  it('SECURITY: room.findMany ไม่ถูกฝัง propertyId ของตึกอื่น (prop_B) เข้ามาได้เลย', async () => {
+    await getSecurePrisma();
+    const q = await runModelHook(h.rec.rls, 'room', 'findMany', { where: {} });
+    expect(q.mock.calls[0][0].where.propertyId.in).not.toContain('prop_B');
+  });
+
+  it('tenant.update → where.room.propertyId.in = เฉพาะตึกที่ได้รับมอบหมาย (กันแก้ผู้เช่าตึกอื่น)', async () => {
+    await getSecurePrisma();
+    const q = await runModelHook(h.rec.rls, 'tenant', 'update', { where: { id: 't1' }, data: {} });
+    expect(q.mock.calls[0][0].where.room.propertyId.in).toEqual(['prop_A']);
+  });
+
+  it('bill.update → where.room.propertyId.in = เฉพาะตึกที่ได้รับมอบหมาย', async () => {
+    await getSecurePrisma();
+    const q = await runModelHook(h.rec.rls, 'bill', 'update', { where: { id: 'b1' }, data: {} });
+    expect(q.mock.calls[0][0].where.room.propertyId.in).toEqual(['prop_A']);
+  });
+
+  it('maintenanceRequest.update → scope ด้วยตึกที่ได้รับมอบหมายเช่นกัน', async () => {
+    await getSecurePrisma();
+    const q = await runModelHook(h.rec.rls, 'maintenanceRequest', 'update', { where: { id: 'm1' }, data: {} });
+    expect(q.mock.calls[0][0].where.room.propertyId.in).toEqual(['prop_A']);
+  });
+
+  it('parcel.findMany → scope ด้วยตึกที่ได้รับมอบหมายเช่นกัน', async () => {
+    await getSecurePrisma();
+    const q = await runModelHook(h.rec.rls, 'parcel', 'findMany', { where: {} });
+    expect(q.mock.calls[0][0].where.room.propertyId.in).toEqual(['prop_A']);
+  });
+
+  it('property.findMany → where.id.in = เฉพาะตึกที่ได้รับมอบหมาย (read-only scope)', async () => {
+    await getSecurePrisma();
+    const q = await runModelHook(h.rec.rls, 'property', 'findMany', { where: {} });
+    expect(q.mock.calls[0][0].where.id.in).toEqual(['prop_A']);
+  });
+
+  it('SECURITY: property.update (แก้ตั้งค่าตึก) → โยน Forbidden เสมอ (owner-only)', async () => {
+    await getSecurePrisma();
+    const query = vi.fn();
+    await expect(
+      h.rec.rls.query.property.$allOperations({ operation: 'update', args: { where: {} }, query }),
+    ).rejects.toThrow(/Forbidden/);
+    expect(query).not.toHaveBeenCalled();
+  });
+
+  it('SECURITY: property.delete → โยน Forbidden เสมอ (owner-only)', async () => {
+    await getSecurePrisma();
+    const query = vi.fn();
+    await expect(
+      h.rec.rls.query.property.$allOperations({ operation: 'delete', args: { where: {} }, query }),
+    ).rejects.toThrow(/Forbidden/);
+  });
+});
+
+describe('RLS · STAFF ที่ไม่มีตึกมอบหมายเลย (assignedPropertyIds ว่าง → deny-all)', () => {
+  beforeEach(() => {
+    h.getServerSession.mockResolvedValue({
+      user: { id: 'staff_orphan', role: 'STAFF', assignedPropertyIds: [] },
+    });
+  });
+
+  it('SECURITY: room.findMany → where.propertyId.in = [] (ไม่เห็นห้องไหนเลย ไม่ fallback เป็นเห็นหมด)', async () => {
+    await getSecurePrisma();
+    const q = await runModelHook(h.rec.rls, 'room', 'findMany', { where: {} });
+    expect(q.mock.calls[0][0].where.propertyId.in).toEqual([]);
+  });
+
+  it('SECURITY: assignedPropertyIds undefined (ยังไม่ sync) → ยัง deny-all ไม่ throw ไม่ fallback', async () => {
+    h.getServerSession.mockResolvedValue({ user: { id: 'staff_new', role: 'STAFF' } });
+    await getSecurePrisma();
+    const q = await runModelHook(h.rec.rls, 'tenant', 'findMany', { where: {} });
+    expect(q.mock.calls[0][0].where.room.propertyId.in).toEqual([]);
+  });
+});
+
 describe('Soft-delete layer ($allModels)', () => {
   it('findMany บนโมเดล soft-delete (Bill) → inject where.isDeleted = false', async () => {
     const query = vi.fn().mockResolvedValue([]);

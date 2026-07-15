@@ -3,13 +3,14 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { draftVacancyListing } from "@/lib/ai";
+import { canAccessProperty } from "@/lib/staff-auth";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -20,7 +21,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       include: { property: true }
     });
 
-    if (!room || room.property.ownerId !== session.user.id) {
+    if (!room || !(await canAccessProperty(session.user.role, session.user.id, room.property.ownerId, room.propertyId))) {
       return NextResponse.json({ message: "Not found or forbidden" }, { status: 403 });
     }
 

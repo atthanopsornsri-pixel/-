@@ -89,7 +89,7 @@ export async function getRevenueAnalytics(propertyId?: string) {
 export async function getDashboardMetrics(month?: number, year?: number, propertyId?: string) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user || session.user.role !== "OWNER") {
+    if (!session || !session.user || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return { success: false, error: "Unauthorized" };
     }
     const ownerId = session.user.id;

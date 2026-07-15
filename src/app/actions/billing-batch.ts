@@ -52,7 +52,14 @@ export async function generateBulkBills(propertyId: string, month: number, year:
     }
 
     // Default due date: 5th of the next month
-    const dueDate = new Date(year, month, 5); 
+    const dueDate = new Date(year, month, 5);
+
+    // ผู้เช่าปัจจุบันของแต่ละห้อง — ผูก tenantId กับบิล (ประวัติไม่ปนกับผู้เช่าคนถัดไป)
+    const activeTenants = await secureDb.tenant.findMany({
+      where: { roomId: { in: roomsToBill.map(r => r.id) }, isDeleted: false },
+      select: { id: true, roomId: true },
+    });
+    const tenantByRoom = new Map(activeTenants.map(t => [t.roomId, t.id]));
 
     // 5. Prepare bulk data payload
     const newBillsData = roomsToBill.map(room => {
@@ -67,6 +74,7 @@ export async function generateBulkBills(propertyId: string, month: number, year:
         month,
         year,
         roomId: room.id,
+        tenantId: tenantByRoom.get(room.id) ?? null,
         rentAmount,
         waterAmount: 0, // Will be updated in Data Grid
         electricAmount: 0, // Will be updated in Data Grid

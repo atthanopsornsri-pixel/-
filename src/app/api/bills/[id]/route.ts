@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { getSecurePrisma } from "@/lib/prisma-secure";
+import { canAccessProperty } from "@/lib/staff-auth";
 
 /**
  * PATCH /api/bills/[id] — แก้ไขบิล (เฉพาะ OWNER, บิลที่ยังไม่ชำระ)
@@ -12,7 +13,7 @@ import { getSecurePrisma } from "@/lib/prisma-secure";
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -27,7 +28,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       include: { room: { include: { property: true } } },
     });
 
-    if (!bill || bill.room.property.ownerId !== session.user.id) {
+    if (!bill || !(await canAccessProperty(session.user.role, session.user.id, bill.room.property.ownerId, bill.room.propertyId))) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
@@ -143,7 +144,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "OWNER") {
+    if (!session || (session.user.role !== "OWNER" && session.user.role !== "STAFF")) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
@@ -155,7 +156,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
       include: { room: { include: { property: true } } },
     });
 
-    if (!bill || bill.room.property.ownerId !== session.user.id) {
+    if (!bill || !(await canAccessProperty(session.user.role, session.user.id, bill.room.property.ownerId, bill.room.propertyId))) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
