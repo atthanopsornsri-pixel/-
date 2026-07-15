@@ -14,6 +14,7 @@ vi.mock("@/lib/prisma", () => ({
     bill: {
       findUnique: vi.fn(),
       update: vi.fn(),
+      updateMany: vi.fn(),
     },
   },
 }));
@@ -56,11 +57,7 @@ const mockBillPending = {
 describe("PATCH /api/bills/[id]/approve — อนุมัติสลิป", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(prisma.bill.update).mockResolvedValue({
-      ...mockBillPending,
-      status: "PAID",
-      paidAmount: 5500,
-    } as any);
+    vi.mocked(prisma.bill.updateMany).mockResolvedValue({ count: 1 } as any);
   });
 
   function makeReq() {
@@ -95,8 +92,9 @@ describe("PATCH /api/bills/[id]/approve — อนุมัติสลิป", 
 
   it("อนุมัติสำเร็จ → 200 + status PAID", async () => {
     vi.mocked(getServerSession).mockResolvedValue(ownerSession as any);
-    vi.mocked(prisma.bill.findUnique).mockResolvedValue(mockBillPending as any);
-    // ต้อง mock sendLineOAMessage เสมอ เพราะ approve จะเรียกแล้ว .catch() บนผลลัพธ์ของ after()
+    vi.mocked(prisma.bill.findUnique)
+      .mockResolvedValueOnce(mockBillPending as any)
+      .mockResolvedValueOnce({ ...mockBillPending, status: "PAID", paidAmount: 5500 } as any);
     vi.mocked(sendLineOAMessage).mockResolvedValue({ success: true } as any);
     const res = await APPROVE(makeReq(), { params });
     expect(res.status).toBe(200);
@@ -106,7 +104,9 @@ describe("PATCH /api/bills/[id]/approve — อนุมัติสลิป", 
 
   it("อนุมัติ → ส่ง LINE แจ้งผู้เช่า (fire-and-forget)", async () => {
     vi.mocked(getServerSession).mockResolvedValue(ownerSession as any);
-    vi.mocked(prisma.bill.findUnique).mockResolvedValue(mockBillPending as any);
+    vi.mocked(prisma.bill.findUnique)
+      .mockResolvedValueOnce(mockBillPending as any)
+      .mockResolvedValueOnce({ ...mockBillPending, status: "PAID", paidAmount: 5500 } as any);
     vi.mocked(sendLineOAMessage).mockResolvedValue({ success: true } as any);
     await APPROVE(makeReq(), { params });
     expect(sendLineOAMessage).toHaveBeenCalledWith(
@@ -118,10 +118,13 @@ describe("PATCH /api/bills/[id]/approve — อนุมัติสลิป", 
 
   it("ผู้เช่าไม่มี lineUserId → ไม่ส่ง LINE แต่ยัง 200", async () => {
     vi.mocked(getServerSession).mockResolvedValue(ownerSession as any);
-    vi.mocked(prisma.bill.findUnique).mockResolvedValue({
+    const tenantlessBill = {
       ...mockBillPending,
       room: { ...mockBillPending.room, tenants: [{ lineUserId: null, firstName: "สมชาย", lastName: "" }] },
-    } as any);
+    };
+    vi.mocked(prisma.bill.findUnique)
+      .mockResolvedValueOnce(tenantlessBill as any)
+      .mockResolvedValueOnce({ ...tenantlessBill, status: "PAID", paidAmount: 5500 } as any);
     const res = await APPROVE(makeReq(), { params });
     expect(res.status).toBe(200);
     expect(sendLineOAMessage).not.toHaveBeenCalled();

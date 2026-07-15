@@ -56,6 +56,28 @@ export async function getSecurePrisma() {
   // OWNER Policy
   if (session.user.role === "OWNER") {
     const ownerId = session.user.id;
+
+    const verifyPropertyOwner = async (propertyId: string) => {
+      const property = await softDeletePrisma.property.findFirst({
+        where: { id: propertyId, ownerId }
+      });
+      if (!property) throw new Error("Forbidden: Property does not belong to owner");
+    };
+
+    const verifyRoomOwner = async (roomId: string) => {
+      const room = await softDeletePrisma.room.findFirst({
+        where: { id: roomId, property: { ownerId } }
+      });
+      if (!room) throw new Error("Forbidden: Room does not belong to owner's properties");
+    };
+
+    const verifyTenantOwner = async (tenantId: string) => {
+      const tenant = await softDeletePrisma.tenant.findFirst({
+        where: { id: tenantId, room: { property: { ownerId } } }
+      });
+      if (!tenant) throw new Error("Forbidden: Tenant does not belong to owner's properties");
+    };
+
     return softDeletePrisma.$extends({
       query: {
         property: {
@@ -68,6 +90,23 @@ export async function getSecurePrisma() {
                 const result = await softDeletePrisma.property.findFirst({ ...anyArgs, where: { ...anyArgs.where, ownerId } });
                 if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
                 return result as any;
+            }
+            if (operation === 'create') {
+              anyArgs.data = anyArgs.data || {};
+              anyArgs.data.ownerId = ownerId;
+            }
+            if (operation === 'createMany') {
+              const data = anyArgs.data;
+              if (Array.isArray(data)) {
+                for (const item of data) item.ownerId = ownerId;
+              } else if (data) {
+                data.ownerId = ownerId;
+              }
+            }
+            if (operation === 'update' || operation === 'upsert') {
+              if (anyArgs.data) {
+                anyArgs.data.ownerId = ownerId;
+              }
             }
             return query(args);
           }
@@ -83,6 +122,21 @@ export async function getSecurePrisma() {
                 if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
                 return result as any;
             }
+            if (operation === 'create') {
+              const propertyId = anyArgs.data?.propertyId;
+              if (propertyId) await verifyPropertyOwner(propertyId);
+            }
+            if (operation === 'createMany') {
+              const data = anyArgs.data;
+              const items = Array.isArray(data) ? data : (data ? [data] : []);
+              for (const item of items) {
+                if (item.propertyId) await verifyPropertyOwner(item.propertyId);
+              }
+            }
+            if (operation === 'update' || operation === 'upsert') {
+              const propertyId = anyArgs.data?.propertyId;
+              if (propertyId) await verifyPropertyOwner(propertyId);
+            }
             return query(args);
           }
         },
@@ -96,6 +150,21 @@ export async function getSecurePrisma() {
                 const result = await softDeletePrisma.tenant.findFirst({ ...anyArgs, where: { ...anyArgs.where, room: { property: { ownerId } } } });
                 if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
                 return result as any;
+            }
+            if (operation === 'create') {
+              const roomId = anyArgs.data?.roomId;
+              if (roomId) await verifyRoomOwner(roomId);
+            }
+            if (operation === 'createMany') {
+              const data = anyArgs.data;
+              const items = Array.isArray(data) ? data : (data ? [data] : []);
+              for (const item of items) {
+                if (item.roomId) await verifyRoomOwner(item.roomId);
+              }
+            }
+            if (operation === 'update' || operation === 'upsert') {
+              const roomId = anyArgs.data?.roomId;
+              if (roomId) await verifyRoomOwner(roomId);
             }
             return query(args);
           }
@@ -111,6 +180,21 @@ export async function getSecurePrisma() {
                 if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
                 return result as any;
             }
+            if (operation === 'create') {
+              const roomId = anyArgs.data?.roomId;
+              if (roomId) await verifyRoomOwner(roomId);
+            }
+            if (operation === 'createMany') {
+              const data = anyArgs.data;
+              const items = Array.isArray(data) ? data : (data ? [data] : []);
+              for (const item of items) {
+                if (item.roomId) await verifyRoomOwner(item.roomId);
+              }
+            }
+            if (operation === 'update' || operation === 'upsert') {
+              const roomId = anyArgs.data?.roomId;
+              if (roomId) await verifyRoomOwner(roomId);
+            }
             return query(args);
           }
         },
@@ -125,6 +209,21 @@ export async function getSecurePrisma() {
                 if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
                 return result as any;
             }
+            if (operation === 'create') {
+              const roomId = anyArgs.data?.roomId;
+              if (roomId) await verifyRoomOwner(roomId);
+            }
+            if (operation === 'createMany') {
+              const data = anyArgs.data;
+              const items = Array.isArray(data) ? data : (data ? [data] : []);
+              for (const item of items) {
+                if (item.roomId) await verifyRoomOwner(item.roomId);
+              }
+            }
+            if (operation === 'update' || operation === 'upsert') {
+              const roomId = anyArgs.data?.roomId;
+              if (roomId) await verifyRoomOwner(roomId);
+            }
             return query(args);
           }
         },
@@ -138,6 +237,79 @@ export async function getSecurePrisma() {
                 const result = await softDeletePrisma.parcel.findFirst({ ...anyArgs, where: { ...anyArgs.where, room: { property: { ownerId } } } });
                 if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
                 return result as any;
+            }
+            if (operation === 'create') {
+              const roomId = anyArgs.data?.roomId;
+              if (roomId) await verifyRoomOwner(roomId);
+            }
+            if (operation === 'createMany') {
+              const data = anyArgs.data;
+              const items = Array.isArray(data) ? data : (data ? [data] : []);
+              for (const item of items) {
+                if (item.roomId) await verifyRoomOwner(item.roomId);
+              }
+            }
+            if (operation === 'update' || operation === 'upsert') {
+              const roomId = anyArgs.data?.roomId;
+              if (roomId) await verifyRoomOwner(roomId);
+            }
+            return query(args);
+          }
+        },
+        vehicle: {
+          async $allOperations({ operation, args, query }) {
+            const anyArgs = args as any;
+            if (['findMany', 'findFirst', 'update', 'updateMany', 'delete', 'deleteMany', 'count'].includes(operation)) {
+              anyArgs.where = { ...anyArgs.where, tenant: { room: { property: { ownerId } } } };
+            }
+            if (operation === 'findUnique' || operation === 'findUniqueOrThrow') {
+                const result = await softDeletePrisma.vehicle.findFirst({ ...anyArgs, where: { ...anyArgs.where, tenant: { room: { property: { ownerId } } } } });
+                if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
+                return result as any;
+            }
+            if (operation === 'create') {
+              const tenantId = anyArgs.data?.tenantId;
+              if (tenantId) await verifyTenantOwner(tenantId);
+            }
+            if (operation === 'createMany') {
+              const data = anyArgs.data;
+              const items = Array.isArray(data) ? data : (data ? [data] : []);
+              for (const item of items) {
+                if (item.tenantId) await verifyTenantOwner(item.tenantId);
+              }
+            }
+            if (operation === 'update' || operation === 'upsert') {
+              const tenantId = anyArgs.data?.tenantId;
+              if (tenantId) await verifyTenantOwner(tenantId);
+            }
+            return query(args);
+          }
+        },
+        meterSubmission: {
+          async $allOperations({ operation, args, query }) {
+            const anyArgs = args as any;
+            if (['findMany', 'findFirst', 'update', 'updateMany', 'delete', 'deleteMany', 'count'].includes(operation)) {
+              anyArgs.where = { ...anyArgs.where, room: { property: { ownerId } } };
+            }
+            if (operation === 'findUnique' || operation === 'findUniqueOrThrow') {
+                const result = await softDeletePrisma.meterSubmission.findFirst({ ...anyArgs, where: { ...anyArgs.where, room: { property: { ownerId } } } });
+                if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
+                return result as any;
+            }
+            if (operation === 'create') {
+              const roomId = anyArgs.data?.roomId;
+              if (roomId) await verifyRoomOwner(roomId);
+            }
+            if (operation === 'createMany') {
+              const data = anyArgs.data;
+              const items = Array.isArray(data) ? data : (data ? [data] : []);
+              for (const item of items) {
+                if (item.roomId) await verifyRoomOwner(item.roomId);
+              }
+            }
+            if (operation === 'update' || operation === 'upsert') {
+              const roomId = anyArgs.data?.roomId;
+              if (roomId) await verifyRoomOwner(roomId);
             }
             return query(args);
           }
@@ -261,6 +433,7 @@ export async function getSecurePrisma() {
     }
     
     const roomId = tenantRecord.roomId;
+    const tenantId = tenantRecord.id;
     const propertyId = tenantRecord.room.propertyId;
 
     return softDeletePrisma.$extends({
@@ -306,13 +479,35 @@ export async function getSecurePrisma() {
                 anyArgs.where = { ...anyArgs.where, roomId };
              }
              if (operation === 'findUnique' || operation === 'findUniqueOrThrow') {
-                const result = await softDeletePrisma.maintenanceRequest.findFirst({ ...anyArgs, where: { ...anyArgs.where, roomId } });
-                if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
-                return result as any;
+                 const result = await softDeletePrisma.maintenanceRequest.findFirst({ ...anyArgs, where: { ...anyArgs.where, roomId } });
+                 if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
+                 return result as any;
              }
-             if (operation === 'create' || operation === 'createMany') {
-                if (anyArgs.data && !Array.isArray(anyArgs.data) && anyArgs.data.roomId !== roomId) {
+             if (operation === 'create') {
+                const dataRoomId = anyArgs.data?.roomId;
+                if (dataRoomId && dataRoomId !== roomId) {
                    throw new Error("Forbidden: Cannot create request for another room");
+                }
+                anyArgs.data = anyArgs.data || {};
+                anyArgs.data.roomId = roomId;
+             }
+             if (operation === 'createMany') {
+                const data = anyArgs.data;
+                const items = Array.isArray(data) ? data : (data ? [data] : []);
+                for (const item of items) {
+                   if (item.roomId && item.roomId !== roomId) {
+                      throw new Error("Forbidden: Cannot create request for another room");
+                   }
+                   item.roomId = roomId;
+                }
+             }
+             if (operation === 'update' || operation === 'upsert') {
+                if (anyArgs.data) {
+                   const dataRoomId = anyArgs.data?.roomId;
+                   if (dataRoomId && dataRoomId !== roomId) {
+                      throw new Error("Forbidden: Cannot update request for another room");
+                   }
+                   anyArgs.data.roomId = roomId;
                 }
              }
              return query(args);
@@ -348,6 +543,102 @@ export async function getSecurePrisma() {
                  const result = await softDeletePrisma.room.findFirst({ ...anyArgs, where: { ...anyArgs.where, id: roomId } });
                  if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
                  return result as any;
+             }
+             return query(args);
+          }
+        },
+        vehicle: {
+          async $allOperations({ operation, args, query }) {
+             const anyArgs = args as any;
+             if (['findMany', 'findFirst', 'update', 'updateMany', 'delete', 'deleteMany', 'count'].includes(operation)) {
+                anyArgs.where = { ...anyArgs.where, tenantId };
+             }
+             if (operation === 'findUnique' || operation === 'findUniqueOrThrow') {
+                 const result = await softDeletePrisma.vehicle.findFirst({ ...anyArgs, where: { ...anyArgs.where, tenantId } });
+                 if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
+                 return result as any;
+             }
+             if (operation === 'create') {
+                const dataTenantId = anyArgs.data?.tenantId;
+                if (dataTenantId && dataTenantId !== tenantId) {
+                   throw new Error("Forbidden: Cannot create vehicle for another tenant");
+                }
+                anyArgs.data = anyArgs.data || {};
+                anyArgs.data.tenantId = tenantId;
+             }
+             if (operation === 'createMany') {
+                const data = anyArgs.data;
+                const items = Array.isArray(data) ? data : (data ? [data] : []);
+                for (const item of items) {
+                   if (item.tenantId && item.tenantId !== tenantId) {
+                      throw new Error("Forbidden: Cannot create vehicle for another tenant");
+                   }
+                   item.tenantId = tenantId;
+                }
+             }
+             if (operation === 'update' || operation === 'upsert') {
+                if (anyArgs.data) {
+                   const dataTenantId = anyArgs.data?.tenantId;
+                   if (dataTenantId && dataTenantId !== tenantId) {
+                      throw new Error("Forbidden: Cannot update vehicle for another tenant");
+                   }
+                   anyArgs.data.tenantId = tenantId;
+                }
+             }
+             return query(args);
+          }
+        },
+        meterSubmission: {
+          async $allOperations({ operation, args, query }) {
+             const anyArgs = args as any;
+             if (['findMany', 'findFirst', 'count'].includes(operation)) {
+                anyArgs.where = { ...anyArgs.where, roomId };
+             }
+             if (operation === 'findUnique' || operation === 'findUniqueOrThrow') {
+                 const result = await softDeletePrisma.meterSubmission.findFirst({ ...anyArgs, where: { ...anyArgs.where, roomId } });
+                 if (operation === 'findUniqueOrThrow' && !result) throw new Error("Not Found");
+                 return result as any;
+             }
+             if (operation === 'create') {
+                const dataRoomId = anyArgs.data?.roomId;
+                const dataTenantId = anyArgs.data?.tenantId;
+                if (dataRoomId && dataRoomId !== roomId) {
+                   throw new Error("Forbidden: Cannot submit meter for another room");
+                }
+                if (dataTenantId && dataTenantId !== tenantId) {
+                   throw new Error("Forbidden: Cannot submit meter for another tenant");
+                }
+                anyArgs.data = anyArgs.data || {};
+                anyArgs.data.roomId = roomId;
+                anyArgs.data.tenantId = tenantId;
+             }
+             if (operation === 'createMany') {
+                const data = anyArgs.data;
+                const items = Array.isArray(data) ? data : (data ? [data] : []);
+                for (const item of items) {
+                   if (item.roomId && item.roomId !== roomId) {
+                      throw new Error("Forbidden: Cannot submit meter for another room");
+                   }
+                   if (item.tenantId && item.tenantId !== tenantId) {
+                      throw new Error("Forbidden: Cannot submit meter for another tenant");
+                   }
+                   item.roomId = roomId;
+                   item.tenantId = tenantId;
+                }
+             }
+             if (operation === 'update' || operation === 'upsert') {
+                if (anyArgs.data) {
+                   const dataRoomId = anyArgs.data?.roomId;
+                   const dataTenantId = anyArgs.data?.tenantId;
+                   if (dataRoomId && dataRoomId !== roomId) {
+                      throw new Error("Forbidden: Cannot update meter for another room");
+                   }
+                   if (dataTenantId && dataTenantId !== tenantId) {
+                      throw new Error("Forbidden: Cannot update meter for another tenant");
+                   }
+                   anyArgs.data.roomId = roomId;
+                   anyArgs.data.tenantId = tenantId;
+                }
              }
              return query(args);
           }

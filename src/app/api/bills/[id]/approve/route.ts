@@ -35,14 +35,27 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
     }
 
-    // Update bill status to PAID + sync paidAmount กับ totalAmount
-    const updated = await prisma.bill.update({
-      where: { id },
+    // บิลที่ชำระแล้วห้ามอนุมัติซ้ำ
+    if (bill.status === "PAID") {
+      return NextResponse.json({ message: "บิลนี้ได้รับการชำระเงินเรียบร้อยแล้ว" }, { status: 400 });
+    }
+
+    // Update bill status to PAID + sync paidAmount กับ totalAmount แบบอะตอมมิก
+    const result = await prisma.bill.updateMany({
+      where: { id, status: { not: "PAID" } },
       data: {
         status: "PAID",
         paidAmount: bill.totalAmount,
         paymentDate: bill.paymentDate ?? new Date(),
       },
+    });
+
+    if (result.count === 0) {
+      return NextResponse.json({ message: "บิลนี้ได้รับการชำระเงินเรียบร้อยแล้ว" }, { status: 400 });
+    }
+
+    const updated = await prisma.bill.findUnique({
+      where: { id }
     });
 
     // แจ้งผู้เช่าทาง LINE ว่าเจ้าของยืนยันการชำระแล้ว

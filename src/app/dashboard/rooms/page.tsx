@@ -353,7 +353,8 @@ export default function RoomsPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out relative">
+    <>
+      <div className="max-w-6xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out relative print:hidden">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-2">
         <div className="flex items-center gap-3">
           <div
@@ -649,15 +650,15 @@ export default function RoomsPage() {
       {/* Edit Modal */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+          <form onSubmit={handleEditSubmit} className="bg-white rounded-3xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 shrink-0">
               <h2 className="text-xl font-bold text-slate-800">แก้ไขห้องพัก</h2>
-              <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-200 transition-colors">
+              <button type="button" onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-200 transition-colors">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
             
-            <form onSubmit={handleEditSubmit} className="p-6 space-y-4">
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
               <div className="space-y-2">
                 <Label>หมายเลขห้อง</Label>
                 <Input value={editNumber} onChange={e => setEditNumber(e.target.value)} required className="rounded-xl h-11" />
@@ -926,8 +927,9 @@ export default function RoomsPage() {
                   *หมายเหตุ: เลขมิเตอร์ตั้งต้นจะถูกใช้เป็นฐานในการคำนวณบิลค่าเช่าในเดือนแรกที่ลูกบ้านย้ายเข้า
                 </p>
               </div>
+              </div>
               
-              <div className="mt-6 flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 shrink-0">
                 <Button type="button" variant="ghost" onClick={() => setIsEditModalOpen(false)} className="rounded-xl h-11 font-semibold text-slate-600 hover:bg-slate-100">
                   ยกเลิก
                 </Button>
@@ -936,7 +938,6 @@ export default function RoomsPage() {
                 </Button>
               </div>
             </form>
-          </div>
         </div>
       )}
 
@@ -1005,12 +1006,19 @@ export default function RoomsPage() {
           </div>
         </div>
       )}
+      </div>
 
       {/* Print QR Code Modal */}
       {printInviteRoom && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white rounded-[32px] shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col print:p-0 print:shadow-none print:border-none print:fixed print:inset-0 print:bg-white print:z-[9999]">
-            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 print:hidden">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200 cursor-pointer"
+          onClick={() => setPrintInviteRoom(null)}
+        >
+          <div 
+            className="bg-white rounded-[32px] shadow-2xl w-full max-w-md max-h-[90vh] overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col print:p-0 print:shadow-none print:border-none print:fixed print:inset-0 print:bg-white print:z-[9999] cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50 print:hidden shrink-0">
               <h3 className="font-bold text-[#1D1D1F]">ใบลงทะเบียน QR Code</h3>
               <button onClick={() => setPrintInviteRoom(null)} className="p-2 bg-white rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors shadow-sm border border-slate-200">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -1071,7 +1079,7 @@ export default function RoomsPage() {
               </div>
             </div>
 
-            <div className="p-4 bg-white border-t border-slate-100 flex gap-3 print:hidden">
+            <div className="p-4 bg-white border-t border-slate-100 flex gap-3 print:hidden shrink-0">
               <Button variant="outline" className="flex-1 rounded-full border-slate-200 h-12" onClick={() => setPrintInviteRoom(null)}>
                 ปิด
               </Button>
@@ -1086,7 +1094,6 @@ export default function RoomsPage() {
           </div>
         </div>
       )}
-
-    </div>
+    </>
   );
 }

@@ -67,6 +67,19 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       );
     }
 
+    // กันสลิปซ้ำข้ามบิลในระบบโดยตรวจสอบ transRef กับฐานข้อมูล
+    if (verification.transRef) {
+      const existingUsedBill = await prisma.bill.findFirst({
+        where: { slipTransRef: verification.transRef, isDeleted: false },
+      });
+      if (existingUsedBill && existingUsedBill.id !== id) {
+        return NextResponse.json(
+          { message: "สลิปนี้เคยถูกใช้ชำระเงินไปแล้วในระบบ ไม่สามารถนำมาใช้ซ้ำได้", code: "DUPLICATE_SLIP" },
+          { status: 400 }
+        );
+      }
+    }
+
     // ยอดเงินในสลิปไม่ตรงกับยอดบิล → แจ้งผู้ใช้ ไม่บันทึก
     if (verification.enabled && verification.amountMismatch) {
       const slipAmt = verification.amount != null
@@ -117,6 +130,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         slipUrl: body.slipUrl,
         paymentDate: new Date(),
         paidAmount,
+        slipTransRef: verification.transRef || null,
       },
     });
 
