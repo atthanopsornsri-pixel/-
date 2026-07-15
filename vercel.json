@@ -12,6 +12,10 @@
     {
       "path": "/api/cron/meter-reminder",
       "schedule": "0 3 20,23 * *"
+    },
+    {
+      "path": "/api/cron/pdpa-retention",
+      "schedule": "0 4 * * *"
     }
   ]
 }

@@ -271,18 +271,23 @@ function TenantsDashboardContent() {
                               className="rounded-xl border-slate-200 text-slate-600 hover:text-slate-900 font-semibold text-xs" 
                               onClick={() => window.open(`/dashboard/tenants/${tenant.id}/contract`, '_blank')}
                             >
-                              พิมพ์สัญญาเช่า
+                              📄 สัญญา (พิมพ์)
                             </Button>
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-semibold text-xs" 
-                              onClick={() => {
-                                setEvictTenantId(tenant.id);
-                                setIsEvictModalOpen(true);
-                              }}
+                              className="rounded-xl border-blue-200 text-blue-600 hover:bg-blue-50 hover:text-blue-700 font-semibold text-xs" 
+                              onClick={() => window.open(`/dashboard/tenants/${tenant.id}/e-contract/draft`, '_blank')}
                             >
-                              ย้ายออก
+                              ✍️ E-Contract
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-semibold text-xs"
+                              onClick={() => window.open(`/dashboard/tenants/${tenant.id}/checkout`, '_blank')}
+                            >
+                              🚪 ย้ายออก / ปิดบิล
                             </Button>
                           </div>
                         </td>
