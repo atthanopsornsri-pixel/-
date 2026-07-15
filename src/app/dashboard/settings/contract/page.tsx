@@ -149,7 +149,7 @@ export default function ContractSettingsPage() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-80px)] -m-6 animate-in fade-in">
+    <div className="flex flex-col -m-4 md:-m-10 animate-in fade-in">
       
       {/* Header bar */}
       <div className="p-6 border-b bg-white flex justify-between items-center shrink-0">
@@ -182,10 +182,10 @@ export default function ContractSettingsPage() {
       </div>
 
       {/* Split Screen Content */}
-      <div className="flex flex-1 overflow-hidden">
-        
+      <div className="flex flex-1 items-stretch">
+
         {/* Left Side: Editor */}
-        <div className="w-[450px] bg-slate-50 border-r flex flex-col overflow-y-auto z-10 shrink-0 p-6 space-y-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+        <div className="w-[450px] bg-slate-50 border-r flex flex-col z-10 shrink-0 p-6 space-y-6 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
           <div>
             <h3 className="font-bold text-slate-800 mb-2">แทรกตัวแปรอัตโนมัติ</h3>
             <p className="text-xs text-slate-500 mb-3">คลิกเพื่อแทรกข้อมูลลงในตำแหน่งเคอร์เซอร์</p>
@@ -215,7 +215,7 @@ export default function ContractSettingsPage() {
         </div>
 
         {/* Right Side: Live Preview */}
-        <div className="flex-1 bg-gray-200 p-8 overflow-y-auto flex justify-center">
+        <div className="flex-1 bg-gray-200 p-8 flex justify-center">
           <div className="bg-white w-full max-w-[794px] min-h-[1123px] shadow-lg p-14 font-sarabun text-[15px] leading-relaxed">
             <div className="text-center font-bold text-xl mb-6">สัญญาเช่าที่อยู่อาศัย</div>
             
