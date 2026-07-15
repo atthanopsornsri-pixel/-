@@ -39,11 +39,13 @@ model User {
   smsAddon          SmsAddon? // แพ็กเกจเสริม SMS (สำหรับ Owner)
   registrationCodes RegistrationCode[] // โค้ดที่ User คนนี้สร้าง หรือใช้งาน
   notifications     Notification[]
+  staffAssignments  PropertyStaff[] // ตึกที่ User (role STAFF) ได้รับมอบหมายให้ดูแล
 }
 
 enum Role {
   ADMIN
   OWNER
+  STAFF
   TENANT
 }
 
@@ -89,9 +91,24 @@ model Property {
   ownerId   String
   owner     User     @relation(fields: [ownerId], references: [id])
   rooms     Room[]
+  staff     PropertyStaff[] // พนักงานที่ได้รับมอบหมายให้ดูแลตึกนี้
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   isDeleted Boolean  @default(false)
+}
+
+// พนักงานคุมตึก (Role STAFF) ผูกกับตึกที่ได้รับมอบหมาย
+// staff 1 คนดูแลได้หลายตึก · 1 ตึกมี staff ได้หลายคน (many-to-many ผ่าน join นี้)
+model PropertyStaff {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, propertyId])
+  @@index([userId])
 }
 
 model Room {
@@ -155,10 +172,16 @@ model Tenant {
   emergencyContact String? // ชื่อผู้ติดต่อฉุกเฉิน
   emergencyPhone   String? // เบอร์ผู้ติดต่อฉุกเฉิน
   moveInDate       DateTime? // วันย้ายเข้าจริง
+  moveOutDate      DateTime? // วันย้ายออกจริง (set ตอน check-out สำเร็จ) — ใช้อ้างอิง retention/termination
   profileCompleted Boolean   @default(false) // กรอกข้อมูลครบแล้วหรือยัง
+
+  // PDPA data retention
+  dataAnonymizedAt DateTime? // เวลาที่ PII ถูก anonymize ตามนโยบายเก็บข้อมูล (กัน cron ทำซ้ำ)
 
   vehicles Vehicle[] // ยานพาหนะที่ลงทะเบียน
   meterSubmissions MeterSubmission[]
+  bills            Bill[]    // บิลที่ผูกกับผู้เช่ารายนี้ (ประวัติคงอยู่แม้ห้องมีผู้เช่าใหม่)
+  checkout         Checkout? // ข้อมูลการย้ายออก/ปิดเคส (1 ต่อ 1)
 
   // E-Contract Fields
   signatureUrl      String?   @db.Text
@@ -166,6 +189,9 @@ model Tenant {
   contractIpAddress String?
   contractUserAgent String?
   contractPdfUrl    String?   @db.Text // สำหรับเก็บไฟล์ PDF สัญญา หรือสลิปสัญญาที่อัปโหลด
+  eContractStatus   String    @default("NONE") // NONE, DRAFT, SENT, SIGNED, TERMINATED, EXPIRED
+  eContractToken    String?   @unique
+  eContractData     Json?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -192,7 +218,9 @@ enum VehicleType {
 
 model Bill {
   id              String   @id @default(cuid())
-  type            BillType @default(MONTHLY) // MONTHLY = บิลรายเดือน, CHECKIN = บิลเข้าอยู่
+  type            BillType @default(MONTHLY) // MONTHLY = บิลรายเดือน, CHECKIN = บิลเข้าอยู่, CHECKOUT = บิลปิดเคส
+  tenantId        String? // ผูกบิลกับผู้เช่าตอนออกบิล — ทำให้ประวัติบิลของแต่ละผู้เช่าไม่ปนกันเมื่อห้องมีผู้เช่าใหม่
+  tenant          Tenant?  @relation(fields: [tenantId], references: [id])
   month           Int
   year            Int
   roomId          String
@@ -222,6 +250,7 @@ model Bill {
   dueDate        DateTime
   slipUrl        String? // ลิงก์/รูปสลิปโอนเงิน
   paymentDate    DateTime? // วันที่ผู้เช่าส่งสลิป
+  slipTransRef   String?    @unique // เลขอ้างอิงรายการโอนเงินสลิป (กันซ้ำข้ามบิลทั้งระบบ)
   payments       Payment[]
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
@@ -233,6 +262,43 @@ model Bill {
 enum BillType {
   MONTHLY
   CHECKIN
+  CHECKOUT // บิลสรุปปิดเคสตอนย้ายออก (Final Settlement)
+}
+
+// ── Check-out / Move-out (Final Settlement) ──
+// 1 ต่อ 1 กับ Tenant · เก็บเลขมิเตอร์งวดสุดท้าย, ยอดหักเงินประกัน, ยอดสุทธิ
+// และบังคับอัปโหลดสลิปคืนเงินก่อนปิดเคส (กันลูกบ้านได้ใบเสร็จแต่ไม่ได้เงินคืนจริง)
+model Checkout {
+  id       String @id @default(cuid())
+  tenantId String @unique
+  tenant   Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  // เลขมิเตอร์งวดสุดท้าย (ใช้คิดค่าน้ำ-ไฟตามหน่วยใช้จริงจากรอบจดล่าสุด)
+  waterReadingFinal    Float?
+  electricReadingFinal Float?
+  finalUtilityAmount   Float @default(0) // ค่าน้ำ-ไฟงวดสุดท้าย (หน่วยที่ใช้ × เรต)
+  finalRentAmount      Float @default(0) // ค่าเช่างวดสุดท้าย (เจ้าของปรับตามจำนวนวันได้)
+  outstandingAmount    Float @default(0) // ยอดค้างชำระจากบิลก่อนหน้า (ยกมา)
+
+  // การหักเงินประกัน
+  depositAmount     Float   @default(0) // เงินประกันตั้งต้นที่ยกมา
+  deductionAmount   Float   @default(0) // ยอดหักรวม (ค่าทำความสะอาด/ของเสียหาย)
+  deductionNote     String? @db.Text // รายละเอียดการหัก
+  deductionPhotoUrl String? @db.Text // รูปหลักฐานความเสียหาย
+
+  // ยอดสุทธิ: + = ผู้เช่าต้องจ่ายเพิ่ม, - = เจ้าของต้องคืนเงิน
+  netAmount     Float   @default(0)
+  refundSlipUrl String? @db.Text // สลิปโอนคืนเงินประกัน (บังคับถ้า netAmount < 0 ก่อนปิดเคส)
+
+  status    CheckoutStatus @default(DRAFT)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+enum CheckoutStatus {
+  DRAFT          // กำลังคำนวณบิลสุดท้าย
+  PENDING_REFUND // ยอดสุทธิติดลบ รอเจ้าของอัปโหลดสลิปคืนเงิน
+  COMPLETED      // ปิดเคสแล้ว ห้องกลับเป็น AVAILABLE
 }
 
 enum BillStatus {
