@@ -26,11 +26,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       return NextResponse.json({ message: "Not found or forbidden" }, { status: 403 });
     }
 
-    // Rate Limiting by Plan Tier: Free Trial (5/hr), Starter (15/hr), Growth (50/hr), Enterprise (100/hr)
+    // Rate Limiting by Plan Tier: Free Trial (5/hr), Starter (15/hr), Growth (50/hr), Pro (75/hr), Enterprise (100/hr)
     let maxQuota = 5;
     const tier = session?.user?.planTier;
     if (tier === "GROWTH") maxQuota = 50;
     else if (tier === "STARTER") maxQuota = 15;
+    else if (tier === "PRO") maxQuota = 75;
     else if (tier === "ENTERPRISE") maxQuota = 100;
 
     const limitKey = `ai_draft:${session.user.id}`;

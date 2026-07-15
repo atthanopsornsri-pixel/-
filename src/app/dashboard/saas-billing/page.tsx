@@ -312,19 +312,19 @@ export default function OwnerBillingPage() {
                 </div>
               </div>
             ) : (
-              <div className="grid md:grid-cols-3 gap-6">
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* STARTER */}
                 <div className="border border-slate-200 rounded-2xl p-6 hover:border-blue-300 hover:shadow-md transition-all flex flex-col justify-between">
                   <div>
                     <h3 className="text-lg font-bold text-slate-800">Starter</h3>
-                    <p className="text-sm text-slate-500">สูงสุด 30 ห้อง</p>
+                    <p className="text-sm text-slate-500">สูงสุด 20 ห้อง</p>
                     <div className="my-4">
-                      <span className="text-3xl font-black text-slate-800">฿199</span><span className="text-slate-500">/ด.</span>
+                      <span className="text-3xl font-black text-slate-800">฿299</span><span className="text-slate-500">/ด.</span>
                     </div>
                   </div>
                   <div className="space-y-2 mt-4">
-                    <Button onClick={() => setConfirmPlan({ planTier: "STARTER", cycle: "MONTHLY", priceText: "฿199" })} variant="outline" className="w-full font-bold">รายเดือน (฿199)</Button>
-                    <Button onClick={() => setConfirmPlan({ planTier: "STARTER", cycle: "YEARLY", priceText: "฿1,990" })} variant="outline" className="w-full font-bold bg-slate-50 text-blue-600 border-blue-200 hover:bg-blue-50">รายปี (฿1,990)</Button>
+                    <Button onClick={() => setConfirmPlan({ planTier: "STARTER", cycle: "MONTHLY", priceText: "฿299" })} variant="outline" className="w-full font-bold">รายเดือน (฿299)</Button>
+                    <Button onClick={() => setConfirmPlan({ planTier: "STARTER", cycle: "YEARLY", priceText: "฿2,990" })} variant="outline" className="w-full font-bold bg-slate-50 text-blue-600 border-blue-200 hover:bg-blue-50">รายปี (฿2,990)</Button>
                   </div>
                 </div>
 
@@ -333,14 +333,29 @@ export default function OwnerBillingPage() {
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">แนะนำ</div>
                   <div>
                     <h3 className="text-lg font-bold text-slate-800">Growth</h3>
-                    <p className="text-sm text-slate-500">สูงสุด 100 ห้อง</p>
+                    <p className="text-sm text-slate-500">สูงสุด 80 ห้อง</p>
                     <div className="my-4">
-                      <span className="text-3xl font-black text-slate-800">฿599</span><span className="text-slate-500">/ด.</span>
+                      <span className="text-3xl font-black text-slate-800">฿799</span><span className="text-slate-500">/ด.</span>
                     </div>
                   </div>
                   <div className="space-y-2 mt-4">
-                    <Button onClick={() => setConfirmPlan({ planTier: "GROWTH", cycle: "MONTHLY", priceText: "฿599" })} variant="outline" className="w-full font-bold border-blue-200 text-blue-700 hover:bg-blue-100">รายเดือน (฿599)</Button>
-                    <Button onClick={() => setConfirmPlan({ planTier: "GROWTH", cycle: "YEARLY", priceText: "฿5,990" })} className="w-full font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md">รายปี (฿5,990)</Button>
+                    <Button onClick={() => setConfirmPlan({ planTier: "GROWTH", cycle: "MONTHLY", priceText: "฿799" })} variant="outline" className="w-full font-bold border-blue-200 text-blue-700 hover:bg-blue-100">รายเดือน (฿799)</Button>
+                    <Button onClick={() => setConfirmPlan({ planTier: "GROWTH", cycle: "YEARLY", priceText: "฿7,990" })} className="w-full font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-md">รายปี (฿7,990)</Button>
+                  </div>
+                </div>
+
+                {/* PRO */}
+                <div className="border border-slate-200 rounded-2xl p-6 hover:border-blue-300 hover:shadow-md transition-all flex flex-col justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-800">Pro</h3>
+                    <p className="text-sm text-slate-500">สูงสุด 200 ห้อง</p>
+                    <div className="my-4">
+                      <span className="text-3xl font-black text-slate-800">฿1,590</span><span className="text-slate-500">/ด.</span>
+                    </div>
+                  </div>
+                  <div className="space-y-2 mt-4">
+                    <Button onClick={() => setConfirmPlan({ planTier: "PRO", cycle: "MONTHLY", priceText: "฿1,590" })} variant="outline" className="w-full font-bold">รายเดือน (฿1,590)</Button>
+                    <Button onClick={() => setConfirmPlan({ planTier: "PRO", cycle: "YEARLY", priceText: "฿15,900" })} variant="outline" className="w-full font-bold bg-slate-50 text-blue-600 border-blue-200 hover:bg-blue-50">รายปี (฿15,900)</Button>
                   </div>
                 </div>
 
@@ -348,14 +363,14 @@ export default function OwnerBillingPage() {
                 <div className="border border-slate-200 rounded-2xl p-6 hover:border-blue-300 hover:shadow-md transition-all flex flex-col justify-between">
                   <div>
                     <h3 className="text-lg font-bold text-slate-800">Enterprise</h3>
-                    <p className="text-sm text-slate-500">ไม่จำกัดห้อง</p>
+                    <p className="text-sm text-slate-500">สูงสุด 300 ห้อง</p>
                     <div className="my-4">
-                      <span className="text-3xl font-black text-slate-800">฿1,299</span><span className="text-slate-500">/ด.</span>
+                      <span className="text-3xl font-black text-slate-800">฿2,900</span><span className="text-slate-500">/ด.</span>
                     </div>
                   </div>
                   <div className="space-y-2 mt-4">
-                    <Button onClick={() => setConfirmPlan({ planTier: "ENTERPRISE", cycle: "MONTHLY", priceText: "฿1,299" })} variant="outline" className="w-full font-bold">รายเดือน (฿1,299)</Button>
-                    <Button onClick={() => setConfirmPlan({ planTier: "ENTERPRISE", cycle: "YEARLY", priceText: "฿12,990" })} variant="outline" className="w-full font-bold bg-slate-50 text-blue-600 border-blue-200 hover:bg-blue-50">รายปี (฿12,990)</Button>
+                    <Button onClick={() => setConfirmPlan({ planTier: "ENTERPRISE", cycle: "MONTHLY", priceText: "฿2,900" })} variant="outline" className="w-full font-bold">รายเดือน (฿2,900)</Button>
+                    <Button onClick={() => setConfirmPlan({ planTier: "ENTERPRISE", cycle: "YEARLY", priceText: "฿29,000" })} variant="outline" className="w-full font-bold bg-slate-50 text-blue-600 border-blue-200 hover:bg-blue-50">รายปี (฿29,000)</Button>
                   </div>
                 </div>
               </div>

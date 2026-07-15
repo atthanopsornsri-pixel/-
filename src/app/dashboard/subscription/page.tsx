@@ -8,7 +8,7 @@ import generatePayload from "promptpay-qr";
 import {
   CreditCard, Package, Smartphone, Key, FileText,
   Crown, Building2, TrendingUp, MessageSquare,
-  Shield, Check, ChevronDown, Zap,
+  Shield, Check, ChevronDown, Zap, Rocket,
 } from "lucide-react";
 
 // =============================================
@@ -80,7 +80,7 @@ const PLAN_META: Record<string, {
     gradFrom: "#f3f5fa",
     gradTo: "#e4eaf5",
     inkColor: "var(--jh-blue)",
-    desc: "เหมาะสำหรับหอพักขนาดเล็ก สูงสุด 30 ห้อง",
+    desc: "เหมาะสำหรับหอพักขนาดเล็ก สูงสุด 20 ห้อง",
   },
   GROWTH: {
     Icon: TrendingUp,
@@ -88,7 +88,15 @@ const PLAN_META: Record<string, {
     gradFrom: "#fdf8ee",
     gradTo: "#f6ecd6",
     inkColor: "var(--jh-orange-ink)",
-    desc: "สำหรับหอพักที่กำลังขยาย สูงสุด 100 ห้อง",
+    desc: "สำหรับหอพักที่กำลังขยาย สูงสุด 80 ห้อง",
+  },
+  PRO: {
+    Icon: Rocket,
+    color: "#af52de",
+    gradFrom: "#fbf5fe",
+    gradTo: "#f3e3fb",
+    inkColor: "var(--jh-purple)",
+    desc: "สำหรับหอพักหลายตึกขนาดกลาง-ใหญ่ สูงสุด 200 ห้อง",
   },
   ENTERPRISE: {
     Icon: Crown,
@@ -96,7 +104,7 @@ const PLAN_META: Record<string, {
     gradFrom: "#f6f6ff",
     gradTo: "#e8e7fb",
     inkColor: "var(--jh-indigo)",
-    desc: "ไม่จำกัดจำนวนห้อง รองรับทุกขนาดธุรกิจ",
+    desc: "โปรเจกต์ใหญ่ หลายตึก สูงสุด 300 ห้อง",
   },
 };
 

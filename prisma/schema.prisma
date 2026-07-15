@@ -53,6 +53,7 @@ enum PlanTier {
   FREE_TRIAL
   STARTER
   GROWTH
+  PRO
   ENTERPRISE
 }
 

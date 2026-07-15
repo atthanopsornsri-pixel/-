@@ -14,7 +14,13 @@ describe('getRoomLimit', () => {
   it('คืน maxRooms ตามแพ็กเกจที่กำหนดไว้', () => {
     expect(getRoomLimit('STARTER')).toBe(PLAN_PRICES.STARTER.maxRooms);
     expect(getRoomLimit('GROWTH')).toBe(PLAN_PRICES.GROWTH.maxRooms);
-    expect(getRoomLimit('ENTERPRISE')).toBe(UNLIMITED_ROOMS);
+    expect(getRoomLimit('PRO')).toBe(PLAN_PRICES.PRO.maxRooms);
+    expect(getRoomLimit('ENTERPRISE')).toBe(PLAN_PRICES.ENTERPRISE.maxRooms);
+  });
+
+  it('ENTERPRISE มีเพดานห้อง ไม่ใช่ไม่จำกัด (ตัดสินใจแล้วว่าเกิน 300 ห้องให้คุยราคาเอง ไม่ใช้ flat fee ไม่จำกัด)', () => {
+    expect(PLAN_PRICES.ENTERPRISE.maxRooms).toBeLessThan(UNLIMITED_ROOMS);
+    expect(isUnlimitedRooms(PLAN_PRICES.ENTERPRISE.maxRooms)).toBe(false);
   });
 
   it('FREE_TRIAL ได้โควตาห้องเท่ากับค่าทดลองใช้ฟรี', () => {

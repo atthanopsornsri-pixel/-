@@ -31,8 +31,8 @@ export default function PricingPage() {
           </p>
         </div>
 
-        <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
-          
+        <div className="max-w-7xl mx-auto grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+
           {/* STARTER */}
           <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm flex flex-col">
             <div className="mb-6">
@@ -40,11 +40,11 @@ export default function PricingPage() {
               <p className="text-slate-500 text-sm mt-1">เริ่มต้นอย่างโปร</p>
             </div>
             <div className="mb-6">
-              <span className="text-4xl font-black text-slate-900">฿199</span>
+              <span className="text-4xl font-black text-slate-900">฿299</span>
               <span className="text-slate-500 font-medium"> / เดือน</span>
             </div>
             <ul className="space-y-4 mb-8 flex-grow">
-              <li className="flex items-start text-sm text-slate-700"><Check className="w-5 h-5 text-emerald-500 mr-2 shrink-0"/> จัดการได้สูงสุด 30 ห้อง</li>
+              <li className="flex items-start text-sm text-slate-700"><Check className="w-5 h-5 text-emerald-500 mr-2 shrink-0"/> จัดการได้สูงสุด 20 ห้อง</li>
               <li className="flex items-start text-sm text-slate-700"><Check className="w-5 h-5 text-emerald-500 mr-2 shrink-0"/> ระบบออกบิล & ส่ง LINE แจ้งเตือน</li>
               <li className="flex items-start text-sm text-slate-700"><Check className="w-5 h-5 text-emerald-500 mr-2 shrink-0"/> รองรับผู้ดูแลระบบ 1 บัญชี</li>
             </ul>
@@ -54,7 +54,7 @@ export default function PricingPage() {
           </div>
 
           {/* GROWTH (HIGHLIGHT) */}
-          <div className="bg-blue-600 rounded-3xl p-8 border border-blue-500 shadow-xl shadow-blue-900/10 flex flex-col transform md:-translate-y-4 relative">
+          <div className="bg-blue-600 rounded-3xl p-8 border border-blue-500 shadow-xl shadow-blue-900/10 flex flex-col md:-translate-y-4 relative">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-amber-400 to-orange-500 text-white text-xs font-bold px-4 py-1 rounded-full shadow-sm">
               แนะนำ (ยอดนิยม)
             </div>
@@ -63,11 +63,11 @@ export default function PricingPage() {
               <p className="text-blue-200 text-sm mt-1">สำหรับอพาร์ตเมนต์ที่กำลังขยาย</p>
             </div>
             <div className="mb-6">
-              <span className="text-4xl font-black text-white">฿599</span>
+              <span className="text-4xl font-black text-white">฿799</span>
               <span className="text-blue-200 font-medium"> / เดือน</span>
             </div>
             <ul className="space-y-4 mb-8 flex-grow text-blue-50">
-              <li className="flex items-start text-sm"><Check className="w-5 h-5 text-emerald-300 mr-2 shrink-0"/> จัดการได้สูงสุด 100 ห้อง</li>
+              <li className="flex items-start text-sm"><Check className="w-5 h-5 text-emerald-300 mr-2 shrink-0"/> จัดการได้สูงสุด 80 ห้อง</li>
               <li className="flex items-start text-sm"><Check className="w-5 h-5 text-emerald-300 mr-2 shrink-0"/> ฟีเจอร์ทั้งหมดในแพ็กเกจ Starter</li>
               <li className="flex items-start text-sm"><Check className="w-5 h-5 text-emerald-300 mr-2 shrink-0"/> ระบบอนุมัติสลิปโอนเงินรวดเร็ว</li>
               <li className="flex items-start text-sm"><Check className="w-5 h-5 text-emerald-300 mr-2 shrink-0"/> รองรับผู้ดูแลระบบ 3 บัญชี</li>
@@ -77,21 +77,41 @@ export default function PricingPage() {
             </Link>
           </div>
 
+          {/* PRO */}
+          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm flex flex-col">
+            <div className="mb-6">
+              <h3 className="text-xl font-bold text-slate-900">Pro</h3>
+              <p className="text-slate-500 text-sm mt-1">สำหรับหอพักหลายตึกขนาดกลาง-ใหญ่</p>
+            </div>
+            <div className="mb-6">
+              <span className="text-4xl font-black text-slate-900">฿1,590</span>
+              <span className="text-slate-500 font-medium"> / เดือน</span>
+            </div>
+            <ul className="space-y-4 mb-8 flex-grow">
+              <li className="flex items-start text-sm text-slate-700"><Check className="w-5 h-5 text-emerald-500 mr-2 shrink-0"/> จัดการได้สูงสุด 200 ห้อง</li>
+              <li className="flex items-start text-sm text-slate-700"><Check className="w-5 h-5 text-emerald-500 mr-2 shrink-0"/> ฟีเจอร์ทั้งหมดในแพ็กเกจ Growth</li>
+              <li className="flex items-start text-sm text-slate-700"><Check className="w-5 h-5 text-emerald-500 mr-2 shrink-0"/> รองรับผู้ดูแลระบบไม่จำกัด</li>
+            </ul>
+            <Link href="/register">
+              <Button variant="outline" className="w-full rounded-xl h-12 font-bold border-slate-300">ทดลองใช้ฟรี 14 วัน</Button>
+            </Link>
+          </div>
+
           {/* ENTERPRISE */}
           <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm flex flex-col">
             <div className="mb-6">
               <h3 className="text-xl font-bold text-slate-900">Enterprise</h3>
-              <p className="text-slate-500 text-sm mt-1">เสือนอนกิน โปรเจกต์ใหญ่</p>
+              <p className="text-slate-500 text-sm mt-1">โปรเจกต์ใหญ่ หลายตึก</p>
             </div>
             <div className="mb-6">
-              <span className="text-4xl font-black text-slate-900">฿1,299</span>
+              <span className="text-4xl font-black text-slate-900">฿2,900</span>
               <span className="text-slate-500 font-medium"> / เดือน</span>
             </div>
             <ul className="space-y-4 mb-8 flex-grow">
-              <li className="flex items-start text-sm text-slate-700"><Check className="w-5 h-5 text-emerald-500 mr-2 shrink-0"/> ไม่จำกัดจำนวนห้อง (101 ห้องขึ้นไป)</li>
-              <li className="flex items-start text-sm text-slate-700"><Check className="w-5 h-5 text-emerald-500 mr-2 shrink-0"/> ฟีเจอร์ทั้งหมดในแพ็กเกจ Growth</li>
-              <li className="flex items-start text-sm text-slate-700"><Check className="w-5 h-5 text-emerald-500 mr-2 shrink-0"/> บริการ Support พิเศษ 24/7</li>
-              <li className="flex items-start text-sm text-slate-700"><Check className="w-5 h-5 text-emerald-500 mr-2 shrink-0"/> รองรับผู้ดูแลระบบไม่จำกัด</li>
+              <li className="flex items-start text-sm text-slate-700"><Check className="w-5 h-5 text-emerald-500 mr-2 shrink-0"/> จัดการได้สูงสุด 300 ห้อง</li>
+              <li className="flex items-start text-sm text-slate-700"><Check className="w-5 h-5 text-emerald-500 mr-2 shrink-0"/> ฟีเจอร์ทั้งหมดในแพ็กเกจ Pro</li>
+              <li className="flex items-start text-sm text-slate-700"><Check className="w-5 h-5 text-emerald-500 mr-2 shrink-0"/> บริการ Support ระดับ Priority</li>
+              <li className="flex items-start text-sm text-slate-700"><Check className="w-5 h-5 text-emerald-500 mr-2 shrink-0"/> เกิน 300 ห้อง ติดต่อฝ่ายขายเพื่อทำราคาเฉพาะราย</li>
             </ul>
             <Link href="/register">
               <Button variant="outline" className="w-full rounded-xl h-12 font-bold border-slate-300">ติดต่อแอดมินเพื่ออัปเกรด</Button>
@@ -147,15 +167,15 @@ export default function PricingPage() {
               {/* JadHor */}
               <div className="p-6 md:p-10 bg-gradient-to-br from-blue-50/50 to-white relative">
                 <div className="absolute top-6 right-6 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                  ประหยัดกว่า 45%
+                  ประหยัดกว่า 25%
                 </div>
                 <div className="text-sm font-bold text-blue-600 uppercase tracking-wider mb-3">JadHor — แพ็กเกจ Growth</div>
                 <div className="flex items-baseline gap-2 mb-4">
-                  <span className="text-4xl font-black text-slate-900">฿599</span>
+                  <span className="text-4xl font-black text-slate-900">฿799</span>
                   <span className="text-slate-500 font-medium">/ เดือน</span>
                 </div>
                 <ul className="space-y-2.5 text-sm text-slate-700">
-                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /> ครอบคลุมได้สูงสุด 100 ห้อง (ทุกตึกรวมกัน)</li>
+                  <li className="flex items-start gap-2"><Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /> ครอบคลุมได้สูงสุด 80 ห้อง (ทุกตึกรวมกัน)</li>
                   <li className="flex items-start gap-2"><Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /> เห็นข้อมูลทุกตึกในที่เดียว</li>
                   <li className="flex items-start gap-2"><Check className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" /> ผู้เช่ารับแจ้งเตือนผ่าน LINE ไม่ต้องโหลดแอป</li>
                 </ul>

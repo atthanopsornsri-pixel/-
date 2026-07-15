@@ -12,13 +12,14 @@
 export const UNLIMITED_ROOMS = 999999;
 
 export const PLAN_PRICES = {
-  STARTER:    { monthly: 199,   yearly: 1990,   label: "Starter",    maxRooms: 30             },
-  GROWTH:     { monthly: 599,   yearly: 5990,   label: "Growth",     maxRooms: 100            },
-  ENTERPRISE: { monthly: 1299,  yearly: 12990,  label: "Enterprise", maxRooms: UNLIMITED_ROOMS },
+  STARTER:    { monthly: 299,   yearly: 2990,   label: "Starter",    maxRooms: 20  },
+  GROWTH:     { monthly: 799,   yearly: 7990,   label: "Growth",     maxRooms: 80  },
+  PRO:        { monthly: 1590,  yearly: 15900,  label: "Pro",        maxRooms: 200 },
+  ENTERPRISE: { monthly: 2900,  yearly: 29000,  label: "Enterprise", maxRooms: 300 },
 } as const;
 
 /** จำนวนห้องสูงสุดในช่วงทดลองใช้ฟรี (เท่ากับ Starter เพื่อให้ทดลองได้เต็มที่) */
-export const FREE_TRIAL_MAX_ROOMS = 30;
+export const FREE_TRIAL_MAX_ROOMS = 20;
 
 /**
  * คืนค่าจำนวนห้องสูงสุดสำหรับแต่ละแพ็กเกจ
