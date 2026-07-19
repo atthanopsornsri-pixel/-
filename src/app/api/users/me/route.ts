@@ -4,6 +4,16 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { encryptCredential, decryptCredential } from "@/lib/encryption";
+import crypto from "crypto";
+
+/** สร้างรหัสผูกบัญชี LINE แบบสุ่มปลอดภัย: JAD-XXXXXX (6 ตัว, ไม่มีอักขระกำกวม 0/O/1/I) */
+function generateBindingCode(): string {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // 32 ตัว, ตัด 0O1I ออก
+  const bytes = crypto.randomBytes(6);
+  let code = "";
+  for (let i = 0; i < 6; i++) code += alphabet[bytes[i] % alphabet.length];
+  return `JAD-${code}`;
+}
 
 export async function GET(req: Request) {
   try {
@@ -51,8 +61,9 @@ export async function PATCH(req: Request) {
     if (lineUserId !== undefined) dataToUpdate.lineUserId = lineUserId;
     
     if (generateBindingCode) {
-      const code = `JAD-${Math.floor(1000 + Math.random() * 9000)}`;
-      dataToUpdate.lineBindingCode = code;
+      dataToUpdate.lineBindingCode = generateBindingCode();
+      // หมดอายุใน 10 นาที — กันการสุ่มเดารหัส (brute-force)
+      dataToUpdate.lineBindingCodeExpiresAt = new Date(Date.now() + 10 * 60 * 1000);
     }
 
     if (password) {

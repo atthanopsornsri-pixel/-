@@ -1,20 +1,27 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendLineOAMessage } from "@/lib/line";
+import { rateLimit } from "@/lib/rate-limit";
 import crypto from "crypto";
 
 function verifyLineSignature(rawBody: string, signature: string | null): boolean {
   const secret = process.env.LINE_CHANNEL_SECRET;
+  // FAIL-CLOSED: ไม่มี secret = ตรวจ signature ไม่ได้ = ปฏิเสธทุกคำขอ
+  // (กันกรณีลืมตั้ง env var แล้ว webhook เปิดโล่งให้ปลอม LINE event ได้)
   if (!secret) {
-    console.warn("[LINE Webhook] LINE_CHANNEL_SECRET is not set — skipping signature verification");
-    return true;
+    console.error("[LINE Webhook] LINE_CHANNEL_SECRET is not set — rejecting all requests (fail-closed)");
+    return false;
   }
   if (!signature) return false;
   const expected = crypto
     .createHmac("sha256", secret)
     .update(rawBody)
     .digest("base64");
-  return crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature));
+  // ความยาว buffer ต้องเท่ากันก่อน timingSafeEqual ไม่งั้น throw
+  const expectedBuf = Buffer.from(expected);
+  const signatureBuf = Buffer.from(signature);
+  if (expectedBuf.length !== signatureBuf.length) return false;
+  return crypto.timingSafeEqual(expectedBuf, signatureBuf);
 }
 
 // ── Chatbot: ตอบกลับผู้เช่าที่รู้จัก ──────────────────────────────────────────
@@ -142,15 +149,25 @@ export async function POST(req: Request) {
 
         // ── Case 1: รหัสผูกบัญชี JAD-XXXX ──
         if (receivedText.toUpperCase().startsWith("JAD-")) {
+          // Rate-limit การเดารหัสต่อ LINE user (กัน brute-force สุ่มรหัส)
+          const rl = await rateLimit(`line-bind:${lineUserId}`, 5, 10 * 60 * 1000);
+          if (!rl.allowed) {
+            continue; // เกินโควตา → เพิกเฉย (ไม่บอกใบ้ว่าถูก/ผิด)
+          }
+
           const bindCode = receivedText.toUpperCase();
           const user = await prisma.user.findFirst({
-            where: { lineBindingCode: bindCode },
+            where: {
+              lineBindingCode: bindCode,
+              // ต้องยังไม่หมดอายุ (โค้ดเก่าที่ไม่มี expiry จะไม่ match ต้อง gen ใหม่)
+              lineBindingCodeExpiresAt: { gt: new Date() },
+            },
           });
 
           if (user) {
             await prisma.user.update({
               where: { id: user.id },
-              data: { lineUserId, lineBindingCode: null },
+              data: { lineUserId, lineBindingCode: null, lineBindingCodeExpiresAt: null },
             });
 
             if (user.role === "TENANT") {

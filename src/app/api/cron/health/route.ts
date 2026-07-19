@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { logError } from "@/lib/logger";
+import { checkCronAuth } from "@/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -13,12 +14,8 @@ export const runtime = "nodejs";
  * ถ้า DB ตายหรือ query ช้าผิดปกติ → แจ้ง LINE Admin อัตโนมัติผ่าน logError()
  */
 export async function GET(req: Request) {
-  // Auth: Vercel Cron ส่ง Authorization: Bearer <CRON_SECRET>
-  const authHeader = req.headers.get("authorization");
-  const expected = process.env.CRON_SECRET;
-  if (expected && authHeader !== `Bearer ${expected}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = checkCronAuth(req, "/api/cron/health");
+  if (authError) return authError;
 
   const start = Date.now();
   try {

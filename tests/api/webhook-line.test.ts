@@ -8,6 +8,7 @@ const mocks = vi.hoisted(() => ({
   tenantFindUnique: vi.fn(),
   tenantFindFirst: vi.fn(),
   sendLineOAMessage: vi.fn(),
+  rateLimit: vi.fn(),
 }));
 
 vi.mock('@/lib/prisma', () => ({
@@ -21,6 +22,7 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 vi.mock('@/lib/line', () => ({ sendLineOAMessage: mocks.sendLineOAMessage }));
+vi.mock('@/lib/rate-limit', () => ({ rateLimit: mocks.rateLimit }));
 
 import { POST } from '@/app/api/webhook/line/route';
 
@@ -38,6 +40,7 @@ const makeReq = (rawBody: string, signature: string | null) =>
 beforeEach(() => {
   vi.clearAllMocks();
   mocks.sendLineOAMessage.mockResolvedValue(undefined);
+  mocks.rateLimit.mockResolvedValue({ allowed: true, remaining: 4, retryAfterMs: 0 });
 });
 afterEach(() => vi.unstubAllEnvs());
 
@@ -77,20 +80,33 @@ describe('POST /api/webhook/line — signature verification (SECURITY)', () => {
 describe('POST /api/webhook/line — account binding (signature ถูกต้อง)', () => {
   beforeEach(() => vi.stubEnv('LINE_CHANNEL_SECRET', SECRET));
 
-  it('รหัส JAD-XXXX ที่ตรง user → ผูก lineUserId + ล้าง bindingCode', async () => {
+  it('รหัส JAD-XXXX ที่ตรง user (ยังไม่หมดอายุ) → ผูก lineUserId + ล้าง bindingCode', async () => {
     mocks.userFindFirst.mockResolvedValue({ id: 'u1', name: 'เจ้าของ', role: 'OWNER', lineChannelAccessToken: null });
     const body = JSON.stringify({
       events: [{ type: 'message', message: { type: 'text', text: 'jad-ab12' }, source: { userId: 'U_line_123' } }],
     });
     const res = await POST(makeReq(body, sign(body)));
     expect(res.status).toBe(200);
-    expect(mocks.userFindFirst).toHaveBeenCalledWith({ where: { lineBindingCode: 'JAD-AB12' } });
+    // where ต้องมีทั้งรหัส + เงื่อนไขยังไม่หมดอายุ (H02)
+    expect(mocks.userFindFirst).toHaveBeenCalledWith({
+      where: { lineBindingCode: 'JAD-AB12', lineBindingCodeExpiresAt: { gt: expect.any(Date) } },
+    });
     expect(mocks.userUpdate).toHaveBeenCalledWith(
       expect.objectContaining({
         where: { id: 'u1' },
-        data: { lineUserId: 'U_line_123', lineBindingCode: null },
+        data: { lineUserId: 'U_line_123', lineBindingCode: null, lineBindingCodeExpiresAt: null },
       }),
     );
+  });
+
+  it('rate-limit เกิน → ไม่ค้นหา/ผูกบัญชี (กัน brute-force, H02)', async () => {
+    mocks.rateLimit.mockResolvedValue({ allowed: false, remaining: 0, retryAfterMs: 60000 });
+    const body = JSON.stringify({
+      events: [{ type: 'message', message: { type: 'text', text: 'JAD-AB12' }, source: { userId: 'U_x' } }],
+    });
+    const res = await POST(makeReq(body, sign(body)));
+    expect(res.status).toBe(200); // ตอบ 200 แต่ไม่ทำอะไร (ไม่บอกใบ้)
+    expect(mocks.userFindFirst).not.toHaveBeenCalled();
   });
 
   it('รหัสผูกไม่ตรง user ใด → ไม่ update อะไร แต่ยังตอบ 200', async () => {

@@ -21,7 +21,8 @@ model User {
   image                  String?
   lineChannelAccessToken String? // สำหรับเก็บ Channel Access Token ของ LINE OA บอต
   lineUserId             String? // สำหรับเก็บ LINE User ID ส่วนบุคคลของผู้ใช้งานเพื่อรับแจ้งเตือน
-  lineBindingCode        String? // สำหรับรหัสผูกบัญชีชั่วคราว (เช่น JAD-1234)
+  lineBindingCode        String? // สำหรับรหัสผูกบัญชีชั่วคราว (เช่น JAD-A1B2C3)
+  lineBindingCodeExpiresAt DateTime? // วันหมดอายุของรหัสผูกบัญชี (ปกติ 10 นาที) — กันสุ่มเดา
   resetTokenHash         String?   @unique // sha256 ของ token รีเซ็ตรหัสผ่าน (เก็บ hash ไม่เก็บ token ดิบ)
   resetTokenExpiry       DateTime? // วันหมดอายุของ token รีเซ็ต (ปกติ 1 ชม.)
   role                   Role      @default(TENANT)

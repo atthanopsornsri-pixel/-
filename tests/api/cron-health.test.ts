@@ -66,10 +66,11 @@ describe('GET /api/cron/health — DB error', () => {
   });
 });
 
-describe('GET /api/cron/health — ไม่ตั้ง CRON_SECRET', () => {
-  it('เมื่อไม่ตั้ง secret → ข้าม auth (เข้าได้) — บันทึกพฤติกรรมไว้', async () => {
+describe('GET /api/cron/health — ไม่ตั้ง CRON_SECRET (fail-closed, C01)', () => {
+  it('ไม่ตั้ง secret → 503 ปฏิเสธ (ไม่ปล่อยผ่าน) + ไม่แตะ DB', async () => {
     vi.stubEnv('CRON_SECRET', undefined);
     const res = await GET(makeReq());
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(503);
+    expect(mocks.userCount).not.toHaveBeenCalled();
   });
 });

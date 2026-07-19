@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { sendLineOAMessage } from "@/lib/line";
 import { sendSmsWithAddon } from "@/lib/sms";
 import { logError } from "@/lib/logger";
+import { checkCronAuth } from "@/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -20,11 +21,8 @@ export const maxDuration = 60;
  *  - ผู้เช่าต้องผูก LINE หรือมีเบอร์โทร
  */
 export async function GET(req: Request) {
-  const authHeader = req.headers.get("authorization");
-  const expected = process.env.CRON_SECRET;
-  if (expected && authHeader !== `Bearer ${expected}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = checkCronAuth(req, "/api/cron/bill-reminder");
+  if (authError) return authError;
 
   const appUrl = process.env.NEXTAUTH_URL?.replace(/\/$/, "") || "https://jadhor.vercel.app";
 

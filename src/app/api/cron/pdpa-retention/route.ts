@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { logError } from "@/lib/logger";
+import { checkCronAuth } from "@/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -22,11 +23,8 @@ export const maxDuration = 60;
  * ไม่แตะ User account (auth) — scope นี้เฉพาะ PII ใน Tenant profile
  */
 export async function GET(req: Request) {
-  const authHeader = req.headers.get("authorization");
-  const expected = process.env.CRON_SECRET;
-  if (expected && authHeader !== `Bearer ${expected}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const authError = checkCronAuth(req, "/api/cron/pdpa-retention");
+  if (authError) return authError;
 
   try {
     const retentionDays = Number(process.env.PDPA_RETENTION_DAYS) || 90;
