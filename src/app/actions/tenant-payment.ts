@@ -106,8 +106,10 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
     // 4. บันทึก DB เป็น PENDING ทันที (fast path — ก่อน SlipOK verify)
     //    เพื่อป้องกัน Vercel 10s timeout ทำให้ผู้เช่าเห็น error
     //    SlipOK จะถูกเรียกแบบ non-blocking หลังจาก return สำเร็จ
-    await prisma.bill.update({
-      where: { id: billId },
+    //    ใช้ updateMany + compound-where ปิดช่อง check-then-write race:
+    //    เขียนได้เฉพาะเมื่อบิลยังไม่ PAID/PENDING (กันกดส่งซ้ำเร็ว ๆ / double-submit)
+    const upd = await prisma.bill.updateMany({
+      where: { id: billId, status: { notIn: ["PAID", "PENDING"] } },
       data: {
         status: "PENDING",
         slipUrl: slipUrlToStore,
@@ -115,6 +117,9 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
         paymentDate: new Date(),
       }
     });
+    if (upd.count === 0) {
+      return { success: false, error: "บิลนี้ถูกดำเนินการไปแล้ว — กรุณารีเฟรชหน้าจอ" };
+    }
 
     revalidatePath("/tenant/dashboard");
     revalidatePath("/dashboard/my-bills");
