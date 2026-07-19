@@ -5,6 +5,7 @@ import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 import LineProvider from "next-auth/providers/line";
 import type { Adapter, AdapterUser } from "next-auth/adapters";
+import { rateLimit } from "./rate-limit";
 
 /**
  * Custom adapter ที่ override createUser เพื่อรองรับ LINE OAuth
@@ -85,6 +86,13 @@ export const authOptions: NextAuthOptions = {
 
         const rawInput = credentials.email.trim();
         const emailInput = rawInput.toLowerCase();
+
+        // Rate-limit ต่อบัญชี: กัน brute-force / credential-stuffing
+        // 5 ครั้งต่อ 15 นาที ต่อ identifier (email/username/เบอร์โทร ที่กรอกเข้ามา)
+        const rl = await rateLimit(`login:${emailInput}`, 5, 15 * 60 * 1000);
+        if (!rl.allowed) {
+          throw new Error("มีการพยายามเข้าสู่ระบบบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่");
+        }
         // เบอร์โทร: ตัดขีด/เว้นวรรคออก เพื่อให้ตรงกับ username ที่เก็บเป็นตัวเลขล้วน
         const phoneInput = rawInput.replace(/[-\s]/g, "");
 
