@@ -44,7 +44,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "อีเมลนี้มีผู้ใช้งานแล้ว" }, { status: 400 });
     }
 
-    let user;
     if (userId) {
       // Check if user already has a tenant profile
       const userCheck = await prisma.user.findUnique({
@@ -54,45 +53,36 @@ export async function POST(req: Request) {
       if (userCheck?.tenantProfile) {
         return NextResponse.json({ message: "บัญชี LINE นี้ได้ลงทะเบียนเป็นลูกบ้านเรียบร้อยแล้ว" }, { status: 400 });
       }
+    }
 
-      // Update existing LINE OAuth user — name from LINE session, password set later in profile step
-      user = await prisma.user.update({
-        where: { id: userId },
-        data: {
-          email,
-          name: sessionName || undefined,
-          role: "TENANT",
-          lineUserId: lineUserId || undefined,
-          tenantProfile: {
-            create: {
-              roomId: room.id,
+    // สร้าง/แก้ user + tenantProfile + เปลี่ยนสถานะห้อง แบบ atomic
+    // (กันห้องค้างสถานะ AVAILABLE ทั้งที่มีผู้เช่าแล้ว ถ้า room.update fail)
+    const user = await prisma.$transaction(async (tx) => {
+      const u = userId
+        ? await tx.user.update({
+            where: { id: userId },
+            data: {
+              email,
+              name: sessionName || undefined,
+              role: "TENANT",
               lineUserId: lineUserId || undefined,
-            }
-          }
-        }
-      });
-    } else {
-      user = await prisma.user.create({
-        data: {
-          email,
-          name: sessionName || undefined,
-          role: "TENANT",
-          tenantProfile: {
-            create: {
-              roomId: room.id,
-            }
-          }
-        },
-      });
-    }
+              tenantProfile: { create: { roomId: room.id, lineUserId: lineUserId || undefined } },
+            },
+          })
+        : await tx.user.create({
+            data: {
+              email,
+              name: sessionName || undefined,
+              role: "TENANT",
+              tenantProfile: { create: { roomId: room.id } },
+            },
+          });
 
-    // Optionally update room status to OCCUPIED if it was AVAILABLE
-    if (room.status === "AVAILABLE") {
-      await prisma.room.update({
-        where: { id: room.id },
-        data: { status: "OCCUPIED" }
-      });
-    }
+      if (room.status === "AVAILABLE") {
+        await tx.room.update({ where: { id: room.id }, data: { status: "OCCUPIED" } });
+      }
+      return u;
+    });
 
     return NextResponse.json(
       { message: "Tenant created successfully", user: { id: user.id, email: user.email } },

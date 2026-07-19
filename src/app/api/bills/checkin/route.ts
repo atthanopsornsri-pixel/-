@@ -79,36 +79,38 @@ export async function POST(req: Request) {
       select: { id: true, lineUserId: true },
     });
 
-    const bill = await prisma.bill.create({
-      data: {
-        type: "CHECKIN",
-        month,
-        year,
-        roomId,
-        tenantId: tenant?.id ?? null,
-        rentAmount: 0,
-        waterAmount: 0,
-        electricAmount: 0,
-        securityDeposit: Number(securityDeposit),
-        advanceRent: Number(advanceRent),
-        keyDeposit: Number(keyDeposit),
-        vehicleFee: Number(vehicleFee),
-        totalAmount: total,
-        dueDate: new Date(dueDate),
-      },
-      include: { room: { select: { number: true } } },
-    });
-
-    // sync เงินประกัน + วันเริ่มสัญญา → Tenant (ใช้ต่อในสัญญาเช่า)
-    if (tenant) {
-      await prisma.tenant.update({
-        where: { id: tenant.id },
+    // สร้างบิลเข้าอยู่ + sync เงินประกัน/วันเริ่มสัญญาเข้า Tenant แบบ atomic
+    // (depositAmount ถูกใช้เป็นค่าตั้งต้นตอนคำนวณเงินคืนใน check-out — ต้องตรงกับบิลเสมอ)
+    const [bill] = await prisma.$transaction([
+      prisma.bill.create({
         data: {
-          depositAmount: Number(securityDeposit),
-          ...(leaseStart ? { leaseStart: new Date(leaseStart) } : {}),
+          type: "CHECKIN",
+          month,
+          year,
+          roomId,
+          tenantId: tenant?.id ?? null,
+          rentAmount: 0,
+          waterAmount: 0,
+          electricAmount: 0,
+          securityDeposit: Number(securityDeposit),
+          advanceRent: Number(advanceRent),
+          keyDeposit: Number(keyDeposit),
+          vehicleFee: Number(vehicleFee),
+          totalAmount: total,
+          dueDate: new Date(dueDate),
         },
-      });
-    }
+        include: { room: { select: { number: true } } },
+      }),
+      ...(tenant
+        ? [prisma.tenant.update({
+            where: { id: tenant.id },
+            data: {
+              depositAmount: Number(securityDeposit),
+              ...(leaseStart ? { leaseStart: new Date(leaseStart) } : {}),
+            },
+          })]
+        : []),
+    ]);
 
     // แจ้งเตือนลูกบ้านผ่าน LINE OA
     if (room.property.owner?.lineChannelAccessToken && tenant?.lineUserId) {
