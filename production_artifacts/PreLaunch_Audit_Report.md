@@ -197,7 +197,7 @@ Endpoint นี้ไม่มี authentication ใดๆ (ตั้งใจ�
 | ID | สถานะ | หมายเหตุ |
 |---|---|---|
 | C01 | ✅ แก้แล้ว | `src/lib/cron-auth.ts` (helper fail-closed) + webhook LINE + cron 5 ตัว — มี test `tests/lib/cron-auth.test.ts` |
-| C02 | ⚠️ code แก้แล้ว / **infra ยังต้องทำ** | backup export ครบทุกตาราง ไม่มี cutoff แล้ว แต่ **disaster recovery จริงต้องตั้ง Supabase PITR หรือ off-site pg_dump** — ดู `DISASTER_RECOVERY.md` |
+| C02 | ✅ แก้ครบแล้ว (2026-07-19) | off-site pg_dump ผ่าน GitHub Actions (`.github/workflows/backup.yml`) + **restore drill ผ่านจริง** (proof: bcrypt hash ที่ restore มา compare ได้ถูกต้องด้วย library เดียวกับที่แอปใช้จริง) — ดู `DISASTER_RECOVERY.md` |
 | H01 | ✅ แก้แล้ว | `/api/public/bills` ใช้ `select` คืนเฉพาะ field ที่จำเป็น (ไม่คืน slipUrl/transRef/tenantId) |
 | H02 | ✅ code แก้แล้ว / **ต้อง db push** | รหัส 6 ตัว crypto-random + expiry 10 นาที + rate-limit webhook — **ต้อง `prisma db push` field `lineBindingCodeExpiresAt`** |
 | H03 | ✅ แก้แล้ว | rate-limit ต่อบัญชีใน `authorize()` (5/15 นาที) |
@@ -211,6 +211,8 @@ Endpoint นี้ไม่มี authentication ใดๆ (ตั้งใจ�
 
 **Verify หลังแก้:** build ✅ · tsc ✅ 0 error · **test ✅ 256/256 ผ่าน**
 
-**เหลือ 2 action ก่อนพร้อมจริง (นอกโค้ด):**
-1. `prisma db push` เพื่อเพิ่ม field `lineBindingCodeExpiresAt` (H02) — ต้องทำก่อน deploy ไม่งั้นการผูก LINE ใหม่จะ error
-2. ตั้ง Supabase PITR หรือ off-site pg_dump + ทำ restore drill (C02) — ดู `DISASTER_RECOVERY.md`
+**อัปเดต 2026-07-19 (รอบ 2):** ทำครบทั้ง 2 action ที่ค้างไว้แล้ว
+1. ✅ `prisma db push` — field `lineBindingCodeExpiresAt` (H02) อยู่ใน DB จริงแล้ว, verify แล้วว่า tsc/test ผ่านกับ schema จริง
+2. ✅ Off-site backup (C02) — ตั้งค่า + รันจริงสำเร็จ + **restore drill ผ่านจริง** วันเดียวกัน — ดู `DISASTER_RECOVERY.md`
+
+**เหลือรายการเดียวที่ยังไม่ทำ:** rollback plan ของ Vercel (Instant Rollback) — ยังไม่เคยทดสอบจริงว่าใช้งานได้
