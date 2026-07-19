@@ -25,7 +25,7 @@
 ## Checklist ก่อนปล่อยตลาดจริง
 - [x] เลือกและตั้งค่า **ตัวเลือก B** (2026-07-19)
 - [x] **restore drill จริงแล้ว** (2026-07-19) — รายละเอียดด้านล่าง
-- [ ] ทดสอบ **rollback plan** ของ Vercel (Instant Rollback ไป deployment ก่อนหน้า) ว่าใช้ได้จริง — ยังไม่ได้ทำ
+- [x] ทดสอบ **rollback plan** ของ Vercel (Instant Rollback ไป deployment ก่อนหน้า) ว่าใช้ได้จริง — **2026-07-19**
 - [x] บันทึกวันที่ทำ restore drill ล่าสุดไว้ที่นี่: **2026-07-19**
 
 ## บันทึก Restore Drill (2026-07-19)
@@ -40,3 +40,15 @@
 - ลบ instance ทดสอบ + ไฟล์ backup ในเครื่องทิ้งหมดหลังตรวจเสร็จ (ไม่เก็บ password hash ค้างไว้)
 
 **สรุป:** off-site backup กู้คืนระบบให้ user login ได้จริง — C02 ปิดสมบูรณ์
+
+## บันทึก Vercel Rollback Drill (2026-07-19)
+
+**วิธี:** ใช้ Vercel CLI (`vercel rollback <deployment-url>`) ทดสอบจริงกับ production alias `jadhor.vercel.app`
+
+1. Baseline: `jadhor.vercel.app` → `apartment-n4yebacrf` (deployment ล่าสุด, ยืนยันด้วยเนื้อหาหน้า `/pricing` ตรงกับราคาที่แก้วันนี้)
+2. Rollback ไป `apartment-bwuyhwegj` (deployment ก่อนหน้า, ~1 ชม.ก่อน) — สำเร็จใน 2 วินาที
+3. **ยืนยันด้วย `vercel inspect jadhor.vercel.app`** (ไม่ใช่แค่เชื่อข้อความ CLI) ว่า alias ชี้ไป deployment เก่าจริง (`dpl_HLi3ciGJqxs8vs98ywid6YRVKKb6`)
+4. Roll forward กลับไป `apartment-n4yebacrf` — สำเร็จใน 2 วินาที เช่นกัน
+5. ยืนยันซ้ำด้วย `vercel inspect` ว่ากลับมาที่ deployment ล่าสุดจริง + เช็ค `/`, `/pricing`, `/login` ตอบ HTTP 200 ทั้งหมด
+
+**สรุป:** Instant Rollback ใช้เวลา ~2 วินาทีต่อครั้ง (เร็วกว่าที่คาด) ใช้งานได้จริงทั้งสองทิศทาง — ไม่มีขั้นตอนซับซ้อนเพิ่มเติม (ไม่ต้อง redeploy ใหม่)

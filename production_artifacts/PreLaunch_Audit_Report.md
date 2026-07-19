@@ -215,4 +215,8 @@ Endpoint นี้ไม่มี authentication ใดๆ (ตั้งใจ�
 1. ✅ `prisma db push` — field `lineBindingCodeExpiresAt` (H02) อยู่ใน DB จริงแล้ว, verify แล้วว่า tsc/test ผ่านกับ schema จริง
 2. ✅ Off-site backup (C02) — ตั้งค่า + รันจริงสำเร็จ + **restore drill ผ่านจริง** วันเดียวกัน — ดู `DISASTER_RECOVERY.md`
 
-**เหลือรายการเดียวที่ยังไม่ทำ:** rollback plan ของ Vercel (Instant Rollback) — ยังไม่เคยทดสอบจริงว่าใช้งานได้
+**อัปเดต 2026-07-19 (รอบ 3):** ทดสอบ Vercel Instant Rollback จริงแล้ว (rollback → verify ด้วย `vercel inspect` → roll forward → verify) ใช้เวลา ~2 วินาทีต่อครั้ง ดูรายละเอียดใน `DISASTER_RECOVERY.md`
+
+## Layer 3 Checklist — ปิดครบทุกข้อแล้ว
+
+ทั้ง 3 Layer ของ playbook นี้ปิดครบสมบูรณ์ ไม่มีรายการค้างเหลือ — ระบบพร้อมสำหรับขั้นตอนถัดไปก่อนปล่อยตลาดจริง (ยังต้องตัดสินใจเรื่องธุรกิจ/การตลาดแยกต่างหาก ไม่ใช่ QA)
