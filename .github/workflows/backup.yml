@@ -1,0 +1,65 @@
+name: Daily off-site database backup
+
+on:
+  schedule:
+    # 20:00 UTC = 03:00 เวลาไทย ทุกวัน
+    - cron: "0 20 * * *"
+  workflow_dispatch: {} # กดรันมือได้จาก tab Actions (ใช้ตอน restore drill/ทดสอบ)
+
+permissions:
+  contents: write # ต้องมี — GITHUB_TOKEN default เป็น read-only, job นี้ต้อง push กลับ repo
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # Supabase รัน Postgres 17 — ubuntu-latest มาพร้อม client v16 เท่านั้น
+      # ต้อง apt install เวอร์ชันที่ตรงกัน แล้วเรียก path เต็มเสมอ (คำสั่ง pg_dump
+      # เปล่า ๆ ใน PATH ยังชี้ไปที่ v16 เดิมอยู่ดีแม้ install 17 เพิ่มแล้ว)
+      - name: Install postgresql-client-17
+        run: |
+          sudo sh -c 'echo "deb https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/pgdg.gpg
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-17
+
+      - name: Dump database
+        env:
+          # ต้องเป็น "Session pooler" connection string (Supabase Dashboard →
+          # Project Settings → Database → Connection string → tab "Session pooler")
+          # ห้ามใช้ "Direct connection" — host นั้น IPv6-only และ GitHub runner
+          # ไม่มี IPv6 ออกอินเทอร์เน็ต จะต่อไม่ติดเลย
+          DATABASE_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          mkdir -p backup_output
+          FILENAME="jadhor-$(date -u +%Y-%m-%dT%H-%M-%S)Z.sql.gz"
+          /usr/lib/postgresql/17/bin/pg_dump "$DATABASE_URL" --no-owner --no-privileges | gzip > "backup_output/$FILENAME"
+          echo "FILENAME=$FILENAME" >> "$GITHUB_ENV"
+          echo "Dump size: $(du -h backup_output/$FILENAME | cut -f1)"
+
+      - name: Push dump to orphan "backups" branch
+        run: |
+          git config user.name "backup-bot"
+          git config user.email "backup-bot@users.noreply.github.com"
+
+          git fetch origin backups 2>/dev/null || true
+          if git show-ref --quiet refs/remotes/origin/backups; then
+            git checkout -b backups origin/backups
+          else
+            git checkout --orphan backups
+            git rm -rf . >/dev/null 2>&1 || true
+          fi
+
+          mkdir -p backups
+          mv "backup_output/$FILENAME" "backups/$FILENAME"
+
+          # เก็บย้อนหลังแค่ 30 ไฟล์ล่าสุด กัน branch บวมไม่รู้จบ
+          cd backups && ls -1t | tail -n +31 | xargs -r rm -- && cd ..
+
+          git add backups
+          git commit -m "backup: $FILENAME" --quiet
+          git push origin backups
