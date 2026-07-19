@@ -23,6 +23,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: "กรุณากรอกช่องอีเมล" }, { status: 400 });
     }
     const email = rawEmail.trim().toLowerCase();
+    // ตรวจรูปแบบอีเมลก่อน กันข้อมูลผิดรูปเข้าระบบ (ส่งอีเมล/reset password ไม่ได้ภายหลัง)
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return NextResponse.json({ message: "รูปแบบอีเมลไม่ถูกต้อง" }, { status: 400 });
+    }
     if (!password || password.length < 6) {
       return NextResponse.json({ message: "กรุณากรอกช่องรหัสผ่าน (อย่างน้อย 6 ตัวอักษร)" }, { status: 400 });
     }

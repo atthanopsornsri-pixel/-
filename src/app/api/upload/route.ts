@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { createClient } from "@supabase/supabase-js";
+import { rateLimit } from "@/lib/rate-limit";
 
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"]);
@@ -11,6 +12,12 @@ export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate-limit ต่อผู้ใช้ กันอัปโหลดถล่ม storage (30 ไฟล์ / 10 นาที)
+    const rl = await rateLimit(`upload:${session.user.id}`, 30, 10 * 60 * 1000);
+    if (!rl.allowed) {
+      return NextResponse.json({ success: false, message: "อัปโหลดบ่อยเกินไป กรุณารอสักครู่" }, { status: 429 });
     }
 
     const data = await req.formData();
