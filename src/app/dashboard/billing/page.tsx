@@ -57,6 +57,7 @@ export default function BillingPage() {
 
   const [isSendingLineMap, setIsSendingLineMap] = useState<Record<string, boolean>>({});
   const [isSendingAll, setIsSendingAll] = useState(false);
+  const [isSendingUnpaid, setIsSendingUnpaid] = useState(false);
   const [isSendingAlert, setIsSendingAlert] = useState(false);
   const [alertCount, setAlertCount] = useState<number | null>(null);
 
@@ -168,6 +169,38 @@ export default function BillingPage() {
       toast.error(`ส่งล้มเหลวทั้งหมด ${failed} ห้อง — ตรวจสอบการตั้งค่า LINE`);
     }
     setIsSendingAll(false);
+  };
+
+  const handleSendUnpaidLine = async () => {
+    const unpaidLineBills = bills.filter(
+      b => (b.status === "UNPAID" || b.status === "OVERDUE") && b.room?.tenants?.[0]?.lineUserId
+    );
+    if (unpaidLineBills.length === 0) {
+      toast.info("ไม่มีห้องที่ค้างชำระและผูก LINE");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `ต้องการส่ง LINE แจ้งเตือนยอดค้างชำระไปยัง ${unpaidLineBills.length} ห้องใช่หรือไม่?\n(ระบบจะไม่ส่งไปยังห้องที่ชำระเงินแล้ว)`
+    );
+    if (!confirmed) return;
+
+    setIsSendingUnpaid(true);
+    const results = await Promise.allSettled(
+      unpaidLineBills.map(b =>
+        fetch(`/api/bills/${b.id}/notify`, { method: "POST" }).then(r => ({ ok: r.ok }))
+      )
+    );
+    const success = results.filter(r => r.status === "fulfilled" && (r as any).value.ok).length;
+    const failed = results.length - success;
+    if (failed === 0) {
+      toast.success(`ส่ง LINE เตือนค้างชำระสำเร็จทั้งหมด ${success} ห้อง 🎉`);
+    } else if (success > 0) {
+      toast.warning(`ส่งสำเร็จ ${success} ห้อง · ล้มเหลว ${failed} ห้อง`);
+    } else {
+      toast.error(`ส่งล้มเหลวทั้งหมด ${failed} ห้อง — ตรวจสอบการตั้งค่า LINE`);
+    }
+    setIsSendingUnpaid(false);
   };
 
   const handleSendLineNotify = async (billId: string) => {
@@ -851,6 +884,23 @@ export default function BillingPage() {
                   <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white">
                     {alertCount}
                   </span>
+                </Button>
+              )}
+              {bills.filter(b => (b.status === "UNPAID" || b.status === "OVERDUE") && b.room?.tenants?.[0]?.lineUserId).length > 0 && (
+                <Button
+                  size="sm"
+                  className="rounded-full h-9 px-4 gap-2 text-white font-semibold text-xs transition-all hover:-translate-y-0.5"
+                  style={{
+                    background: "#ff9500",
+                    boxShadow: "0 8px 18px -6px #ff9500",
+                  }}
+                  onClick={handleSendUnpaidLine}
+                  disabled={isSendingUnpaid}
+                >
+                  <BellRing className="w-3.5 h-3.5" strokeWidth={2} />
+                  {isSendingUnpaid
+                    ? "กำลังส่ง..."
+                    : `เตือนค้างชำระ (${bills.filter(b => (b.status === "UNPAID" || b.status === "OVERDUE") && b.room?.tenants?.[0]?.lineUserId).length} ห้อง)`}
                 </Button>
               )}
               {bills.filter(b => b.room?.tenants?.[0]?.lineUserId).length > 0 && (

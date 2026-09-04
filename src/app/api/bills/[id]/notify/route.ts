@@ -92,7 +92,7 @@ export async function POST(
     // 4. ลิงก์ระบบ (ใช้ NEXTAUTH_URL เป็น base)
     const appUrl =
       process.env.NEXTAUTH_URL?.replace(/\/$/, "") || "https://jadhor.vercel.app";
-    const paymentUrl = `${appUrl}/dashboard/my-bills`;
+    const paymentUrl = `${appUrl}/pay/${bill.id}`;
 
     // 5. สร้างรายการค่าใช้จ่ายเฉพาะที่มีจริง
     const lines: string[] = [];
@@ -118,6 +118,14 @@ export async function POST(
     // 6. ร่างข้อความ — แยกตามสถานะบิล
     //    PAID → ใบเสร็จ/ขอบคุณ (ไม่ใช่ใบแจ้งหนี้+กำหนดชำระ ที่ทำให้ลูกบ้านสับสน)
     const rangeBE = bill.type === "CHECKIN" ? "บิลเข้าอยู่" : `ประจำเดือน ${bill.month}/${yearBE}`;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dueDate = new Date(bill.dueDate);
+    dueDate.setHours(0, 0, 0, 0);
+    const isOverdue = dueDate.getTime() < today.getTime();
+    const overdueDays = Math.max(1, Math.ceil((today.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)));
+
     const messageText =
       bill.status === "PAID"
         ? [
@@ -132,6 +140,22 @@ export async function POST(
             `━━━━━━━━━━━━━━━━━━━━`,
             `ขอบคุณที่ชำระตรงเวลา 💚`,
           ].filter(Boolean).join("\n")
+        : isOverdue
+        ? [
+            `⚠️ แจ้งเตือนด่วน: บิลค้างชำระ! — ${propertyName}`,
+            `สวัสดีคุณ${tenantName} 🙏`,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            `🏠 ${propertyName}`,
+            `🚪 ห้อง ${bill.room.number}  |  ${rangeBE}`,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            ...lines,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            `💰 ยอดรวมทั้งสิ้น: ฿${bill.totalAmount.toLocaleString()}`,
+            `📌 ครบกำหนด: ${toThaiDate(bill.dueDate)} (เกินกำหนดมาแล้ว ${overdueDays} วัน ⚠️)`,
+            `━━━━━━━━━━━━━━━━━━━━`,
+            `👉 กรุณาตรวจสอบและชำระโดยด่วนที่:`,
+            paymentUrl,
+          ].join("\n")
         : [
             `🧾 ใบแจ้งหนี้ค่าเช่า — ${propertyName}`,
             `สวัสดีคุณ${tenantName} 🙏`,

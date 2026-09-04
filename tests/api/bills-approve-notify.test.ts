@@ -252,4 +252,44 @@ describe("POST /api/bills/[id]/notify — ส่ง LINE แจ้งเตื�
     expect(msg).toMatch(/ได้รับชำระเงิน/);
     expect(msg).not.toMatch(/กำหนดชำระ/);
   });
+
+  it("บิล UNPAID ที่เกินกำหนด → ข้อความเตือนด่วน พร้อมคำว่า เกินกำหนดมาแล้ว และรายละเอียดค่าใช้จ่าย", async () => {
+    vi.mocked(getServerSession).mockResolvedValue(ownerSession as any);
+    // วันครบกำหนดในอดีต (เกินกำหนด)
+    const pastDueDate = new Date();
+    pastDueDate.setDate(pastDueDate.getDate() - 3);
+
+    vi.mocked(prisma.bill.findUnique).mockResolvedValue({
+      ...mockBillForNotify,
+      status: "UNPAID",
+      dueDate: pastDueDate,
+    } as any);
+    vi.mocked(sendLineOAMessage).mockResolvedValue({ success: true } as any);
+    await NOTIFY(makeReq(), { params });
+    const msg = vi.mocked(sendLineOAMessage).mock.calls[0][1];
+    expect(msg).toMatch(/แจ้งเตือนด่วน: บิลค้างชำระ!/);
+    expect(msg).toMatch(/เกินกำหนดมาแล้ว/);
+    expect(msg).toMatch(/ค่าเช่าห้อง: ฿5,000/);
+    expect(msg).toMatch(/ค่าน้ำ \(10 หน่วย\): ฿200/);
+    expect(msg).toMatch(/ค่าไฟ \(15 หน่วย\): ฿300/);
+  });
+
+  it("บิล UNPAID ที่ยังไม่เกินกำหนด → ข้อความเป็นใบแจ้งหนี้ปกติ", async () => {
+    vi.mocked(getServerSession).mockResolvedValue(ownerSession as any);
+    // วันครบกำหนดในอนาคต (ยังไม่เกินกำหนด)
+    const futureDueDate = new Date();
+    futureDueDate.setDate(futureDueDate.getDate() + 5);
+
+    vi.mocked(prisma.bill.findUnique).mockResolvedValue({
+      ...mockBillForNotify,
+      status: "UNPAID",
+      dueDate: futureDueDate,
+    } as any);
+    vi.mocked(sendLineOAMessage).mockResolvedValue({ success: true } as any);
+    await NOTIFY(makeReq(), { params });
+    const msg = vi.mocked(sendLineOAMessage).mock.calls[0][1];
+    expect(msg).toMatch(/ใบแจ้งหนี้ค่าเช่า/);
+    expect(msg).not.toMatch(/แจ้งเตือนด่วน: บิลค้างชำระ!/);
+    expect(msg).toMatch(/ค่าเช่าห้อง: ฿5,000/);
+  });
 });
