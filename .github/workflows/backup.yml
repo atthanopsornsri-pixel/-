@@ -53,7 +53,8 @@ jobs:
           # ทุกไฟล์เป็น "เวลาเช็คเอาท์" ทำให้ไฟล์ dump ที่เพิ่งสร้างก่อนหน้า
           # ดูเก่ากว่าไฟล์เก่าที่เพิ่ง checkout แล้วโดนลบทิ้งไปเอง (bug เดิม)
           cd backups && ls -1 | sort | head -n -30 | xargs -r rm -- && cd ..
-          git add backups
+          echo '{"ignoreCommand": "exit 0"}' > vercel.json
+          git add backups vercel.json
           if git diff --cached --quiet; then
             echo "ไม่มีข้อมูลใหม่ให้ commit วันนี้ ข้าม"
           else
