@@ -466,55 +466,26 @@ export default async function Home() {
         <HowItWorks />
 
         {/* ---------------- LINE Mockup (เพียงแค่..รับบิลผ่าน LINE) ---------------- */}
-        <section className="overflow-hidden px-6 py-24 bg-white">
-          <div className="mx-auto grid max-w-[1120px] items-center gap-14 md:grid-cols-2">
-            {/* Phone mockup image (dynamic glow) */}
-            <div className="flex justify-center">
-              <div className="relative w-full max-w-[320px]">
-                {/* glow behind phone */}
-                <div
-                  aria-hidden
-                  className="pointer-events-none absolute -inset-6 -z-10 opacity-70 blur-[50px]"
-                  style={{
-                    background:
-                      "radial-gradient(50% 50% at 50% 35%, rgba(0,122,255,.32), transparent 70%), radial-gradient(45% 45% at 60% 80%, rgba(52,199,89,.28), transparent 72%)",
-                  }}
-                />
-                <div className="relative group">
-                  <Image
-                    src="/images/tenant_bill_preview.png"
-                    alt="ตัวอย่างการรับบิลผ่าน LINE ของ JadHor OS"
-                    width={500}
-                    height={1000}
-                    className="w-full h-auto rounded-[36px] shadow-[0_20px_50px_rgba(0,0,0,0.12)] border border-slate-100 transform group-hover:-translate-y-1.5 transition-transform duration-500 ease-out"
-                  />
-                  {/* Decorative float badge */}
-                  <span className="absolute -top-3 -right-3 inline-flex h-9 w-9 items-center justify-center rounded-full bg-emerald-500 text-white font-bold shadow-lg animate-bounce">
-                    ✓
-                  </span>
-                </div>
-              </div>
+        <section className="overflow-hidden px-6 py-20 bg-white">
+          <div className="mx-auto max-w-[1120px]">
+            <div className="relative overflow-hidden rounded-[32px] md:rounded-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-black/[0.05] transition-transform duration-500 hover:-translate-y-1">
+              <Image
+                src="/images/landing5_v2.png"
+                alt="เพียงแค่..ออกบิล ที่เหลือส่งเข้า LINE ให้เอง - ตัวอย่างการรับบิลผ่าน LINE ของ JadHor OS"
+                width={1536}
+                height={947}
+                className="w-full h-auto object-contain block"
+                priority
+              />
             </div>
-
-            {/* Text + checklist */}
-            <div>
-              <span className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--jh-green-ink)]">
-                Tenant Experience
-              </span>
-              <h2 className="mt-3.5 text-[32px] font-semibold leading-[1.12] tracking-[-0.02em] md:text-[42px]">
-                เพียงแค่..ออกบิล
-                <br />
-                ที่เหลือส่งเข้า LINE ให้เอง
-              </h2>
-              <p className="mt-4 text-[17px] leading-[1.6] text-[var(--jh-ink-secondary)]">
-                ลูกบ้านไม่ต้องโหลดแอปอะไรเพิ่ม รับทุกอย่างผ่านแอปพลิเคชัน LINE ที่ใช้ส่งข้อความอยู่ทุกวัน
-              </p>
-              <ul className="mt-7 space-y-3.5">
+            {/* Accessibility & SEO */}
+            <div className="sr-only">
+              <span className="uppercase">Tenant Experience</span>
+              <h2>เพียงแค่..ออกบิล ที่เหลือส่งเข้า LINE ให้เอง</h2>
+              <p>ลูกบ้านไม่ต้องโหลดแอปอะไรเพิ่ม รับทุกอย่างผ่านแอปพลิเคชัน LINE ที่ใช้ส่งข้อความอยู่ทุกวัน</p>
+              <ul>
                 {LINE_BENEFITS.map((b) => (
-                  <li key={b} className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 h-[22px] w-[22px] shrink-0 text-[var(--jh-green-ink)]" strokeWidth={2} />
-                    <span className="text-[15px] leading-[1.5] text-[var(--jh-ink)]">{b}</span>
-                  </li>
+                  <li key={b}>{b}</li>
                 ))}
               </ul>
             </div>
