@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { isPublicPayableStatus } from "@/lib/bill-status";
 
 // Utility to compress image natively
 const compressImage = (file: File, maxWidth = 1000): Promise<string> => {
@@ -171,7 +172,7 @@ export default function PayBillPage() {
                 <p className="text-slate-500 text-xs mt-2">เหตุผล: {bill.waivedReason}</p>
               )}
             </div>
-          ) : bill.status === "UNPAID" && !isSuccess ? (
+          ) : isPublicPayableStatus(bill.status) && !isSuccess ? (
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="p-4 border border-dashed border-slate-300 rounded-2xl bg-slate-50 text-center">
                 <Label htmlFor="slip" className="cursor-pointer block">
