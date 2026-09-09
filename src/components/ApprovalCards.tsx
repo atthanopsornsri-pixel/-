@@ -48,7 +48,9 @@ export function ApprovalCards({ initialBills }: { initialBills: ApprovalBill[] }
   };
 
   const handlePartialApprove = async (billId: string, total: number) => {
-    const inputAmount = window.prompt(`ยอดโอนตามบิลคือ ${formatTHB(total)}\nกรุณาระบุยอดที่ผู้เช่าโอนมาจริง (จ่ายไม่ครบ):`);
+    const inputAmount = window.prompt(
+      `ยอดโอนตามบิลคือ ${formatTHB(total)}\nกรุณาระบุ "ยอดสะสมทั้งหมดที่จ่ายมาแล้ว" (รวมยอดงวดนี้ด้วย):`
+    );
     if (!inputAmount) return;
     
     const paidAmount = parseFloat(inputAmount);
@@ -56,17 +58,16 @@ export function ApprovalCards({ initialBills }: { initialBills: ApprovalBill[] }
       alert("ระบุยอดเงินไม่ถูกต้อง");
       return;
     }
-    if (paidAmount >= total) {
-      alert("ถ้ายอดเงินครบถ้วน ให้กดยืนยันปกติครับ");
-      return;
-    }
 
     setLoadingId(billId);
     startTransition(() => {
       removeOptimisticBill(billId);
     });
-    await approvePartialBill(billId, paidAmount);
+    const res = await approvePartialBill(billId, paidAmount);
     setLoadingId(null);
+    if (!res?.success && res?.error) {
+      alert(res.error);
+    }
   };
 
   const formatTHB = (amount: number) => {
@@ -144,7 +145,7 @@ export function ApprovalCards({ initialBills }: { initialBills: ApprovalBill[] }
                     variant="ghost"
                     className="w-full text-amber-600 hover:bg-amber-50 hover:text-amber-700 text-xs font-semibold"
                   >
-                    ลูกบ้านโอนยอดไม่ครบ? (ระบุยอดจริง)
+                    ลูกบ้านโอนยอดไม่ครบ? (ระบุยอดสะสมจริง)
                 </Button>
               </div>
             </div>

@@ -152,7 +152,7 @@ export default function MyBillsPage() {
     }
   }
 
-  const canPay = (status: string) => status === "UNPAID" || status === "OVERDUE" || status === "PARTIAL";
+  const canPay = (status: string) => status === "UNPAID" || status === "OVERDUE";
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -291,6 +291,19 @@ export default function MyBillsPage() {
                       style={{ background: "#fdf8ee", color: "#d4a548" }}>
                       <Clock className="w-4 h-4" />
                       รอเจ้าของหอตรวจสอบสลิป
+                    </div>
+                  )}
+
+                  {bill.status === "PARTIAL" && (
+                    <div className="flex flex-col items-center gap-1 py-2.5 rounded-2xl text-sm font-semibold text-center px-3"
+                      style={{ background: "#f6f6ff", color: "#5856d6" }}>
+                      <div className="flex items-center gap-2">
+                        <Wallet className="w-4 h-4" />
+                        ชำระแล้วบางส่วน {thb(bill.paidAmount ?? 0)} (คงค้าง {thb(bill.totalAmount - (bill.paidAmount ?? 0))})
+                      </div>
+                      <div className="text-xs font-normal opacity-80">
+                        กรุณาติดต่อเจ้าของหอพักเพื่อชำระยอดคงค้าง
+                      </div>
                     </div>
                   )}
 

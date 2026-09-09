@@ -95,7 +95,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     }
 
     // ตัดสินสถานะบิลตามผลการตรวจ
-    let newStatus: "PENDING" | "PAID" | "PARTIAL" = "PENDING"; // ค่าเริ่มต้น = รอเจ้าของตรวจ (manual fallback)
+    let newStatus: "PENDING" | "PAID" = "PENDING"; // ค่าเริ่มต้น = รอเจ้าของตรวจ (manual fallback)
     let paidAmount = bill.paidAmount;
     let autoVerified = false;
 
@@ -114,11 +114,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         newStatus = "PAID";
         paidAmount = bill.totalAmount;
         autoVerified = true;
-      } else if (slipAmount > 0 && slipAmount < bill.totalAmount) {
-        // ของจริงแต่จ่ายไม่ครบ → บันทึกเป็นจ่ายบางส่วน
-        newStatus = "PARTIAL";
-        paidAmount = slipAmount;
-        autoVerified = true;
+      } else {
+        // Option A: ยอดไม่ครบ → ตกเป็น PENDING ให้เจ้าของตรวจเอง ไม่แตะ paidAmount (ไม่เขียนทับ)
+        newStatus = "PENDING";
       }
     }
 
@@ -141,8 +139,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       const ownerMsg =
         newStatus === "PAID"
           ? `✅ ห้อง ${roomNo} ชำระเงินแล้ว\n💰 ยอด: ฿${bill.totalAmount.toLocaleString()}\n🤖 ระบบตรวจสลิปผ่านอัตโนมัติ`
-          : newStatus === "PARTIAL"
-          ? `⚠️ ห้อง ${roomNo} ชำระบางส่วน ฿${(paidAmount ?? 0).toLocaleString()} / ฿${bill.totalAmount.toLocaleString()}\n📋 กรุณาตรวจสอบในระบบ`
+          : bill.status === "PARTIAL"
+          ? `⚠️ ห้อง ${roomNo} แนบสลิปชำระเงิน (บิลชำระบางส่วน)\n💰 ชำระสะสม: ฿${(bill.paidAmount ?? 0).toLocaleString()} / ยอดรวม: ฿${bill.totalAmount.toLocaleString()}\n👉 กรุณาเข้าตรวจสอบและอนุมัติในระบบ`
           : `📬 ห้อง ${roomNo} แนบสลิปชำระเงินแล้ว\n💰 ยอด: ฿${bill.totalAmount.toLocaleString()}\n👉 กรุณาเข้าตรวจสอบและอนุมัติในระบบ`;
       const ownerLineId = owner.lineUserId;
       const lineToken = owner.lineChannelAccessToken;

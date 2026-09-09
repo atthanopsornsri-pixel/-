@@ -123,12 +123,13 @@ describe('PATCH /api/bills/[id]/pay — slip verification (SECURITY)', () => {
     expect((await res.json()).autoVerified).toBe(true);
   });
 
-  it('ตรวจผ่าน + จ่ายไม่ครบ → PARTIAL ตามยอดสลิป', async () => {
+  it('Option A: ตรวจผ่านแต่จ่ายไม่ครบ → ตกเป็น PENDING ไม่แตะ paidAmount', async () => {
     mocks.verifySlip.mockResolvedValue({ enabled: true, verified: true, amount: 500, receiverAccount: 'xxx3806' });
     const res = await PATCH(makeReq({ slipUrl: 'data:image/jpeg;base64,AA' }), ctx);
     expect(res.status).toBe(200);
-    expect(callData().status).toBe('PARTIAL');
-    expect(callData().paidAmount).toBe(500);
+    expect(callData().status).toBe('PENDING');
+    expect(callData().paidAmount).toBe(0);
+    expect((await res.json()).autoVerified).toBe(false);
   });
 
   it('SECURITY: ตรวจผ่านยอดครบ แต่บัญชีผู้รับไม่ตรงพร้อมเพย์ → ไม่ auto-close, ตกเป็น PENDING', async () => {

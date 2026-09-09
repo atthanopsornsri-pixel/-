@@ -16,6 +16,10 @@ export async function approveBill(billId: string) {
     const bill = await secureDb.bill.findUnique({ where: { id: billId }});
     if (!bill) throw new Error("Bill not found");
 
+    if (bill.status === "PAID") {
+      return { success: false, error: "บิลนี้ได้รับการชำระเงินเรียบร้อยแล้ว" };
+    }
+
     await secureDb.bill.update({
       where: { id: billId },
       data: {
@@ -66,27 +70,59 @@ export async function rejectBill(billId: string, reason?: string) {
 }
 
 /**
- * PHASE 13: Partial Payment (Edge Case)
- * Approves a bill but with a partial amount, marking it as PARTIAL.
+ * PHASE 13: Partial Payment (Option A)
+ * บันทึกการอนุมัติชำระเงินบางส่วน โดยระบุ "ยอดสะสมทั้งหมดที่จ่ายมาแล้ว"
+ *
+ * @param billId - ID ของบิล
+ * @param paidAmount - ยอดสะสมทั้งหมดที่จ่ายมาแล้ว (cumulative paid amount)
+ *
+ * Invariants:
+ * 1. Status guard: บิลที่สถานะเป็น PAID แล้วห้ามอนุมัติซ้ำ
+ * 2. Auto-advance: ถ้ายอดสะสม >= totalAmount -> ปรับเป็น PAID และ paidAmount = totalAmount (ไม่ค้าง PARTIAL)
+ * 3. Partial: ถ้ายอดสะสม < totalAmount -> สถานะเป็น PARTIAL และ paidAmount = ยอดสะสม
  */
 export async function approvePartialBill(billId: string, paidAmount: number) {
   try {
     const secureDb = await getSecurePrisma();
 
+    const bill = await secureDb.bill.findUnique({ where: { id: billId } });
+    if (!bill) {
+      return { success: false, error: "ไม่พบบิลดังกล่าว หรือคุณไม่มีสิทธิ์เข้าถึง" };
+    }
+
+    if (bill.status === "PAID") {
+      return { success: false, error: "บิลนี้ได้รับการชำระเงินเรียบร้อยแล้ว" };
+    }
+
+    if (typeof paidAmount !== "number" || isNaN(paidAmount) || paidAmount <= 0) {
+      return { success: false, error: "ระบุยอดเงินไม่ถูกต้อง" };
+    }
+
+    const isFullyPaid = paidAmount >= bill.totalAmount;
+    const newStatus: "PAID" | "PARTIAL" = isFullyPaid ? "PAID" : "PARTIAL";
+    const finalPaidAmount = isFullyPaid ? bill.totalAmount : paidAmount;
+
     await secureDb.bill.update({
       where: { id: billId },
       data: {
-        status: "PARTIAL",
+        status: newStatus,
         paymentDate: new Date(),
-        paidAmount: paidAmount, // บันทึกยอดที่จ่ายจริง
+        paidAmount: finalPaidAmount,
       },
     });
 
     revalidatePath("/dashboard", "layout");
-    return { success: true, message: "Partial bill recorded successfully." };
+    return {
+      success: true,
+      message: isFullyPaid
+        ? "บิลได้รับการชำระเงินครบถ้วนเรียบร้อยแล้ว"
+        : "Partial bill recorded successfully.",
+      status: newStatus,
+      paidAmount: finalPaidAmount,
+    };
   } catch (error: any) {
     console.error("Failed to record partial bill:", error);
-    return { success: false, error: "Unauthorized or failed." };
+    return { success: false, error: error?.message || "Unauthorized or failed." };
   }
 }
 

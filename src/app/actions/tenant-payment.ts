@@ -201,18 +201,15 @@ async function verifyAndUpgradeStatus(opts: {
       opts.promptPayNo
     );
 
-    let newStatus: "PAID" | "PARTIAL" | null = null;
+    let newStatus: "PAID" | null = null;
     let paidAmount: number | undefined;
 
     if (receiverOk && slipAmount >= opts.totalAmount) {
       newStatus = "PAID";
       paidAmount = opts.totalAmount;
-    } else if (receiverOk && slipAmount > 0 && slipAmount < opts.totalAmount) {
-      newStatus = "PARTIAL";
-      paidAmount = slipAmount;
     }
 
-    if (!newStatus) return; // ยังต้องให้เจ้าของตรวจเอง
+    if (!newStatus) return; // ยังต้องให้เจ้าของตรวจเอง (Option A: ยอดไม่ครบ คงเป็น PENDING และไม่แตะ paidAmount)
 
     await prisma.bill.update({
       where: { id: opts.billId },
