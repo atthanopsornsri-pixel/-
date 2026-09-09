@@ -42,6 +42,10 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       return NextResponse.json({ message: "บิลนี้ได้รับการชำระเงินเรียบร้อยแล้ว" }, { status: 400 });
     }
 
+    if (bill.status === "WAIVED") {
+      return NextResponse.json({ message: "บิลนี้ได้รับการยกเว้นแล้ว ไม่ต้องชำระเงิน" }, { status: 400 });
+    }
+
     // Optional: If tenant has a session, perform room validation
     const session = await getServerSession(authOptions);
     if (session && session.user.role === "TENANT") {

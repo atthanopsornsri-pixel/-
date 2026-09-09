@@ -20,6 +20,10 @@ export async function approveBill(billId: string) {
       return { success: false, error: "บิลนี้ได้รับการชำระเงินเรียบร้อยแล้ว" };
     }
 
+    if (bill.status === "WAIVED") {
+      return { success: false, error: "บิลนี้ได้รับการยกเว้นแล้ว ไม่สามารถอนุมัติได้" };
+    }
+
     await secureDb.bill.update({
       where: { id: billId },
       data: {
@@ -94,19 +98,28 @@ export async function approvePartialBill(billId: string, paidAmount: number) {
       return { success: false, error: "บิลนี้ได้รับการชำระเงินเรียบร้อยแล้ว" };
     }
 
-    if (typeof paidAmount !== "number" || isNaN(paidAmount) || paidAmount <= 0) {
+    if (bill.status === "WAIVED") {
+      return { success: false, error: "บิลนี้ได้รับการยกเว้นแล้ว ไม่สามารถอนุมัติได้" };
+    }
+
+    if (typeof paidAmount !== "number" || !Number.isFinite(paidAmount) || isNaN(paidAmount) || paidAmount <= 0) {
       return { success: false, error: "ระบุยอดเงินไม่ถูกต้อง" };
     }
 
-    const isFullyPaid = paidAmount >= bill.totalAmount;
+    const roundedPaidAmount = Math.round(paidAmount * 100) / 100;
+    if (roundedPaidAmount <= 0) {
+      return { success: false, error: "ระบุยอดเงินไม่ถูกต้อง" };
+    }
+
+    const isFullyPaid = roundedPaidAmount >= bill.totalAmount;
     const newStatus: "PAID" | "PARTIAL" = isFullyPaid ? "PAID" : "PARTIAL";
-    const finalPaidAmount = isFullyPaid ? bill.totalAmount : paidAmount;
+    const finalPaidAmount = isFullyPaid ? bill.totalAmount : roundedPaidAmount;
 
     await secureDb.bill.update({
       where: { id: billId },
       data: {
         status: newStatus,
-        paymentDate: new Date(),
+        paymentDate: bill.paymentDate ?? new Date(),
         paidAmount: finalPaidAmount,
       },
     });

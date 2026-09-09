@@ -82,6 +82,7 @@ export default async function ApprovalsDashboardPage() {
         id: bill.id,
         roomNumber: bill.room.number,
         totalAmount: bill.totalAmount,
+        paidAmount: bill.paidAmount ?? 0,
         signedSlipUrl,
         month: bill.month,
         year: bill.year

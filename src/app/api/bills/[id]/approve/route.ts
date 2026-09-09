@@ -39,10 +39,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (bill.status === "PAID") {
       return NextResponse.json({ message: "บิลนี้ได้รับการชำระเงินเรียบร้อยแล้ว" }, { status: 400 });
     }
+    if (bill.status === "WAIVED") {
+      return NextResponse.json({ message: "บิลนี้ได้รับการยกเว้นแล้ว ไม่สามารถอนุมัติได้" }, { status: 400 });
+    }
 
     // Update bill status to PAID + sync paidAmount กับ totalAmount แบบอะตอมมิก
     const result = await prisma.bill.updateMany({
-      where: { id, status: { not: "PAID" } },
+      where: { id, status: { notIn: ["PAID", "WAIVED"] } },
       data: {
         status: "PAID",
         paidAmount: bill.totalAmount,

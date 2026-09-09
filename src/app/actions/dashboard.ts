@@ -42,16 +42,20 @@ export async function getRevenueAnalytics(propertyId?: string) {
             where: {
               month,
               year,
-              status: { in: ["UNPAID", "OVERDUE", "PENDING"] },
+              status: { in: ["UNPAID", "OVERDUE", "PENDING", "PARTIAL"] },
               ...(propertyId && { room: { propertyId } }),
             },
-            _sum: { totalAmount: true },
+            _sum: { totalAmount: true, paidAmount: true },
           }),
         ]);
+        const outstandingAmount = Math.max(
+          0,
+          (outstanding._sum.totalAmount ?? 0) - (outstanding._sum.paidAmount ?? 0)
+        );
         return {
           month, year, label,
           revenue: paid._sum.totalAmount ?? 0,
-          outstanding: outstanding._sum.totalAmount ?? 0,
+          outstanding: outstandingAmount,
         };
       })
     );
@@ -122,15 +126,15 @@ export async function getDashboardMetrics(month?: number, year?: number, propert
           waterAmount: true
         }
       }),
-      // 2. Outstanding Debt (UNPAID, OVERDUE, or PENDING bills)
+      // 2. Outstanding Debt (UNPAID, OVERDUE, PENDING, or PARTIAL bills)
       secureDb.bill.aggregate({
         where: {
           month: currentMonth,
           year: currentYear,
-          status: { in: ["UNPAID", "OVERDUE", "PENDING"] },
+          status: { in: ["UNPAID", "OVERDUE", "PENDING", "PARTIAL"] },
           ...(propertyId && { room: { propertyId } })
         },
-        _sum: { totalAmount: true }
+        _sum: { totalAmount: true, paidAmount: true }
       }),
       // 3. Occupancy Rate & Properties
       secureDb.property.count({
@@ -160,7 +164,10 @@ export async function getDashboardMetrics(month?: number, year?: number, propert
     ]);
 
     const totalRevenue = paidBillsAggregation._sum.totalAmount || 0;
-    const outstandingDebt = unpaidBillsAggregation._sum.totalAmount || 0;
+    const outstandingDebt = Math.max(
+      0,
+      (unpaidBillsAggregation._sum.totalAmount || 0) - (unpaidBillsAggregation._sum.paidAmount || 0)
+    );
     const electricRevenue = paidBillsAggregation._sum.electricAmount || 0;
     const waterRevenue = paidBillsAggregation._sum.waterAmount || 0;
     const saasExpense = !propertyId ? (paidSaaSInvoicesAggregation._sum.totalAmount || 0) : 0;

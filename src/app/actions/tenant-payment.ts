@@ -66,6 +66,9 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
     if (bill.status === "PAID") {
       return { success: false, error: "บิลนี้ได้รับการชำระเงินเรียบร้อยแล้ว" };
     }
+    if (bill.status === "WAIVED") {
+      return { success: false, error: "บิลนี้ได้รับการยกเว้นแล้ว ไม่ต้องชำระเงิน" };
+    }
     if (bill.status === "PENDING") {
       return { success: false, error: "บิลนี้อยู่ระหว่างรอเจ้าของหอตรวจสอบสลิปอยู่แล้ว — กรุณารอการอนุมัติ" };
     }
@@ -109,7 +112,7 @@ export async function submitPaymentSlip(prevState: any, formData: FormData) {
     //    ใช้ updateMany + compound-where ปิดช่อง check-then-write race:
     //    เขียนได้เฉพาะเมื่อบิลยังไม่ PAID/PENDING (กันกดส่งซ้ำเร็ว ๆ / double-submit)
     const upd = await prisma.bill.updateMany({
-      where: { id: billId, status: { notIn: ["PAID", "PENDING"] } },
+      where: { id: billId, status: { notIn: ["PAID", "PENDING", "WAIVED"] } },
       data: {
         status: "PENDING",
         slipUrl: slipUrlToStore,
@@ -211,8 +214,8 @@ async function verifyAndUpgradeStatus(opts: {
 
     if (!newStatus) return; // ยังต้องให้เจ้าของตรวจเอง (Option A: ยอดไม่ครบ คงเป็น PENDING และไม่แตะ paidAmount)
 
-    await prisma.bill.update({
-      where: { id: opts.billId },
+    await prisma.bill.updateMany({
+      where: { id: opts.billId, status: "PENDING" },
       data: { status: newStatus, paidAmount },
     });
 

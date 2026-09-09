@@ -225,6 +225,51 @@ describe("Partial Payment Accounting Fix — Option A (7 Mandatory Cases)", () =
     expect(updateCall.data.paidAmount).toBe(3000);
   });
 
+  it("Case 4b: approvePartialBill: ปัดเศษทศนิยม 2 ตำแหน่ง (satang rounding เช่น 3000.505 → 3000.51)", async () => {
+    mocks.getServerSession.mockResolvedValue({
+      user: { id: "owner-1", role: "OWNER" },
+    });
+
+    mocks.billFindUnique.mockResolvedValue(
+      baseBill({ totalAmount: 5000, paidAmount: 0, status: "PENDING" })
+    );
+
+    const res = await approvePartialBill("bill-101", 3000.505);
+
+    expect(res.success).toBe(true);
+    expect(res.status).toBe("PARTIAL");
+    expect(res.paidAmount).toBe(3000.51);
+
+    const updateCall = mocks.billUpdate.mock.calls[0][0];
+    expect(updateCall.data.paidAmount).toBe(3000.51);
+  });
+
+  it("Case 4c: approvePartialBill: ปฏิเสธค่าที่ไม่ใช่ตัวเลขจริง (Infinity, NaN, <= 0)", async () => {
+    mocks.getServerSession.mockResolvedValue({
+      user: { id: "owner-1", role: "OWNER" },
+    });
+
+    mocks.billFindUnique.mockResolvedValue(
+      baseBill({ totalAmount: 5000, paidAmount: 0, status: "PENDING" })
+    );
+
+    // Test Infinity
+    const resInf = await approvePartialBill("bill-101", Infinity);
+    expect(resInf.success).toBe(false);
+    expect(resInf.error).toBe("ระบุยอดเงินไม่ถูกต้อง");
+
+    // Test <= 0
+    const resZero = await approvePartialBill("bill-101", 0);
+    expect(resZero.success).toBe(false);
+    expect(resZero.error).toBe("ระบุยอดเงินไม่ถูกต้อง");
+
+    const resNeg = await approvePartialBill("bill-101", -500);
+    expect(resNeg.success).toBe(false);
+    expect(resNeg.error).toBe("ระบุยอดเงินไม่ถูกต้อง");
+
+    expect(mocks.billUpdate).not.toHaveBeenCalled();
+  });
+
   // ─── Case 5 ───────────────────────────────────────────────────────────────
   describe("Case 5: พยายามจ่าย/อนุมัติบิลที่ PAID แล้ว → ถูกบล็อก (status guard)", () => {
     it("Case 5a: pay route บล็อกบิลที่ PAID แล้ว", async () => {
@@ -289,6 +334,71 @@ describe("Partial Payment Accounting Fix — Option A (7 Mandatory Cases)", () =
 
       expect(res.success).toBe(false);
       expect(res.error).toContain("บิลนี้ได้รับการชำระเงินเรียบร้อยแล้ว");
+      expect(mocks.billUpdate).not.toHaveBeenCalled();
+    });
+
+    it("Case 5e: pay route บล็อกบิลที่ WAIVED แล้ว", async () => {
+      mocks.billFindUnique.mockResolvedValue(
+        baseBill({ status: "WAIVED", paidAmount: 0 })
+      );
+
+      const res = await payRoute(
+        makePayReq({ slipUrl: "data:image/jpeg;base64,SLIP" }),
+        payCtx
+      );
+
+      expect(res.status).toBe(400);
+      const data = await res.json();
+      expect(data.message).toContain("บิลนี้ได้รับการยกเว้นแล้ว");
+      expect(mocks.billUpdate).not.toHaveBeenCalled();
+    });
+
+    it("Case 5f: approve route บล็อกบิลที่ WAIVED แล้ว", async () => {
+      mocks.getServerSession.mockResolvedValue({
+        user: { id: "owner-1", role: "OWNER" },
+      });
+      mocks.billFindUnique.mockResolvedValue(
+        baseBill({ status: "WAIVED", paidAmount: 0 })
+      );
+
+      const req = new Request("http://localhost/api/bills/bill-101/approve", {
+        method: "PATCH",
+      });
+      const res = await approveRoute(req, approveCtx);
+
+      expect(res.status).toBe(400);
+      const data = await res.json();
+      expect(data.message).toContain("บิลนี้ได้รับการยกเว้นแล้ว");
+      expect(mocks.billUpdateMany).not.toHaveBeenCalled();
+    });
+
+    it("Case 5g: approvePartialBill action บล็อกบิลที่ WAIVED แล้ว", async () => {
+      mocks.getServerSession.mockResolvedValue({
+        user: { id: "owner-1", role: "OWNER" },
+      });
+      mocks.billFindUnique.mockResolvedValue(
+        baseBill({ status: "WAIVED", paidAmount: 0 })
+      );
+
+      const res = await approvePartialBill("bill-101", 3000);
+
+      expect(res.success).toBe(false);
+      expect(res.error).toContain("บิลนี้ได้รับการยกเว้นแล้ว");
+      expect(mocks.billUpdate).not.toHaveBeenCalled();
+    });
+
+    it("Case 5h: approveBill action บล็อกบิลที่ WAIVED แล้ว", async () => {
+      mocks.getServerSession.mockResolvedValue({
+        user: { id: "owner-1", role: "OWNER" },
+      });
+      mocks.billFindUnique.mockResolvedValue(
+        baseBill({ status: "WAIVED", paidAmount: 0 })
+      );
+
+      const res = await approveBill("bill-101");
+
+      expect(res.success).toBe(false);
+      expect(res.error).toContain("บิลนี้ได้รับการยกเว้นแล้ว");
       expect(mocks.billUpdate).not.toHaveBeenCalled();
     });
   });

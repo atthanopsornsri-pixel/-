@@ -9,6 +9,7 @@ export type ApprovalBill = {
   id: string;
   roomNumber: string;
   totalAmount: number;
+  paidAmount?: number;
   signedSlipUrl: string;
   month: number;
   year: number;
@@ -47,14 +48,15 @@ export function ApprovalCards({ initialBills }: { initialBills: ApprovalBill[] }
     setLoadingId(null);
   };
 
-  const handlePartialApprove = async (billId: string, total: number) => {
-    const inputAmount = window.prompt(
-      `ยอดโอนตามบิลคือ ${formatTHB(total)}\nกรุณาระบุ "ยอดสะสมทั้งหมดที่จ่ายมาแล้ว" (รวมยอดงวดนี้ด้วย):`
-    );
+  const handlePartialApprove = async (billId: string, total: number, currentPaid: number = 0) => {
+    const promptMsg = currentPaid > 0
+      ? `ยอดโอนตามบิลคือ ${formatTHB(total)}\n(มียอดสะสมเดิมที่บันทึกไว้: ${formatTHB(currentPaid)})\nกรุณาระบุ "ยอดสะสมทั้งหมดที่จ่ายมาแล้ว" (รวมยอดงวดนี้ด้วย):`
+      : `ยอดโอนตามบิลคือ ${formatTHB(total)}\nกรุณาระบุ "ยอดสะสมทั้งหมดที่จ่ายมาแล้ว" (รวมยอดงวดนี้ด้วย):`;
+    const inputAmount = window.prompt(promptMsg, currentPaid > 0 ? String(currentPaid) : undefined);
     if (!inputAmount) return;
     
     const paidAmount = parseFloat(inputAmount);
-    if (isNaN(paidAmount) || paidAmount <= 0) {
+    if (isNaN(paidAmount) || !Number.isFinite(paidAmount) || paidAmount <= 0) {
       alert("ระบุยอดเงินไม่ถูกต้อง");
       return;
     }
@@ -119,7 +121,12 @@ export function ApprovalCards({ initialBills }: { initialBills: ApprovalBill[] }
             {/* Body */}
             <div className="p-4 flex flex-col flex-grow">
               <div className="text-sm text-slate-500 font-medium">ยอดโอน (เดือน {bill.month}/{bill.year + 543})</div>
-              <div className="text-2xl font-black text-slate-800 mb-4">{formatTHB(bill.totalAmount)}</div>
+              <div className="text-2xl font-black text-slate-800 mb-1">{formatTHB(bill.totalAmount)}</div>
+              {bill.paidAmount != null && bill.paidAmount > 0 && (
+                <div className="text-xs text-amber-600 font-semibold mb-3">
+                  ชำระสะสมแล้ว {formatTHB(bill.paidAmount)} (คงค้าง {formatTHB(Math.max(0, bill.totalAmount - bill.paidAmount))})
+                </div>
+              )}
               
               <div className="mt-auto flex flex-col gap-2">
                 <div className="grid grid-cols-2 gap-3">
@@ -140,7 +147,7 @@ export function ApprovalCards({ initialBills }: { initialBills: ApprovalBill[] }
                   </Button>
                 </div>
                 <Button 
-                    onClick={() => handlePartialApprove(bill.id, bill.totalAmount)}
+                    onClick={() => handlePartialApprove(bill.id, bill.totalAmount, bill.paidAmount ?? 0)}
                     disabled={loadingId === bill.id}
                     variant="ghost"
                     className="w-full text-amber-600 hover:bg-amber-50 hover:text-amber-700 text-xs font-semibold"
